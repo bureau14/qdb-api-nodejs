@@ -1,0 +1,20 @@
+{
+  "author": "quasardb",
+  "name": "qdb",
+  "description": "Official quasardb nodejs library",
+  "keywords": [
+    "quasardb",
+    "nosql",
+    "database",
+    "store"
+  ],
+  "version": "2.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bureau14/qdb-api-nodejs"
+  },
+  "devDependencies": {
+    "unit": "*"
+  },
+  "license": "BSD"
+}

@@ -4,9 +4,22 @@ This API is still experimental and poorly documented. Use at your own risks!
 
 quasardb 2.0 or later required. You need a C++ 11 compiler to compile this addon.
 
+## Installation
+
+Make sure the qdb API is installed on your machine and can be found by the compiler (On UNIXes typically /usr/lib or /usr/local/lib) and that you have [node-gyp](https://github.com/TooTallNate/node-gyp) installed.
+
+In the directory run:
+
+```
+    node-gyp configure
+    node-gyp build
+```
+
+You will then find a qdb.node file which is the quasardb addon.
+
 ## Introduction
 
-Using *quasardb* cluster from a PHP program is extremely straightforward, just create a Cluster and perform the operations.
+Using *quasardb* starts with a Cluster:
 
 ```javascript
     var qdb = require('./qdb');
@@ -14,7 +27,7 @@ Using *quasardb* cluster from a PHP program is extremely straightforward, just c
     var c = new qdb.Cluster('qdb://127.0.0.1:2836');
 ```
 
-OK, now that we have a connection to the cluster, let's store some [binary data](doc/QdbBlob.md):
+Now that we have a connection to the cluster, let's store some binary data:
 
 ```javascript
     var b = c.blob('bam');
@@ -23,7 +36,7 @@ OK, now that we have a connection to the cluster, let's store some [binary data]
     b.get(function(err, data) { /* */  });
 ```
 
-Want a queue?
+Want a queue? We have distributed queues.
 
 ```javascript
     var q = c.queue('q2');
@@ -33,7 +46,7 @@ Want a queue?
     q.pushFront(function(err, data) { /* */ }, new Buffer("bang"));
 ```
 
-Want atomic integers now?
+quasardb comes out of the box with server-side atomic integers:
 
 ```javascript
     var i = c.integer('some_int');
@@ -41,7 +54,7 @@ Want atomic integers now?
     i.add(function(err, data){ /* */}, 7);
 ```
 
-What else? a set maybe?
+We also provide distributed sets:
 
 ```javascript
     var s = c.set('the_set');
