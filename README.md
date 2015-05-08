@@ -6,7 +6,13 @@ quasardb 2.0 or later required. You need a C++ 11 compiler to compile this addon
 
 ## Installation
 
-Make sure the qdb API is installed on your machine and can be found by the compiler (On UNIXes typically /usr/lib or /usr/local/lib) and that you have [node-gyp](https://github.com/TooTallNate/node-gyp) installed.
+## quasardb C API
+
+To build the nodejs API, you will need the C API. It can either be installed on the machine (e.g. on unix in /usr/lib or /usr/local/lib) or you can unpack the C API archive in deps/qdb.
+
+## Building the extension
+
+You will need to have [node-gyp](https://github.com/TooTallNate/node-gyp) installed.
 
 In the directory run:
 
@@ -14,7 +20,7 @@ In the directory run:
     npm install
 ```
 
-You will then find a qdb.node file which is the quasardb addon.
+You will then find a qdb.node file which is the quasardb addon in `build/Release`.
 
 ## Introduction
 
