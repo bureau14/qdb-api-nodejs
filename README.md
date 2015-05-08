@@ -11,8 +11,7 @@ Make sure the qdb API is installed on your machine and can be found by the compi
 In the directory run:
 
 ```
-    node-gyp configure
-    node-gyp build
+    npm install
 ```
 
 You will then find a qdb.node file which is the quasardb addon.
@@ -54,7 +53,7 @@ quasardb comes out of the box with server-side atomic integers:
     i.add(function(err, data){ /* */}, 7);
 ```
 
-We also provide distributed sets:
+We also provide distributed sets (this is still an *experimental* feature):
 
 ```javascript
     var s = c.set('the_set');
