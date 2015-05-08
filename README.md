@@ -2,7 +2,7 @@
 
 This API is still experimental and poorly documented. Use at your own risks!
 
-quasardb 2.0 or later required.
+quasardb 2.0 or later required. You need a C++ 11 compiler to compile this addon.
 
 ## Introduction
 
