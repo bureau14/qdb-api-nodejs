@@ -37,7 +37,7 @@ Now that we have a connection to the cluster, let's store some binary data:
 ```javascript
     var b = c.blob('bam');
 
-    b.put(function(err, data) { /* */  }, new Buffer("boom"));
+    b.put(new Buffer("boom"), function(err, data) { /* */  });
     b.get(function(err, data) { /* */  });
 ```
 
@@ -46,17 +46,17 @@ Want a queue? We have distributed queues.
 ```javascript
     var q = c.queue('q2');
 
-    q.pushBack(function(err, data) { /* */ }, new Buffer("boom"));
+    q.pushBack(new Buffer("boom"), function(err, data) { /* */ });
     q.popFront(function(err, data) { /* */ });
-    q.pushFront(function(err, data) { /* */ }, new Buffer("bang"));
+    q.pushFront(new Buffer("bang"), function(err, data) { /* */ });
 ```
 
 quasardb comes out of the box with server-side atomic integers:
 
 ```javascript
     var i = c.integer('some_int');
-    i.put(function(err, data){ /* */}, 3);
-    i.add(function(err, data){ /* */}, 7);
+    i.put(3, function(err, data){ /* */});
+    i.add(7, function(err, data){ /* */});
 ```
 
 We also provide distributed sets (this is still an *experimental* feature):
@@ -64,6 +64,6 @@ We also provide distributed sets (this is still an *experimental* feature):
 ```javascript
     var s = c.set('the_set');
 
-    s.insert(function(err, data) { /* */ }, new Buffer("boom"));
+    s.insert(new Buffer("boom"), function(err, data) { /* */ });
 ```
 

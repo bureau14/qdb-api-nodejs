@@ -34,9 +34,9 @@ namespace qdb
     public:
         static void alias(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            MethodMan<Derivate> this_call(args);
+            MethodMan this_call(args);
             
-            Derivate * pthis = this_call.nativeHolder();
+            Derivate * pthis = this_call.nativeHolder<Derivate>();
 
             assert(pthis);
 
@@ -53,6 +53,61 @@ namespace qdb
         {
             assert(_alias);
             return *_alias;
+        }
+
+    public:
+        static uv_work_t * MakeBadArgumentWorkItem(void) 
+        {
+            uv_work_t * req = new uv_work_t();
+            req->data = new qdb_request(qdb_e_invalid_argument);
+            return req;
+        }
+
+        template <typename F>
+        uv_work_t * MakeWorkItem(const v8::Local<v8::Function> & callback, qdb_int value, qdb_time_t expiry, F f)
+        {
+            uv_work_t * req = new uv_work_t();
+
+            qdb_request * qdb_req = new qdb_request(qdb_handle(), f, callback, native_alias(), expiry);
+
+            qdb_req->input.content.value = value;
+
+            // sanitize output
+            qdb_req->output.content.value = 0;
+
+            req->data = qdb_req;
+
+            return req;  
+        }
+
+        template <typename F>
+        uv_work_t * MakeWorkItem(const v8::Local<v8::Function> & callback, 
+            const std::pair<v8::Local<v8::Object>, bool> & buffer,
+            qdb_time_t expiry, 
+            F f)
+        {
+            uv_work_t * req = new uv_work_t();
+
+            qdb_request * qdb_req = new qdb_request(qdb_handle(), f, callback, native_alias(), expiry);
+
+            if (buffer.second)
+            {
+                qdb_req->input.content.buffer.begin = node::Buffer::Data(buffer.first);
+                qdb_req->input.content.buffer.size = node::Buffer::Length(buffer.first);   
+            }
+            else
+            {
+                qdb_req->input.content.buffer.begin = nullptr;
+                qdb_req->input.content.buffer.size = 0;               
+            }
+
+            // sanitize output
+            qdb_req->output.content.buffer.begin = nullptr;
+            qdb_req->output.content.buffer.size = 0;    
+
+            req->data = qdb_req;
+
+            return req; 
         }
 
     public:
@@ -89,17 +144,116 @@ namespace qdb
         }
 
     public:
+        static void processBufferResult(uv_work_t * req, int status)
+        {
+            v8::Isolate * isolate = v8::Isolate::GetCurrent();
+
+            v8::TryCatch try_catch;
+
+            qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
+            assert(qdb_req);
+
+            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
+            auto result_data = ((qdb_req->output.error == qdb_e_ok) && (qdb_req->output.content.buffer.size > 0u)) ?
+                node::Buffer::New(isolate, qdb_req->output.content.buffer.begin, qdb_req->output.content.buffer.size) : node::Buffer::New(isolate, 0);
+
+            // safe to call even on null/invalid buffers
+            qdb_free_buffer(qdb_req->handle, qdb_req->output.content.buffer.begin);
+
+            const unsigned argc = 2;
+            v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
+
+            auto cb = qdb_req->callbackAsLocal();
+
+            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);  
+                    
+            delete qdb_req;                     
+                        
+            if (try_catch.HasCaught()) 
+            {
+                node::FatalException(try_catch);
+            }                
+        }
+
+        static void processIntegerResult(uv_work_t * req, int status)
+        {
+            v8::Isolate * isolate = v8::Isolate::GetCurrent();
+
+            v8::TryCatch try_catch;
+
+            qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
+            assert(qdb_req);
+
+            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
+            auto result_data = (qdb_req->output.error == qdb_e_ok) ? v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.value)) : v8::Number::New(isolate, 0.0);
+
+            const unsigned argc = 2;
+            v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
+
+            auto cb = qdb_req->callbackAsLocal();
+
+            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);  
+                    
+            delete qdb_req;                     
+                        
+            if (try_catch.HasCaught()) 
+            {
+                node::FatalException(try_catch);
+            }  
+        }
+
+        static void processVoidResult(uv_work_t * req, int status)
+        {
+            v8::Isolate * isolate = v8::Isolate::GetCurrent();
+
+            v8::TryCatch try_catch;
+
+            qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
+            assert(qdb_req);
+
+            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
+
+            const unsigned argc = 1;
+            v8::Handle<v8::Value> argv[argc] = { error_code };
+
+            auto cb = qdb_req->callbackAsLocal();
+
+            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);  
+                    
+            delete qdb_req;                     
+                        
+            if (try_catch.HasCaught()) 
+            {
+                node::FatalException(try_catch);
+            }    
+        }
+
+    private:
+        static void callback_wrapper(uv_work_t * req)
+        {
+            static_cast<qdb_request *>(req->data)->execute();
+        }
+
+    public:
         template <typename F>
         static void queue_work(const v8::FunctionCallbackInfo<v8::Value> & args, F f)
         {
-             MethodMan<Derivate> call(args);        
+             v8::TryCatch try_catch;
+
+             MethodMan call(args);    
+
+             uv_work_t * work = Derivate::spawnRequest(call, f);
+
+             if (try_catch.HasCaught()) 
+             {
+                node::FatalException(try_catch);
+             } 
+
+             assert(work);
 
              uv_queue_work(uv_default_loop(),
-                Derivate::spawnRequest(call, f), 
-                [](uv_work_t * req)
-                {
-                    static_cast<qdb_request *>(req->data)->execute();
-                },
+                work, 
+                &Entity<Derivate>::callback_wrapper,
                 Derivate::processResult);
 
             // this is callback, the return value is undefined and the callback will get everything

@@ -42,85 +42,31 @@ namespace qdb
         
     public:
         template <typename F>
-        static uv_work_t * spawnRequest(const MethodMan<Blob> & call, F f)
+        static uv_work_t * spawnRequest(const MethodMan & call, F f)
         {
-            Blob * pthis = call.nativeHolder();
+            Blob * pthis = call.nativeHolder<Blob>();
             assert(pthis);
 
-            qdb_request * qdb_req = nullptr;
+            // first position must be the object to process
+            ArgsEater eater(call);
 
-            if (!call.checkArgc(1))
+            auto buf = eater.eatObject();
+            auto expiry = eater.eatInteger<qdb_time_t>();
+            auto callback = eater.eatCallback();
+
+            if (!callback.second)
             {
-                qdb_req = new qdb_request(qdb_e_invalid_argument);
-            }
-            else
-            {
-                // do we have expiry?
-                qdb_time_t expiry = 0;
-
-                if (call.args()[2]->IsNumber())
-                {
-                    expiry = static_cast<qdb_time_t>(call.args()[2]->NumberValue());
-                }
-
-                qdb_req = new qdb_request(pthis->qdb_handle(), f, call.argCallback(0), pthis->native_alias(), expiry);
-                
-                // do we have content
-                if (call.args()[1]->IsObject())
-                {
-                    auto buf = call.args()[1]->ToObject();
-
-                    qdb_req->input.content.buffer.begin = node::Buffer::Data(buf);
-                    qdb_req->input.content.buffer.size = node::Buffer::Length(buf);
-                }
-                else
-                {
-                    qdb_req->input.content.buffer.begin = nullptr;
-                    qdb_req->input.content.buffer.size = 0;
-                }
-
-                // sanitize output
-                qdb_req->output.content.buffer.begin = nullptr;
-                qdb_req->output.content.buffer.size = 0;
+                call.throwException("callback expected");
+                return nullptr;                  
             }
 
-            uv_work_t * req = new uv_work_t();
-            req->data = qdb_req;
-
-            return req;
+            return pthis->MakeWorkItem(callback.first, buf, expiry.first, f);
         }
 
     public:
         static void processResult(uv_work_t * req, int status)
         {
-            v8::Isolate * isolate = v8::Isolate::GetCurrent();
-
-            v8::TryCatch try_catch;
-
-            qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
-            assert(qdb_req);
-
-            // get the callback and give the result (error code as integer + result as string if any)
-            v8::Local<v8::Function> cb = qdb_req->callbackAsLocal();
-
-            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
-            auto result_data = ((qdb_req->output.error == qdb_e_ok) && (qdb_req->output.content.buffer.size > 0u)) ?
-                node::Buffer::New(isolate, qdb_req->output.content.buffer.begin, qdb_req->output.content.buffer.size) : node::Buffer::New(isolate, 0);
-
-            // safe to call even on null/invalid buffers
-            qdb_free_buffer(qdb_req->handle, qdb_req->output.content.buffer.begin);
-
-            const unsigned argc = 2;
-            v8::Local<v8::Value> argv[argc] = { error_code, result_data };
-
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);                    
-                    
-            delete qdb_req;                     
-                        
-            if (try_catch.HasCaught() ) 
-            {
-                node::FatalException(try_catch);
-            }              
+            Entity::processBufferResult(req, status);
         }
 
     public:

@@ -13,8 +13,12 @@
     "type": "git",
     "url": "git://github.com/bureau14/qdb-api-nodejs"
   },
+  "scripts": {
+    "test": "mocha test"
+  },
   "devDependencies": {
-    "unit": "*"
+    "mocha": "*",
+    "unit.js": "*"
   },
   "license": "BSD"
 }
