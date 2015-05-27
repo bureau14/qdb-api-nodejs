@@ -9,7 +9,7 @@
 #include <node_object_wrap.h>
 #include <uv.h>
 
-#include <qdb/client.h>
+#include <qdb/hset.h>
 
 #include "entity.hpp"
 
@@ -70,7 +70,7 @@ namespace qdb
         {
             Entity::queue_work(args, [](qdb_request * qdb_req)
             {
-                qdb_req->output.error = qdb_set_insert(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                qdb_req->output.error = qdb_hset_insert(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
             });
         }
 
@@ -78,7 +78,7 @@ namespace qdb
         {
             Entity::queue_work(args, [](qdb_request * qdb_req)
             {
-                qdb_req->output.error = qdb_set_erase(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                qdb_req->output.error = qdb_hset_erase(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
             });
         }
 
@@ -86,7 +86,7 @@ namespace qdb
         {
             Entity::queue_work(args, [](qdb_request * qdb_req)
             {
-                qdb_req->output.error = qdb_set_contains(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                qdb_req->output.error = qdb_hset_contains(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
             });
         }
 

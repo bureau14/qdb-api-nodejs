@@ -7,7 +7,7 @@
 #include "blob.hpp"
 #include "integer.hpp"
 #include "queue.hpp"
-#include "set.hpp"
+#include "hset.hpp"
 
 namespace qdb
 {

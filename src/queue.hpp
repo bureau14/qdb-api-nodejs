@@ -9,7 +9,7 @@
 #include <node_object_wrap.h>
 #include <uv.h>
 
-#include <qdb/client.h>
+#include <qdb/queue.h>
 
 #include "entity.hpp"
 
