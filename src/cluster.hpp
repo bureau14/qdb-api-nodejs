@@ -8,6 +8,7 @@
 #include "integer.hpp"
 #include "queue.hpp"
 #include "hset.hpp"
+#include "tag.hpp"
 
 namespace qdb
 {
@@ -41,6 +42,7 @@ namespace qdb
             NODE_SET_PROTOTYPE_METHOD(tpl, "integer", integer);
             NODE_SET_PROTOTYPE_METHOD(tpl, "queue", queue);
             NODE_SET_PROTOTYPE_METHOD(tpl, "set", set);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
 
             constructor.Reset(isolate, tpl->GetFunction());
             exports->Set(v8::String::NewFromUtf8(isolate, "Cluster"), tpl->GetFunction());
@@ -165,6 +167,11 @@ namespace qdb
         static void set(const v8::FunctionCallbackInfo<v8::Value> & args) 
         {
             objectFactory<Set>(args);
+        }
+
+        static void tag(const v8::FunctionCallbackInfo<v8::Value> & args) 
+        {
+            objectFactory<Tag>(args);
         }
 
     public:

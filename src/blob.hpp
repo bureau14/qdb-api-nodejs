@@ -36,74 +36,44 @@ namespace qdb
                 NODE_SET_PROTOTYPE_METHOD(tpl, "put", put);
                 NODE_SET_PROTOTYPE_METHOD(tpl, "update", update);
                 NODE_SET_PROTOTYPE_METHOD(tpl, "get", get);
-                NODE_SET_PROTOTYPE_METHOD(tpl, "remove", remove);
             });
-        }
-        
-    public:
-        template <typename F>
-        static uv_work_t * spawnRequest(const MethodMan & call, F f)
-        {
-            Blob * pthis = call.nativeHolder<Blob>();
-            assert(pthis);
-
-            // first position must be the object to process
-            ArgsEater eater(call);
-
-            auto buf = eater.eatObject();
-            auto expiry = eater.eatInteger<qdb_time_t>();
-            auto callback = eater.eatCallback();
-
-            if (!callback.second)
-            {
-                call.throwException("callback expected");
-                return nullptr;                  
-            }
-
-            return pthis->MakeWorkItem(callback.first, buf, expiry.first, f);
-        }
-
-    public:
-        static void processResult(uv_work_t * req, int status)
-        {
-            Entity::processBufferResult(req, status);
         }
 
     public:
         // put a new entry, with an optional expiry time
         static void put(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, [](qdb_request * qdb_req)
-            {
-                qdb_req->output.error = qdb_put(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size, qdb_req->input.expiry);
-            });
+            Entity::queue_work(args, 
+                Entity::eatBufExpiryParams,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_put(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size, qdb_req->input.expiry);
+                }, 
+                Entity::processVoidResult);
         }
 
         // put a new entry, with an optional expiry time
         static void update(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, [](qdb_request * qdb_req)
-            {
-                qdb_req->output.error = qdb_update(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size, qdb_req->input.expiry);
-            });
+            Entity::queue_work(args, 
+                Entity::eatBufExpiryParams,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_update(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size, qdb_req->input.expiry);
+                }, 
+                Entity::processVoidResult);
         }
 
         // return the alias content
         static void get(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, [](qdb_request * qdb_req)
-            {
-                qdb_req->output.error = qdb_get(qdb_req->handle, qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
-            });
-        }
-
-        // remove the alias
-        static void remove(const v8::FunctionCallbackInfo<v8::Value> & args)
-        {
-            Entity::queue_work(args, [](qdb_request * qdb_req)
-            {
-                qdb_req->output.error = qdb_remove(qdb_req->handle, qdb_req->input.alias.c_str());
-            }); 
+            Entity::queue_work(args, 
+                Entity::eatBufExpiryParams,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_get(qdb_req->handle, qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
+                }, 
+                Entity::processBufferResult);
         }
 
     private:

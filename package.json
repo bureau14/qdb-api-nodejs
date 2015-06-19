@@ -8,13 +8,13 @@
     "database",
     "store"
   ],
-  "version": "2.0.0",
+  "version": "2.0.0beta3",
   "repository": {
     "type": "git",
     "url": "git://github.com/bureau14/qdb-api-nodejs"
   },
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha"
   },
   "devDependencies": {
     "mocha": "*",

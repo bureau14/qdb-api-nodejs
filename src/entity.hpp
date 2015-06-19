@@ -10,6 +10,7 @@
 #include <uv.h>
 
 #include <qdb/client.h>
+#include <qdb/tag.h>
 
 #include "utilities.hpp"
 
@@ -44,6 +45,19 @@ namespace qdb
         }
 
     public:
+        // remove the alias
+        static void remove(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            queue_work(args, 
+                eatNoParam,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_remove(qdb_req->handle, qdb_req->input.alias.c_str());
+                }, 
+                processVoidResult); 
+        }
+
+    public:
         qdb_handle_t qdb_handle(void) const
         {
             return _handle;
@@ -56,58 +70,146 @@ namespace qdb
         }
 
     public:
-        static uv_work_t * MakeBadArgumentWorkItem(void) 
+        template <typename F, typename Params>
+        static uv_work_t * spawnRequest(const MethodMan & call, Params p, F f)
         {
+            Blob * pthis = call.nativeHolder<Blob>();
+            assert(pthis);
+
+            // first position must be the object to process
+            ArgsEater eater(call);
+
+            qdb_request::query res = p(eater);
+
+            auto callback = eater.eatCallback();
+
+            if (!callback.second)
+            {
+                call.throwException("callback expected");
+                return nullptr;                  
+            }            
+
+            qdb_request * qdb_req = new qdb_request(pthis->qdb_handle(), f, callback.first, pthis->native_alias(), res.expiry);
+
+            qdb_req->input.content = res.content;
+
             uv_work_t * req = new uv_work_t();
-            req->data = new qdb_request(qdb_e_invalid_argument);
+            req->data = qdb_req;
+
             return req;
         }
 
-        template <typename F>
-        uv_work_t * MakeWorkItem(const v8::Local<v8::Function> & callback, qdb_int value, qdb_time_t expiry, F f)
+        static qdb_request::query eatNoParam(ArgsEater & eater)
         {
-            uv_work_t * req = new uv_work_t();
+            qdb_request::query res;
 
-            qdb_request * qdb_req = new qdb_request(qdb_handle(), f, callback, native_alias(), expiry);
-
-            qdb_req->input.content.value = value;
-
-            // sanitize output
-            qdb_req->output.content.value = 0;
-
-            req->data = qdb_req;
-
-            return req;  
+            return res;
         }
 
-        template <typename F>
-        uv_work_t * MakeWorkItem(const v8::Local<v8::Function> & callback, 
-            const std::pair<v8::Local<v8::Object>, bool> & buffer,
-            qdb_time_t expiry, 
-            F f)
+        static qdb_request::query eatStringParams(ArgsEater & eater)
         {
-            uv_work_t * req = new uv_work_t();
+            qdb_request::query res;
 
-            qdb_request * qdb_req = new qdb_request(qdb_handle(), f, callback, native_alias(), expiry);
+            auto str = eater.eatString();
 
-            if (buffer.second)
+            if (str.second)
             {
-                qdb_req->input.content.buffer.begin = node::Buffer::Data(buffer.first);
-                qdb_req->input.content.buffer.size = node::Buffer::Length(buffer.first);   
-            }
-            else
-            {
-                qdb_req->input.content.buffer.begin = nullptr;
-                qdb_req->input.content.buffer.size = 0;               
+                v8::String::Utf8Value val(str.first);
+                res.content.str = std::string(*val, val.length());
             }
 
-            // sanitize output
-            qdb_req->output.content.buffer.begin = nullptr;
-            qdb_req->output.content.buffer.size = 0;    
+            return res;
+        }
 
-            req->data = qdb_req;
+        static qdb_request::query eatBufExpiryParams(ArgsEater & eater)
+        {
+            qdb_request::query res;
 
-            return req; 
+            auto buf = eater.eatObject();
+
+            if (buf.second)
+            {
+                res.content.buffer.begin = node::Buffer::Data(buf.first);
+                res.content.buffer.size = node::Buffer::Length(buf.first);   
+            }
+
+            res.expiry = eater.eatInteger<qdb_time_t>().first;     
+
+            return res;     
+        }
+
+        static qdb_request::query eatBufParams(ArgsEater & eater)
+        {
+            qdb_request::query res;
+
+            auto buf = eater.eatObject();
+
+            if (buf.second)
+            {
+                res.content.buffer.begin = node::Buffer::Data(buf.first);
+                res.content.buffer.size = node::Buffer::Length(buf.first);   
+            }
+
+            return res; 
+        }
+
+        static qdb_request::query eatIntExpiryParams(ArgsEater & eater)
+        {
+            qdb_request::query res;
+
+            res.content.value = eater.eatInteger<qdb_int>().first;
+            res.expiry = eater.eatInteger<qdb_time_t>().first;    
+
+            return res;
+        }
+
+    public:
+        static void addTag(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            queue_work(args, 
+                eatStringParams,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_add_tag(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+                }, 
+                processVoidResult);
+        }
+
+        static void removeTag(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            queue_work(args, 
+                eatStringParams,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_remove_tag(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+                }, 
+                processVoidResult);
+        }
+
+        static void hasTag(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            queue_work(args, 
+                eatStringParams,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_has_tag(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+                }, 
+                processVoidResult);
+        }
+
+        static void getTags(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            queue_work(args, 
+                eatNoParam,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_get_tags(qdb_req->handle, 
+                        qdb_req->input.alias.c_str(),
+                        reinterpret_cast<const char ***>(const_cast<char **>(&(qdb_req->output.content.buffer.begin))),
+                        &(qdb_req->output.content.buffer.size));
+
+                }, 
+                processArrayStringResult);            
         }
 
     public:
@@ -122,7 +224,12 @@ namespace qdb
             tpl->InstanceTemplate()->SetInternalFieldCount(Entity<Derivate>::FieldsCount);
             
             // Prototype
-            NODE_SET_PROTOTYPE_METHOD(tpl, "alias", Entity<Derivate>::alias);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "alias",         Entity<Derivate>::alias);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "remove",        Entity<Derivate>::remove);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "addTag",        Entity<Derivate>::addTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "removeTag",     Entity<Derivate>::removeTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "hasTag",        Entity<Derivate>::hasTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "getTags",       Entity<Derivate>::getTags);
 
             init(tpl);
 
@@ -173,6 +280,59 @@ namespace qdb
             {
                 node::FatalException(try_catch);
             }                
+        }
+
+        static void processArrayStringResult(uv_work_t * req, int status)
+        {
+            // build an array out of the buffer
+
+            v8::Isolate * isolate = v8::Isolate::GetCurrent();
+
+            v8::Handle<v8::Array> array;
+
+            v8::TryCatch try_catch;
+
+            qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
+            assert(qdb_req);
+
+            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
+            if (qdb_req->output.error == qdb_e_ok)
+            {
+                const char ** entries = reinterpret_cast<const char **>(const_cast<char *>(qdb_req->output.content.buffer.begin));
+                const size_t entries_count = qdb_req->output.content.buffer.size;
+
+                array = v8::Array::New(isolate, static_cast<int>(entries_count));
+                if(!array.IsEmpty())
+                {
+                    for(size_t i = 0; i < entries_count; ++i)
+                    {
+                        auto str = v8::String::NewFromUtf8(isolate, entries[i]);
+                        array->Set(static_cast<uint32_t>(i), str);
+                    }
+                }
+                else
+                {
+                    error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_e_no_memory));                    
+                }
+
+                // safe to call even on null/invalid buffers
+                qdb_free_results(qdb_req->handle, entries, entries_count);
+            }
+
+            const unsigned argc = 2;
+            v8::Handle<v8::Value> argv[argc] = { error_code, array };
+
+            auto cb = qdb_req->callbackAsLocal();
+
+            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);  
+                    
+            delete qdb_req;                     
+                        
+            if (try_catch.HasCaught()) 
+            {
+                node::FatalException(try_catch);
+            }  
+
         }
 
         static void processIntegerResult(uv_work_t * req, int status)
@@ -235,14 +395,14 @@ namespace qdb
         }
 
     public:
-        template <typename F>
-        static void queue_work(const v8::FunctionCallbackInfo<v8::Value> & args, F f)
+        template <typename Params, typename F, typename Proc>
+        static void queue_work(const v8::FunctionCallbackInfo<v8::Value> & args, Params params, F f, Proc process)
         {
              v8::TryCatch try_catch;
 
              MethodMan call(args);    
 
-             uv_work_t * work = Derivate::spawnRequest(call, f);
+             uv_work_t * work = spawnRequest(call, params, f);
 
              if (try_catch.HasCaught()) 
              {
@@ -254,7 +414,7 @@ namespace qdb
              uv_queue_work(uv_default_loop(),
                 work, 
                 &Entity<Derivate>::callback_wrapper,
-                Derivate::processResult);
+                process);
 
             // this is callback, the return value is undefined and the callback will get everything
             call.setUndefinedReturnValue();

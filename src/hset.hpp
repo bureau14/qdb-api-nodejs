@@ -60,34 +60,37 @@ namespace qdb
         }
 
     public:
-        static void processResult(uv_work_t * req, int status)
-        {
-            Entity::processVoidResult(req, status);
-        }
-
-    public:
         static void insert(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, [](qdb_request * qdb_req)
-            {
-                qdb_req->output.error = qdb_hset_insert(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
-            });
+            Entity::queue_work(args, 
+                Entity::eatBufParams,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_hset_insert(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                }, 
+                Entity::processVoidResult);
         }
 
         static void erase(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, [](qdb_request * qdb_req)
-            {
-                qdb_req->output.error = qdb_hset_erase(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
-            });
+            Entity::queue_work(args, 
+                Entity::eatBufParams,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_hset_erase(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                }, 
+                Entity::processVoidResult);
         }
 
         static void contains(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, [](qdb_request * qdb_req)
-            {
-                qdb_req->output.error = qdb_hset_contains(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
-            });
+            Entity::queue_work(args, 
+                Entity::eatBufParams,
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_hset_contains(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                }, 
+                Entity::processVoidResult);
         }
 
     private:

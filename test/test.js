@@ -16,6 +16,7 @@ describe('qdb', function()
         describe('blob', function()
         {
             var b = c.blob('bam');
+            var tagName = 'myTag';
 
             test.object(b).isInstanceOf(qdb.Blob);
 
@@ -27,7 +28,7 @@ describe('qdb', function()
             {
                 it('should update without error', function(done)
                 {
-                    b.update(new Buffer('bam_content'), function(err, data)
+                    b.update(new Buffer('bam_content'), function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
@@ -51,7 +52,7 @@ describe('qdb', function()
 
                 it('should remove without error', function(done)
                 {
-                    b.remove(function(err, data)
+                    b.remove(function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
@@ -62,7 +63,7 @@ describe('qdb', function()
 
                 it('should put again without an error', function(done)
                 {
-                    b.put(new Buffer('boom_content'), function(err, data)
+                    b.put(new Buffer('boom_content'), function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
@@ -84,20 +85,391 @@ describe('qdb', function()
                     });
                 });
 
-                it('should remove again without error', function(done)
+                it('should get an empty tag list', function(done)
                 {
-                    b.remove(function(err, data)
+                    b.getTags(function(err, tags)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        tags.must.have.length(0);
+
+                        done();
+                    });
+
+                });
+
+                it('should not find the tag', function(done)
+                {
+                    b.hasTag(tagName, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(42);
+
+                        done();
+                    });
+
+                });         
+
+                it('should tag without an error', function(done)
+                {
+                    b.addTag(tagName, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        done();
+                    });
+
+                });
+
+                it('should tag again with an error', function(done)
+                {
+                    b.addTag(tagName, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(41);
+                        
+                        done();
+                    });
+
+                });
+
+                it('should find the tag', function(done)
+                {
+                    b.hasTag(tagName, function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
 
                         done();
                     });
-                });               
+
+                });    
+
+                it('should get a tag list with the tag', function(done)
+                {
+                    b.getTags(function(err, tags)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        tags.must.have.length(1);
+                        tags[0].must.be.equal(tagName);
+
+                        done();
+                    });
+
+                });
+
+
+                it('should remove the tag without an error', function(done)
+                {
+                    b.removeTag(tagName, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        done();
+                    });
+
+                });
+
+                it('should remove the tag again with an error', function(done)
+                {
+                    b.removeTag(tagName, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(42);
+                        
+                        done();
+                    });
+
+                });
+
+                it('should not find the tag', function(done)
+                {
+                    b.hasTag(tagName, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(42);
+
+                        done();
+                    });
+
+                });  
+
+                it('should get an empty tag list again', function(done)
+                {
+                    b.getTags(function(err, tags)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        tags.must.have.length(0);
+
+                        done();
+                    });
+
+                });
+
+                it('should remove without error', function(done)
+                {
+                    b.remove(function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();
+                    });
+                });     
 
             }); // update/get/delete
 
         }); // blob
+
+        describe('tag', function()
+        {
+            var dasTag = 'u96';
+
+            var t = c.tag(dasTag);
+
+            test.object(t).isInstanceOf(qdb.Tag);
+
+            test.object(t).hasProperty('alias');
+            test.must(t.alias()).be.a.string();
+            test.must(t.alias()).be.equal(dasTag);  
+
+            describe('entries list test', function()
+            {
+                var b = c.blob('blob_tag_test');
+                var i = c.integer('int_tag_test');
+                var q = c.queue('queue_tag_test');
+                var s = c.set('set_tag_test');
+
+                it('should return an empty tag list', function(done)
+                {
+                    t.getEntries(function(err, entries)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        entries.must.have.length(0);
+
+                        done();
+                    });
+                });
+
+                it('should create the blob for tag test', function(done)
+                {
+                    b.put(new Buffer('untz'), function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();
+                    });
+                });
+
+                it('should create the integer for tag test', function(done)
+                {
+                    i.update(0, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();                  
+                    });
+                });
+
+                it('should create the queue for tag test', function(done)
+                {
+                    q.pushBack(new Buffer('mmm ok'), function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();                  
+                    });
+                });
+
+                it('should create the set for tag test', function(done)
+                {
+                    s.insert(new Buffer('b00m'), function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();                  
+                    });
+                });
+
+                it('should tag the blob successfully', function(done)
+                {
+                    b.addTag(dasTag, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();   
+                    });
+                });
+
+                it('should tag the integer successfully', function(done)
+                {
+                    i.addTag(dasTag, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();   
+                    });
+                });
+
+                it('should tag the queue successfully', function(done)
+                {
+                    q.addTag(dasTag, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();   
+                    });
+                });
+
+                it('should tag the set successfully', function(done)
+                {
+                    s.addTag(dasTag, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();   
+                    });
+                });
+
+                it('should return the whole list of entries', function(done)
+                {
+                    t.getEntries(function(err, entries)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        entries.must.have.length(4);
+
+                        test.must(entries.indexOf('blob_tag_test')).be.gte(0);
+                        test.must(entries.indexOf('int_tag_test')).be.gte(0);
+                        test.must(entries.indexOf('queue_tag_test')).be.gte(0);
+                        test.must(entries.indexOf('set_tag_test')).be.gte(0);
+
+                        done();
+                    });
+                });
+
+                it('should untag the blob successfully', function(done)
+                {
+                    b.removeTag(dasTag, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();   
+                    });
+                });
+
+                it('should untag the integer successfully', function(done)
+                {
+                    i.removeTag(dasTag, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();   
+                    });
+                });
+
+                it('should untag the queue successfully', function(done)
+                {
+                    q.removeTag(dasTag, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();   
+                    });
+                });
+
+                it('should untag the set successfully', function(done)
+                {
+                    s.removeTag(dasTag, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();   
+                    });
+                });
+
+                it('should return an empty tag list again', function(done)
+                {
+                    t.getEntries(function(err, entries)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        entries.must.have.length(0);
+
+                        done();
+                    });
+                });
+
+                it('should remove the blob for tag test', function(done)
+                {
+                    b.remove(function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();
+                    });
+                });
+
+                it('should remove the integer for tag test', function(done)
+                {
+                    i.remove(function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();                  
+                    });
+                });
+
+                it('should remove the queue for tag test', function(done)
+                {
+                    q.remove(function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();                  
+                    });
+                });
+
+                it('should remove the set for tag test', function(done)
+                {
+                    s.remove(function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        done();                  
+                    });
+                });
+
+            });  // entries list test
+
+        }); // tag
 
         describe('integer', function()
         {
@@ -113,7 +485,7 @@ describe('qdb', function()
             {
                 it('should set the value to 0', function(done)
                 {
-                    i.update(0, function(err, data)
+                    i.update(0, function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
@@ -152,7 +524,7 @@ describe('qdb', function()
 
                 it('should remove without an error', function(done)
                 {
-                    i.remove(function(err, data)
+                    i.remove(function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
@@ -163,7 +535,7 @@ describe('qdb', function()
 
                 it('should set the value to 10', function(done)
                 {
-                    i.put(10, function(err, data)
+                    i.put(10, function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
@@ -188,7 +560,7 @@ describe('qdb', function()
 
                 it('should remove again without an error', function(done)
                 {
-                    i.remove(function(err, data)
+                    i.remove(function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
@@ -217,7 +589,7 @@ describe('qdb', function()
             {
                 it('should push back without error', function(done)
                 {
-                    q.pushBack(new Buffer('a'), function(err, data)
+                    q.pushBack(new Buffer('a'), function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
@@ -267,7 +639,7 @@ describe('qdb', function()
 
                 it('should push front without error', function(done)
                 {
-                    q.pushFront(new Buffer('b'), function(err, data)
+                    q.pushFront(new Buffer('b'), function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);

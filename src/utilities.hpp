@@ -42,11 +42,9 @@ namespace detail
     // we however like the make_error_string convenience function very much and therefore implement it here again
     inline std::string make_error_string(qdb_error_t error)
     {
-        static const size_t buf_size = 1024;
-        char buf[buf_size];
         // qdb_error never fails and always appends a terminating null
         // the only exception is when providing an empty buffer, which is not the case here
-        return std::string(qdb_error(error, buf, buf_size));
+        return std::string(qdb_error(error));
     }
 
     struct qdb_request
@@ -64,11 +62,20 @@ namespace detail
             
             std::string alias;
 
-            union 
+            struct query_content
             {
+                query_content(void) : value(0)
+                {
+                    buffer.begin = nullptr;
+                    buffer.size = 0;
+                }
+
+                std::string str;
                 slice buffer;
                 qdb_int value;
-            } content;
+            };
+
+            query_content content;
             
             qdb_time_t expiry;    
         };
