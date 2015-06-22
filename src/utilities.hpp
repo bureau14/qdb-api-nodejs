@@ -44,7 +44,8 @@ namespace detail
     {
         // qdb_error never fails and always appends a terminating null
         // the only exception is when providing an empty buffer, which is not the case here
-        return std::string(qdb_error(error));
+     //   return std::string(qdb_error(error));
+        return std::string();
     }
 
     struct qdb_request
@@ -58,7 +59,7 @@ namespace detail
 
         struct query
         {
-            query(std::string a = "", qdb_time_t e = 0) : alias(a), expiry(e) {}
+            query(std::string a = "") : alias(a), expiry(0) {}
             
             std::string alias;
 
@@ -88,6 +89,7 @@ namespace detail
             {
                 slice buffer;
                 qdb_int value;
+                qdb_time_t date;
             } content;
 
             qdb_error_t error;      
@@ -95,7 +97,7 @@ namespace detail
 
         explicit qdb_request (qdb_error_t err) : handle(nullptr), output(err) {}
 
-        qdb_request(qdb_handle_t h, std::function<void (qdb_request *)> exec, const v8::Handle<v8::Function> & cb, std::string a, qdb_time_t e = 0) : handle(h), callback(v8::Isolate::GetCurrent(), cb), input(a, e), _execute(exec) {}
+        qdb_request(qdb_handle_t h, std::function<void (qdb_request *)> exec, std::string a) : handle(h), input(a), _execute(exec) {}
 
         qdb_handle_t handle;
 
@@ -224,6 +226,18 @@ namespace detail
                 std::bind(&MethodMan::argNumber, this, std::placeholders::_1));
         }
 
+        v8::Local<v8::Date> argDate(int i) const
+        {
+            return v8::Local<v8::Date>::Cast(_args[i]);
+        }
+
+        std::pair<v8::Local<v8::Date>, bool> checkedArgDate(int i) const
+        {            
+            return checkArg<v8::Local<v8::Date>>(i, 
+                [](v8::Local<v8::Value> v) -> bool { return v->IsDate(); }, 
+                std::bind(&MethodMan::argDate, this, std::placeholders::_1));
+        }
+
         const v8::FunctionCallbackInfo<v8::Value> & args(void) const
         {
             return _args;
@@ -249,7 +263,7 @@ namespace detail
 
     struct ArgsEater
     {
-        ArgsEater(const MethodMan & meth) : _method(meth), _pos(0) {}
+        explicit ArgsEater(const MethodMan & meth) : _method(meth), _pos(0) {}
 
     private:
         template <typename Pair>
@@ -293,10 +307,142 @@ namespace detail
             return processResult(_method.checkedArgObject(_pos));  
         }
 
+        std::pair<v8::Local<v8::Date>, bool> eatDate(void)
+        {
+            return processResult(_method.checkedArgDate(_pos));  
+        }
+
+    public:
+        qdb_int eatAndConvertInteger(void)
+        {
+            return eatInteger<qdb_int>().first;
+        }
+
+        qdb_time_t eatAndConvertDate(void)
+        {
+            // we get a Date object a convert that to qdb_time_t
+            auto date = eatDate();
+
+            qdb_time_t res = 0;
+
+            if (date.second)
+            {
+                res = static_cast<qdb_time_t>(date.first->ValueOf() / 1000.0);               
+            }
+
+            return res;
+        }
+
+        std::string eatAndConvertString(void)
+        {
+            std::string res;
+
+            auto str = eatString();
+
+            if (str.second)
+            {
+                v8::String::Utf8Value val(str.first);
+                res = std::string(*val, val.length());
+            }
+
+            return res;
+        }
+
+        qdb_request::slice eatAndConvertBuffer(void)
+        {
+            auto buf = eatObject();
+
+            qdb_request::slice res;
+
+            if (buf.second)
+            {
+                res.begin = node::Buffer::Data(buf.first);
+                res.size = node::Buffer::Length(buf.first);   
+            }
+            else
+            {
+                res.begin = nullptr;
+                res.size = 0;
+            }
+
+            return res;
+        }
+
     private:
         const MethodMan & _method;
         int _pos;
 
+    };
+
+
+    class ArgsEaterBinder
+    {
+    public:
+        explicit ArgsEaterBinder(const MethodMan & meth) : _eater(meth) {}
+
+    public:
+        qdb_request & none(qdb_request & req)
+        {
+            return req;
+        }
+
+        qdb_request & integer(qdb_request & req)
+        {
+            req.input.content.value = _eater.eatAndConvertInteger();
+            return req;
+        }
+
+        qdb_request & string(qdb_request & req)
+        {
+            req.input.content.str = _eater.eatAndConvertString();
+            return req;
+        }
+
+        qdb_request & buffer(qdb_request & req)
+        {
+            req.input.content.buffer = _eater.eatAndConvertBuffer();
+            return req;
+        }
+
+        qdb_request & expiry(qdb_request & req)
+        {
+            req.input.expiry = _eater.eatAndConvertDate();
+            return req;
+        }
+
+    public:
+        bool bindCallback(qdb_request & req)
+        {
+            auto callback = _eater.eatCallback();
+
+            if (callback.second)
+            {
+                req.callback.Reset(v8::Isolate::GetCurrent(), callback.first);
+            }
+
+            return callback.second;
+        }
+
+    public:
+        qdb_request & eatThem(qdb_request & req)
+        {
+            return req;
+        }
+
+        template <typename Last>
+        qdb_request & eatThem(qdb_request & req, Last last)
+        {
+            return (this->*last)(req);
+        }
+
+        template <typename First, typename... Tail>
+        qdb_request & eatThem(qdb_request & req, First f, Tail... tail)
+        {
+            return eatThem((this->*f)(req), tail...);
+        }
+
+    private:
+        ArgsEater _eater;
     };
 
 }

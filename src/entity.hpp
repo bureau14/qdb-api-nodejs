@@ -20,14 +20,17 @@ namespace qdb
     class Cluster;
 
     template <typename Derivate>
-    class Entity : public node::ObjectWrap 
+    class Entity : public node::ObjectWrap
     {
     public:
         static const int FieldsCount = 2;
 
     public:
+        // if an entry is expirable, we will register the expiry management functions
+        // this simplifies organization here
+        // in other APIs generally we have an ExpirableEntry that inherits from Entity
         Entity(qdb_handle_t h, const char * alias) : _handle(h), _alias(new std::string(alias)) {}
-        virtual ~Entity(void) 
+        virtual ~Entity(void)
         {
             _handle = nullptr;
         }
@@ -36,7 +39,7 @@ namespace qdb
         static void alias(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             MethodMan this_call(args);
-            
+
             Derivate * pthis = this_call.nativeHolder<Derivate>();
 
             assert(pthis);
@@ -48,13 +51,13 @@ namespace qdb
         // remove the alias
         static void remove(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            queue_work(args, 
-                eatNoParam,
+            queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_remove(qdb_req->handle, qdb_req->input.alias.c_str());
-                }, 
-                processVoidResult); 
+                },
+                processVoidResult,
+                &ArgsEaterBinder::none);
         }
 
     public:
@@ -70,147 +73,85 @@ namespace qdb
         }
 
     public:
-        template <typename F, typename Params>
-        static uv_work_t * spawnRequest(const MethodMan & call, Params p, F f)
+        template <typename F, typename... Params>
+        static uv_work_t * spawnRequest(const MethodMan & call, F f, Params... p)
         {
             Blob * pthis = call.nativeHolder<Blob>();
             assert(pthis);
 
-            // first position must be the object to process
-            ArgsEater eater(call);
+            qdb_request * qdb_req = new qdb_request(pthis->qdb_handle(), f, pthis->native_alias());
 
-            qdb_request::query res = p(eater);
+            ArgsEaterBinder eaterBinder(call);
 
-            auto callback = eater.eatCallback();
+            eaterBinder.eatThem(*qdb_req, p...);
 
-            if (!callback.second)
+            uv_work_t * req = nullptr;
+
+            if (eaterBinder.bindCallback(*qdb_req))
             {
+                req = new uv_work_t();
+                req->data = qdb_req;
+            }
+            else
+            {
+                delete qdb_req;
                 call.throwException("callback expected");
-                return nullptr;                  
-            }            
-
-            qdb_request * qdb_req = new qdb_request(pthis->qdb_handle(), f, callback.first, pthis->native_alias(), res.expiry);
-
-            qdb_req->input.content = res.content;
-
-            uv_work_t * req = new uv_work_t();
-            req->data = qdb_req;
+            }
 
             return req;
         }
-
-        static qdb_request::query eatNoParam(ArgsEater & eater)
-        {
-            qdb_request::query res;
-
-            return res;
-        }
-
-        static qdb_request::query eatStringParams(ArgsEater & eater)
-        {
-            qdb_request::query res;
-
-            auto str = eater.eatString();
-
-            if (str.second)
-            {
-                v8::String::Utf8Value val(str.first);
-                res.content.str = std::string(*val, val.length());
-            }
-
-            return res;
-        }
-
-        static qdb_request::query eatBufExpiryParams(ArgsEater & eater)
-        {
-            qdb_request::query res;
-
-            auto buf = eater.eatObject();
-
-            if (buf.second)
-            {
-                res.content.buffer.begin = node::Buffer::Data(buf.first);
-                res.content.buffer.size = node::Buffer::Length(buf.first);   
-            }
-
-            res.expiry = eater.eatInteger<qdb_time_t>().first;     
-
-            return res;     
-        }
-
-        static qdb_request::query eatBufParams(ArgsEater & eater)
-        {
-            qdb_request::query res;
-
-            auto buf = eater.eatObject();
-
-            if (buf.second)
-            {
-                res.content.buffer.begin = node::Buffer::Data(buf.first);
-                res.content.buffer.size = node::Buffer::Length(buf.first);   
-            }
-
-            return res; 
-        }
-
-        static qdb_request::query eatIntExpiryParams(ArgsEater & eater)
-        {
-            qdb_request::query res;
-
-            res.content.value = eater.eatInteger<qdb_int>().first;
-            res.expiry = eater.eatInteger<qdb_time_t>().first;    
-
-            return res;
-        }
-
+        
     public:
+        // tag management function
         static void addTag(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            queue_work(args, 
-                eatStringParams,
+            queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_add_tag(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
-                }, 
-                processVoidResult);
+                },
+                processVoidResult,
+                &ArgsEaterBinder::string);
         }
 
         static void removeTag(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            queue_work(args, 
-                eatStringParams,
+            queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_remove_tag(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
-                }, 
-                processVoidResult);
+                },
+                processVoidResult,
+                &ArgsEaterBinder::string);
         }
 
         static void hasTag(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            queue_work(args, 
-                eatStringParams,
+            queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_has_tag(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
-                }, 
-                processVoidResult);
+                },
+                processVoidResult,
+                &ArgsEaterBinder::string);
         }
 
         static void getTags(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            queue_work(args, 
-                eatNoParam,
+            queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_get_tags(qdb_req->handle, 
+                    qdb_req->output.error = qdb_get_tags(qdb_req->handle,
                         qdb_req->input.alias.c_str(),
                         reinterpret_cast<const char ***>(const_cast<char **>(&(qdb_req->output.content.buffer.begin))),
                         &(qdb_req->output.content.buffer.size));
 
-                }, 
-                processArrayStringResult);            
+                },
+                processArrayStringResult,
+                &ArgsEaterBinder::none);
         }
+
+
 
     public:
         template <typename F>
@@ -222,7 +163,7 @@ namespace qdb
             v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Derivate::New);
             tpl->SetClassName(v8::String::NewFromUtf8(isolate, className));
             tpl->InstanceTemplate()->SetInternalFieldCount(Entity<Derivate>::FieldsCount);
-            
+
             // Prototype
             NODE_SET_PROTOTYPE_METHOD(tpl, "alias",         Entity<Derivate>::alias);
             NODE_SET_PROTOTYPE_METHOD(tpl, "remove",        Entity<Derivate>::remove);
@@ -272,14 +213,14 @@ namespace qdb
 
             auto cb = qdb_req->callbackAsLocal();
 
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);  
-                    
-            delete qdb_req;                     
-                        
-            if (try_catch.HasCaught()) 
+            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+            delete qdb_req;
+
+            if (try_catch.HasCaught())
             {
                 node::FatalException(try_catch);
-            }                
+            }
         }
 
         static void processArrayStringResult(uv_work_t * req, int status)
@@ -312,7 +253,7 @@ namespace qdb
                 }
                 else
                 {
-                    error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_e_no_memory));                    
+                    error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_e_no_memory));
                 }
 
                 // safe to call even on null/invalid buffers
@@ -324,14 +265,14 @@ namespace qdb
 
             auto cb = qdb_req->callbackAsLocal();
 
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);  
-                    
-            delete qdb_req;                     
-                        
-            if (try_catch.HasCaught()) 
+            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+            delete qdb_req;
+
+            if (try_catch.HasCaught())
             {
                 node::FatalException(try_catch);
-            }  
+            }
 
         }
 
@@ -352,14 +293,41 @@ namespace qdb
 
             auto cb = qdb_req->callbackAsLocal();
 
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);  
-                    
-            delete qdb_req;                     
-                        
-            if (try_catch.HasCaught()) 
+            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+            delete qdb_req;
+
+            if (try_catch.HasCaught())
             {
                 node::FatalException(try_catch);
-            }  
+            }
+        }
+
+        static void processDateResult(uv_work_t * req, int status)
+        {
+            v8::Isolate * isolate = v8::Isolate::GetCurrent();
+
+            v8::TryCatch try_catch;
+
+            qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
+            assert(qdb_req);
+
+            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
+            auto result_data = (qdb_req->output.error == qdb_e_ok) ? v8::Date::New(isolate, static_cast<double>(qdb_req->output.content.value) * 1000.0) : v8::Date::New(isolate, 0.0);
+
+            const unsigned argc = 2;
+            v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
+
+            auto cb = qdb_req->callbackAsLocal();
+
+            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+            delete qdb_req;
+
+            if (try_catch.HasCaught())
+            {
+                node::FatalException(try_catch);
+            }
         }
 
         static void processVoidResult(uv_work_t * req, int status)
@@ -378,14 +346,14 @@ namespace qdb
 
             auto cb = qdb_req->callbackAsLocal();
 
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);  
-                    
-            delete qdb_req;                     
-                        
-            if (try_catch.HasCaught()) 
+            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+            delete qdb_req;
+
+            if (try_catch.HasCaught())
             {
                 node::FatalException(try_catch);
-            }    
+            }
         }
 
     private:
@@ -395,24 +363,24 @@ namespace qdb
         }
 
     public:
-        template <typename Params, typename F, typename Proc>
-        static void queue_work(const v8::FunctionCallbackInfo<v8::Value> & args, Params params, F f, Proc process)
+        template <typename Proc, typename F, typename... Params>
+        static void queue_work(const v8::FunctionCallbackInfo<v8::Value> & args, F f, Proc process, Params... p)
         {
              v8::TryCatch try_catch;
 
-             MethodMan call(args);    
+             MethodMan call(args);
 
-             uv_work_t * work = spawnRequest(call, params, f);
+             uv_work_t * work = spawnRequest(call, f, p...);
 
-             if (try_catch.HasCaught()) 
+             if (try_catch.HasCaught())
              {
                 node::FatalException(try_catch);
-             } 
+             }
 
              assert(work);
 
              uv_queue_work(uv_default_loop(),
-                work, 
+                work,
                 &Entity<Derivate>::callback_wrapper,
                 process);
 

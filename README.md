@@ -69,7 +69,7 @@ We also provide distributed sets:
 
 ## Tags
 
-[quasardb](https://www.quasardb.net/) is advanced key-value store with a powerful tagging feature. Tag enables you to find entries immediately by an arbitrary key.
+[quasardb](https://www.quasardb.net/) is advanced key-value store with a powerful tagging feature. Tags lookup are fast, scalable and reliable.
 
 Any entry can be tagged, including tags.
 
@@ -97,11 +97,41 @@ It is also possible to list the tags of an entry or test for the existence of a 
     b.getTags(function(err, tags) { /* tags is the list of tags */ });
 ```
 
+## Expiry
+
+Integers and blob can be configured to automatically expire. The expiry can be specified with an absolute value at the entry creation or update, or can
+later be set with expiresAt and expiresFromNow.
+
+The expiry is second precise.
+
+```javascript
+    var b = c.blob('bam');
+
+    // value will be removed at the specified time
+    b.put(new Buffer("boom"), new Date("October 1st, 2016 11:13:00"), function(err) { /* */  });
+
+    // value expires now!
+    b.expiresAt(new Date());
+
+    // entry will be removed in 20 seconds relative to the current time
+    b.expiresFromNow(20);
+```
+
+Everytime you update a value without providing an expiry, the expiry time is set to "infinite" (i.e. never expires).
+
+You can query the expiry time of an entry with getExpiry:
+
+```javascript
+    // returns a Date object
+    var expiry = b.getExpiry();
+```
+
+Tags, sets and queues do not expire (but can of course be manually removed).
+
 ## Not supported yet
 
-The nodejs is still a work in progress, the following quasardb features are not supported:
+The quasardb nodejs addon is still a work in progress, the following quasardb features are not supported:
 
  * Advanced atomic operations such as compare and swap and conditional removal
  * Batches and transactions
- * Expiry management
  * Queue size and random access to elements in the queue

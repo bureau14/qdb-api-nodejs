@@ -4,7 +4,23 @@
   "targets": [
     {
       "target_name": "qdb",
-      "sources": [ "src/qdb_api.cpp", "src/blob.cpp", "src/cluster.cpp", "src/hset.cpp", "src/integer.cpp", "src/queue.cpp", "src/tag.cpp" ],
+      "sources": [ 
+        "src/qdb_api.cpp", 
+        "src/entity.hpp", 
+        "src/expirable_entity.hpp", 
+        "src/blob.cpp", 
+        "src/blob.hpp",
+        "src/cluster.cpp", 
+        "src/cluster.hpp", 
+        "src/hset.cpp", 
+        "src/hset.hpp", 
+        "src/integer.cpp", 
+        "src/integer.hpp",
+        "src/queue.cpp", 
+        "src/queue.hpp", 
+        "src/tag.cpp",
+        "src/tag.hpp",
+        "src/utilities.hpp" ],
       "conditions": [ 
             [ "OS=='win'", { "copies": [ { 
                                             "destination" : "<(module_root_dir)/build/Release/",

@@ -6,7 +6,7 @@ describe('qdb', function()
 {
     it('connect', function()
     {
-        var qdb = require('../build/Release/qdb.node');
+        var qdb = require('../build/Debug/qdb.node');
 
         // make sure you have a quasardb daemon running, default port
         var c = new qdb.Cluster('qdb://127.0.0.1:2836');
@@ -225,6 +225,148 @@ describe('qdb', function()
                 });     
 
             }); // update/get/delete
+
+            // work on a different blob
+            b = c.blob('expiry_bam');
+
+            describe('expiry', function()
+            {
+                it('should update with an expiry in 2s without error', function(done)
+                {
+                    var test_exp = new Date();
+                    test_exp.setSeconds(test_exp.getSeconds() + 2);
+
+                    b.update(new Buffer('bam_content'), test_exp, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        done();
+                    }); 
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should expire after more than 2s', function(done)
+                {
+                    b.get(function(err, data)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(8);
+
+                        done();
+                    });
+                });
+
+                it('should put with an expiry in 2030', function(done)
+                {
+                    var test_exp = new Date(2030, 1, 1, 10, 50, 0, 0);
+
+                    b.put(new Buffer('bam_content'), test_exp, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        done();
+                    });
+
+                });
+
+                it('should return the exact supplied expiry', function(done)
+                {
+                    var test_exp = new Date(2030, 1, 1, 10, 50, 0, 0);
+
+                    b.getExpiry(function(err, entry_expiry)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
+
+                        done();
+                    });
+                });
+
+                it('should set the expiry to 2040', function(done)
+                {
+                    var test_exp = new Date(2040, 1, 1, 10, 50, 0, 0);
+
+                    b.expiresAt(test_exp, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        done();
+                    });
+
+                });
+
+                it('should return the new supplied expiry', function(done)
+                {
+                    var test_exp = new Date(2040, 1, 1, 10, 50, 0, 0);
+
+                    b.getExpiry(function(err, entry_expiry)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
+
+                        done();
+                    });
+                });
+
+                it('should expire in 2 seconds from now', function(done)
+                {
+                    b.expiresFromNow(2, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        done();
+                    });
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should expire after more than 3s', function(done)
+                {
+                    b.get(function(err, data)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(8);
+
+                        done();
+                    });
+                });
+
+            }); // expiry
 
         }); // blob
 
@@ -570,6 +712,148 @@ describe('qdb', function()
                 });
 
             }); // update/add/add/remove
+
+            // work on a different integer
+            i = c.integer('expiry_int');
+
+            describe('expiry', function()
+            {
+                it('should update with an expiry in 2s without error', function(done)
+                {
+                    var test_exp = new Date();
+                    test_exp.setSeconds(test_exp.getSeconds() + 2);
+
+                    i.update(10, test_exp, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        done();
+                    }); 
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should expire after more than 2s', function(done)
+                {
+                    i.get(function(err, data)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(8);
+
+                        done();
+                    });
+                });
+
+                it('should put with an expiry in 2030', function(done)
+                {
+                    var test_exp = new Date(2030, 1, 1, 10, 50, 0, 0);
+
+                    i.put(20, test_exp, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        done();
+                    });
+
+                });
+
+                it('should return the exact supplied expiry', function(done)
+                {
+                    var test_exp = new Date(2030, 1, 1, 10, 50, 0, 0);
+
+                    i.getExpiry(function(err, entry_expiry)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
+
+                        done();
+                    });
+                });
+
+                it('should set the expiry to 2040', function(done)
+                {
+                    var test_exp = new Date(2040, 1, 1, 10, 50, 0, 0);
+
+                    i.expiresAt(test_exp, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        done();
+                    });
+
+                });
+
+                it('should return the new supplied expiry', function(done)
+                {
+                    var test_exp = new Date(2040, 1, 1, 10, 50, 0, 0);
+
+                    i.getExpiry(function(err, entry_expiry)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
+
+                        done();
+                    });
+                });
+
+                it('should expire in 2 seconds from now', function(done)
+                {
+                    i.expiresFromNow(2, function(err)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+                        
+                        done();
+                    });
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should wait one second', function(done)
+                {
+                    setTimeout(done, 1000);
+                });
+
+                it('should expire after more than 3s', function(done)
+                {
+                    i.get(function(err, data)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(8);
+
+                        done();
+                    });
+                });
+
+            }); // expiry
 
         }); // integer
 

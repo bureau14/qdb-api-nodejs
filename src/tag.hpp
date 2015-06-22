@@ -40,8 +40,7 @@ namespace qdb
     public:
         static void getEntries(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            queue_work(args, 
-                eatNoParam,
+            queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_get_tagged(qdb_req->handle, 
