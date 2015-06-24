@@ -40,7 +40,7 @@ namespace qdb
     public:
         static void getEntries(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            queue_work(args,
+            Entity<Tag>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_get_tagged(qdb_req->handle, 
@@ -49,7 +49,7 @@ namespace qdb
                         &(qdb_req->output.content.buffer.size));
 
                 }, 
-                processArrayStringResult);
+                Entity<Tag>::processArrayStringResult);
         }
 
     private:

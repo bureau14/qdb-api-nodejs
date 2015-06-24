@@ -43,7 +43,7 @@ namespace qdb
         // put a new entry, with an optional expiry time
         static void put(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity::queue_work(args, 
+            ExpirableEntity<Integer>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_int_put(qdb_req->handle, 
@@ -51,7 +51,7 @@ namespace qdb
                         qdb_req->input.content.value, 
                         qdb_req->input.expiry);
                 }, 
-                ExpirableEntity::processVoidResult,
+                ExpirableEntity<Integer>::processVoidResult,
                 &ArgsEaterBinder::integer,
                 &ArgsEaterBinder::expiry);
         }
@@ -59,7 +59,7 @@ namespace qdb
         // put a new entry, with an optional expiry time
         static void update(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity::queue_work(args, 
+            ExpirableEntity<Integer>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_int_update(qdb_req->handle, 
@@ -67,7 +67,7 @@ namespace qdb
                         qdb_req->input.content.value, 
                         qdb_req->input.expiry);
                 }, 
-                ExpirableEntity::processVoidResult,
+                ExpirableEntity<Integer>::processVoidResult,
                 &ArgsEaterBinder::integer,
                 &ArgsEaterBinder::expiry);
         }
@@ -75,34 +75,34 @@ namespace qdb
         // return the alias content
         static void get(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity::queue_work(args, 
+            ExpirableEntity<Integer>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_int_get(qdb_req->handle, 
                         qdb_req->input.alias.c_str(), 
                         &(qdb_req->output.content.value));
                 }, 
-                ExpirableEntity::processIntegerResult,
+                ExpirableEntity<Integer>::processIntegerResult,
                 &ArgsEaterBinder::integer);
         }
 
         // remove the alias
         static void remove(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity::queue_work(args, 
+            ExpirableEntity<Integer>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_remove(qdb_req->handle, 
                         qdb_req->input.alias.c_str());
                 }, 
-                ExpirableEntity::processVoidResult,
+                ExpirableEntity<Integer>::processVoidResult,
                 &ArgsEaterBinder::integer);
         }
 
         // add
         static void add(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity::queue_work(args, 
+            ExpirableEntity<Integer>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_int_add(qdb_req->handle, 
@@ -110,7 +110,7 @@ namespace qdb
                         qdb_req->input.content.value, 
                         &(qdb_req->output.content.value));
                 }, 
-                ExpirableEntity::processIntegerResult,
+                ExpirableEntity<Integer>::processIntegerResult,
                 &ArgsEaterBinder::integer);
         }
 

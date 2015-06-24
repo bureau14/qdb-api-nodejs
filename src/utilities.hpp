@@ -173,7 +173,7 @@ namespace detail
                 return std::make_pair(T(), false);
             }
 
-            return std::make_pair(acc(i), true);            
+            return std::make_pair((this->*acc)(i), true);
         }
 
     public:
@@ -187,7 +187,7 @@ namespace detail
         {
             return checkArg<v8::Local<v8::Object>>(i, 
                 [](v8::Local<v8::Value> v) -> bool { return !v->IsFunction() && v->IsObject(); }, 
-                std::bind(&MethodMan::argObject, this, std::placeholders::_1));
+                &MethodMan::argObject);
         }
 
         v8::Local<v8::Function> argCallback(int i) const
@@ -199,7 +199,7 @@ namespace detail
         {
             return checkArg<v8::Local<v8::Function>>(i, 
                 [](v8::Local<v8::Value> v) -> bool { return v->IsFunction(); }, 
-                std::bind(&MethodMan::argCallback, this, std::placeholders::_1));
+                &MethodMan::argCallback);
         }
 
         v8::Local<v8::String> argString(int i) const
@@ -211,7 +211,7 @@ namespace detail
         {
             return checkArg<v8::Local<v8::String>>(i, 
                 [](v8::Local<v8::Value> v) -> bool { return v->IsString(); }, 
-                std::bind(&MethodMan::argString, this, std::placeholders::_1));
+                &MethodMan::argString);
         }
 
         double argNumber(int i) const
@@ -223,7 +223,7 @@ namespace detail
         {
             return checkArg<double>(i, 
                 [](v8::Local<v8::Value> v) -> bool { return v->IsNumber(); }, 
-                std::bind(&MethodMan::argNumber, this, std::placeholders::_1));
+                &MethodMan::argNumber);
         }
 
         v8::Local<v8::Date> argDate(int i) const
@@ -235,7 +235,7 @@ namespace detail
         {            
             return checkArg<v8::Local<v8::Date>>(i, 
                 [](v8::Local<v8::Value> v) -> bool { return v->IsDate(); }, 
-                std::bind(&MethodMan::argDate, this, std::placeholders::_1));
+                &MethodMan::argDate);
         }
 
         const v8::FunctionCallbackInfo<v8::Value> & args(void) const

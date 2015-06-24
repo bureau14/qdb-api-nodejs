@@ -35,40 +35,40 @@ namespace qdb
     public:
         static void expiresAt(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args,
+            Entity<Derivate>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_expires_at(qdb_req->handle,
                         qdb_req->input.alias.c_str(),
                         qdb_req->input.expiry);
                 },
-                Entity::processVoidResult,
+                Entity<Derivate>::processVoidResult,
                 &ArgsEaterBinder::expiry);
         }
 
         static void expiresFromNow(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args,
+            Entity<Derivate>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_expires_from_now(qdb_req->handle,
                         qdb_req->input.alias.c_str(),
                         static_cast<qdb_int>(qdb_req->input.content.value));
                 },
-                Entity::processVoidResult,
+                Entity<Derivate>::processVoidResult,
                 &ArgsEaterBinder::integer);
         }
 
         static void getExpiry(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args,
+            Entity<Derivate>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_get_expiry_time(qdb_req->handle,
                         qdb_req->input.alias.c_str(),
                         &(qdb_req->output.content.date));
                 },
-                Entity::processDateResult,
+                Entity<Derivate>::processDateResult,
                 &ArgsEaterBinder::integer);
         }
 

@@ -38,58 +38,36 @@ namespace qdb
         }
 
     public:
-        template <typename F>
-        static uv_work_t * spawnRequest(const MethodMan & call, F f)
-        {
-            Set * pthis = call.nativeHolder<Set>();
-            assert(pthis);
-
-            // first position must be the object to process
-            ArgsEater eater(call);
-
-            auto buf = eater.eatObject();
-
-            auto callback = eater.eatCallback();
-            if (!callback.second)
-            {
-                call.throwException("callback expected");
-                return nullptr;             
-            }
-
-            return pthis->MakeWorkItem(callback.first, buf, 0u, f);
-        }
-
-    public:
         static void insert(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, 
+            Entity<Set>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_hset_insert(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
                 }, 
-                Entity::processVoidResult,
+                Entity<Set>::processVoidResult,
                 &ArgsEaterBinder::buffer);
         }
 
         static void erase(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, 
+            Entity<Set>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_hset_erase(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
                 }, 
-                Entity::processVoidResult,
+                Entity<Set>::processVoidResult,
                 &ArgsEaterBinder::buffer);
         }
 
         static void contains(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, 
+            Entity<Set>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_hset_contains(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
                 }, 
-                Entity::processVoidResult,
+                Entity<Set>::processVoidResult,
                 &ArgsEaterBinder::buffer);
         }
 

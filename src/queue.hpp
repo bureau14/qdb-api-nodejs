@@ -41,72 +41,69 @@ namespace qdb
         }
 
     public:
-
-
-    public:
         static void pushFront(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args,
+            Entity<Queue>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_queue_push_front(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
                 }, 
-                Entity::processVoidResult,
+                Entity<Queue>::processVoidResult,
                 &ArgsEaterBinder::buffer);
         }
 
         static void pushBack(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, 
+            Entity<Queue>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_queue_push_back(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
                 }, 
-                Entity::processVoidResult,
+                Entity<Queue>::processVoidResult,
                 &ArgsEaterBinder::buffer);
         }
 
         static void popFront(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, 
+            Entity<Queue>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_queue_pop_front(qdb_req->handle, qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
                 }, 
-                Entity::processBufferResult,
+                Entity<Queue>::processBufferResult,
                 &ArgsEaterBinder::buffer);
         }
 
         static void popBack(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, 
+            Entity<Queue>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_queue_pop_back(qdb_req->handle, qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
                 }, 
-                Entity::processBufferResult,
+                Entity<Queue>::processBufferResult,
                 &ArgsEaterBinder::buffer);
         }
 
         static void front(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, 
+            Entity<Queue>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_queue_front(qdb_req->handle, qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
                 }, 
-                Entity::processBufferResult,
+                Entity<Queue>::processBufferResult,
                 &ArgsEaterBinder::buffer);
         }
 
         static void back(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            Entity::queue_work(args, 
+            Entity<Queue>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_queue_back(qdb_req->handle, qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
                 }, 
-                Entity::processBufferResult,
+                Entity<Queue>::processBufferResult,
                 &ArgsEaterBinder::buffer);
         }
 

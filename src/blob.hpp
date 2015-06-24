@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
 
 #include <node.h>
@@ -43,7 +42,7 @@ namespace qdb
         // put a new entry, with an optional expiry time
         static void put(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity::queue_work(args, 
+            ExpirableEntity<Blob>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_put(qdb_req->handle, 
@@ -52,7 +51,7 @@ namespace qdb
                         qdb_req->input.content.buffer.size, 
                         qdb_req->input.expiry);
                 }, 
-                Entity::processVoidResult,
+                ExpirableEntity<Blob>::processVoidResult,
                 &ArgsEaterBinder::buffer,
                 &ArgsEaterBinder::expiry);
         }
@@ -60,7 +59,7 @@ namespace qdb
         // put a new entry, with an optional expiry time
         static void update(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity::queue_work(args, 
+            ExpirableEntity<Blob>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_update(qdb_req->handle, 
@@ -69,7 +68,7 @@ namespace qdb
                         qdb_req->input.content.buffer.size, 
                         qdb_req->input.expiry);
                 }, 
-                Entity::processVoidResult,
+                ExpirableEntity<Blob>::processVoidResult,
                 &ArgsEaterBinder::buffer,
                 &ArgsEaterBinder::expiry);
         }
@@ -77,7 +76,7 @@ namespace qdb
         // return the alias content
         static void get(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity::queue_work(args, 
+            ExpirableEntity<Blob>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_get(qdb_req->handle, 
@@ -85,7 +84,7 @@ namespace qdb
                         &(qdb_req->output.content.buffer.begin), 
                         &(qdb_req->output.content.buffer.size));
                 }, 
-                Entity::processBufferResult,
+                ExpirableEntity<Blob>::processBufferResult,
                 &ArgsEaterBinder::buffer);
         }
 

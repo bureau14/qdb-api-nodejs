@@ -76,7 +76,7 @@ namespace qdb
         template <typename F, typename... Params>
         static uv_work_t * spawnRequest(const MethodMan & call, F f, Params... p)
         {
-            Blob * pthis = call.nativeHolder<Blob>();
+            Derivate * pthis = call.nativeHolder<Derivate>();
             assert(pthis);
 
             qdb_request * qdb_req = new qdb_request(pthis->qdb_handle(), f, pthis->native_alias());
