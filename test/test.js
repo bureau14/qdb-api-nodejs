@@ -1,20 +1,36 @@
 // test.js
-
+var spawn = require('child_process').spawn;
+var execSync = require('child_process').execSync;
+var qdb = require('../build/Release/qdb.node');
 var test = require('unit.js');
+
+var qdbd = null;
+
+before('run quasardb daemon', function(done)
+{
+    this.timeout(5000);
+    qdbd = spawn('./deps/qdb/bin/qdbd', ['--transient','--address=127.0.0.1:3030']);
+    setTimeout(done, 2000);
+});
+
+after('terminate quasardb daemon', function(done)
+{
+    this.timeout(10000);
+    qdbd.kill('SIGTERM');
+    qdbd.on('exit', function(code)
+    {
+        done();
+    });
+});
 
 describe('qdb', function()
 {
-    it('connect', function()
+    it('test suite', function()
     {
-        var qdb = require('../build/Debug/qdb.node');
-
-        // make sure you have a quasardb daemon running, default port
-        var c = new qdb.Cluster('qdb://127.0.0.1:2836');
-
-        test.object(c).isInstanceOf(qdb.Cluster);
-
         describe('blob', function()
         {
+            var c = new qdb.Cluster('qdb://127.0.0.1:3030');
+            test.object(c).isInstanceOf(qdb.Cluster);
             var b = c.blob('bam');
             var tagName = 'myTag';
 
@@ -245,19 +261,10 @@ describe('qdb', function()
                     }); 
                 });
 
-                it('should wait one second', function(done)
+                it('should wait three seconds', function(done)
                 {
-                    setTimeout(done, 1000);
-                });
-
-                it('should wait one second', function(done)
-                {
-                    setTimeout(done, 1000);
-                });
-
-                it('should wait one second', function(done)
-                {
-                    setTimeout(done, 1000);
+                    this.timeout(5000);
+                    setTimeout(done, 3000);
                 });
 
                 it('should expire after more than 2s', function(done)
@@ -340,19 +347,10 @@ describe('qdb', function()
                     });
                 });
 
-                it('should wait one second', function(done)
+                it('should wait three seconds', function(done)
                 {
-                    setTimeout(done, 1000);
-                });
-
-                it('should wait one second', function(done)
-                {
-                    setTimeout(done, 1000);
-                });
-
-                it('should wait one second', function(done)
-                {
-                    setTimeout(done, 1000);
+                    this.timeout(5000);
+                    setTimeout(done, 3000);
                 });
 
                 it('should expire after more than 3s', function(done)
@@ -373,7 +371,8 @@ describe('qdb', function()
         describe('tag', function()
         {
             var dasTag = 'u96';
-
+            var c = new qdb.Cluster('qdb://127.0.0.1:3030');
+            test.object(c).isInstanceOf(qdb.Cluster);
             var t = c.tag(dasTag);
 
             test.object(t).isInstanceOf(qdb.Tag);
@@ -615,6 +614,8 @@ describe('qdb', function()
 
         describe('integer', function()
         {
+            var c = new qdb.Cluster('qdb://127.0.0.1:3030');
+            test.object(c).isInstanceOf(qdb.Cluster);
             var i = c.integer('int_test');
 
             test.object(i).isInstanceOf(qdb.Integer);
@@ -732,19 +733,10 @@ describe('qdb', function()
                     }); 
                 });
 
-                it('should wait one second', function(done)
+                it('should wait three seconds', function(done)
                 {
-                    setTimeout(done, 1000);
-                });
-
-                it('should wait one second', function(done)
-                {
-                    setTimeout(done, 1000);
-                });
-
-                it('should wait one second', function(done)
-                {
-                    setTimeout(done, 1000);
+                    this.timeout(5000);                    
+                    setTimeout(done, 3000);
                 });
 
                 it('should expire after more than 2s', function(done)
@@ -827,19 +819,10 @@ describe('qdb', function()
                     });
                 });
 
-                it('should wait one second', function(done)
+                it('should wait three seconds', function(done)
                 {
-                    setTimeout(done, 1000);
-                });
-
-                it('should wait one second', function(done)
-                {
-                    setTimeout(done, 1000);
-                });
-
-                it('should wait one second', function(done)
-                {
-                    setTimeout(done, 1000);
+                    this.timeout(5000);
+                    setTimeout(done, 3000);
                 });
 
                 it('should expire after more than 3s', function(done)
@@ -859,6 +842,8 @@ describe('qdb', function()
 
         describe('queue', function()
         {
+            var c = new qdb.Cluster('qdb://127.0.0.1:3030');
+            test.object(c).isInstanceOf(qdb.Cluster);
             // some back push/pop
             // note that at every moment you can have back() and front() (these functions do not pop)
             var q = c.queue('q1');
@@ -977,6 +962,8 @@ describe('qdb', function()
 
         describe('set', function()
         {
+            var c = new qdb.Cluster('qdb://127.0.0.1:3030');
+            test.object(c).isInstanceOf(qdb.Cluster);
             // some back push/pop
             // note that at every moment you can have back() and front() (these functions do not pop)
             var s = c.set('s1');
@@ -1058,6 +1045,7 @@ describe('qdb', function()
         }); // set
 
     }); // connect
+
 }); // qdb
     
 

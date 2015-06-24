@@ -31,7 +31,7 @@
                               "link_settings": { "libraries": [ "<(module_root_dir)/deps/qdb/lib/qdb_api.lib" ] } }, 
                             { "include_dirs": [ "/usr/local/include", "<(module_root_dir)/deps/qdb/include" ], 
                               "libraries": [ "-L/usr/local/lib", "-L<(module_root_dir)/deps/qdb/lib", "-lqdb_api"],
-                               "cflags": [ "-std=c++11" ] } ]
+                               "cflags": [ "-std=c++11", "-Wno-strict-aliasing" ] } ]
         ]
     }
   ]

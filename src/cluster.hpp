@@ -51,28 +51,33 @@ namespace qdb
     private:
         static void New(const v8::FunctionCallbackInfo<v8::Value>& args)
         {
-            v8::Isolate* isolate = v8::Isolate::GetCurrent();
-            v8::HandleScope scope(isolate);
-
             if (args.IsConstructCall()) 
             {
+                MethodMan call(args);
 
                 if (args.Length() != 1) 
                 {
-                    isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "Wrong number of arguments")));
+                    call.throwException("Wrong number of arguments");
                     return;
                 }
-                
-                v8::String::Utf8Value uri(args[0]->ToString());
+
+                auto str = call.checkedArgString(0);
+                if (!str.second)
+                {
+                    call.throwException("Expected a connection string as an argument");
+                    return;
+                }
+
+                v8::String::Utf8Value utf8str(str.first);
 
                 // create and open handle
                 qdb_handle_t h = qdb_open_tcp();
-                const qdb_error_t err = qdb_connect(h, *uri);
+                const qdb_error_t err = qdb_connect(h, *utf8str);
                 if (err != qdb_e_ok)
                 {
-                    std::string err_str = qdb::make_error_string(err);
-                    isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, err_str.c_str())));
-                    return;
+                    qdb_close(h);
+                    call.throwException(qdb_error(err));;
+                    return;    
                 }
 
                 // handle is now owned by the cluster object
@@ -83,6 +88,7 @@ namespace qdb
             } 
             else 
             {
+                v8::Isolate* isolate = v8::Isolate::GetCurrent();
                 // Invoked as plain function `MyObject(...)`, turn into construct call.
                 const int argc = 1;
                 v8::Local<v8::Value> argv[argc] = { args[0] };
@@ -95,36 +101,45 @@ namespace qdb
         template <typename Object>
         static void newObject(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            v8::Isolate* isolate = v8::Isolate::GetCurrent();
-            v8::HandleScope scope(isolate);
-
             if (args.IsConstructCall()) 
             {
+                MethodMan call(args);
+
                 if (args.Length() != 2) 
                 {
-                    isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "Wrong number of arguments")));
-                    return;
-                }
-        
-                // the first parameter is a Cluster object, let's unwrap it to get access to the underlying handle
-                if (!args[0]->IsObject())
-                {
-                    isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "Invalid parameter supplied to object")));
+                    call.throwException("Wrong number of arguments");
                     return;
                 }
 
-                v8::String::Utf8Value alias(args[1]->ToString());
+                // the first parameter is a Cluster object, let's unwrap it to get access to the underlying handle
+                auto obj = call.checkedArgObject(0);
+
+                if (!obj.second)
+                {
+                    call.throwException("Invalid parameter supplied to object");
+                    return;
+                } 
+
+                auto str = call.checkedArgString(1);
+                if (!str.second)
+                {
+                    call.throwException("Expected a string as an argument");
+                    return;
+                }
+
+                v8::String::Utf8Value utf8str(str.first);
 
                 // get access to the underlying handle
-                Cluster * c = ObjectWrap::Unwrap<Cluster>(args[0]->ToObject());
+                Cluster * c = ObjectWrap::Unwrap<Cluster>(obj.first);
 
-                Object * b = new Object(*c, *alias);
+                Object * b = new Object(*c, *utf8str);
 
                 b->Wrap(args.This());
                 args.GetReturnValue().Set(args.This());
             } 
             else 
             {
+                v8::Isolate* isolate = v8::Isolate::GetCurrent();
                 // Invoked as plain function `MyObject(...)`, turn into construct call.
                 const int argc = 2;
                 v8::Local<v8::Value> argv[argc] = { args[0], args[1] };

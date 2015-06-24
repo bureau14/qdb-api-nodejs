@@ -20,5 +20,5 @@
     "mocha": "*",
     "unit.js": "*"
   },
-  "license": "BSD"
+  "license": "BSD-2-Clause"
 }
