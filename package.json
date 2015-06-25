@@ -1,5 +1,9 @@
 {
   "author": "quasardb",
+  "homepage": "https://www.quasardb.net",
+  "bugs": {
+    "url": "https://quasardb.zendesk.com"
+  },
   "name": "qdb",
   "description": "Official quasardb nodejs library",
   "keywords": [
@@ -8,10 +12,11 @@
     "database",
     "store"
   ],
+  "main": "build/Release/qdb.node",
   "version": "2.0.0beta3",
   "repository": {
     "type": "git",
-    "url": "git://github.com/bureau14/qdb-api-nodejs"
+    "url": "https://github.com/bureau14/qdb-api-nodejs"
   },
   "scripts": {
     "test": "mocha"
