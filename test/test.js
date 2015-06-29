@@ -42,6 +42,21 @@ describe('qdb', function()
 
             describe('update/get/delete/put/get/delete', function()
             {
+
+                it('should say entry not found and get an empty tag list', function(done)
+                {
+                    b.getTags(function(err, tags)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(8);
+
+                        tags.must.have.length(0);
+
+                        done();
+                    });
+
+                });
+
                 it('should update without error', function(done)
                 {
                     b.update(new Buffer('bam_content'), function(err)

@@ -259,6 +259,11 @@ namespace qdb
                 // safe to call even on null/invalid buffers
                 qdb_free_results(qdb_req->handle, entries, entries_count);
             }
+            else
+            {
+                // provide an empty array 
+                array = v8::Array::New(isolate, 0);
+            }
 
             const unsigned argc = 2;
             v8::Handle<v8::Value> argv[argc] = { error_code, array };
