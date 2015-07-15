@@ -7,6 +7,7 @@
 #include <node.h>
 
 #include <qdb/client.h>
+#include <qdb/integer.h>
 
 namespace qdb
 {
