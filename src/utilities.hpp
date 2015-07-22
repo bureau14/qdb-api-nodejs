@@ -96,12 +96,21 @@ namespace detail
             qdb_error_t error;      
         };
 
-        explicit qdb_request (qdb_error_t err) : handle(nullptr), output(err) {}
+        explicit qdb_request (qdb_error_t err) : _handle(nullptr), output(err) {}
 
-        qdb_request(qdb_handle_t h, std::function<void (qdb_request *)> exec, std::string a) : handle(h), input(a), _execute(exec) {}
+        qdb_request(std::shared_ptr<qdb_handle_t> h, std::function<void (qdb_request *)> exec, std::string a) : _handle(h), input(a), _execute(exec) {}
 
-        qdb_handle_t handle;
+    private:
+        // make sure the handle is alive for the duration of the request
+        std::shared_ptr<qdb_handle_t> _handle;
 
+    public:
+        qdb_handle_t handle(void) const
+        {
+            return _handle ? *_handle : static_cast<qdb_handle_t>(0);
+        }
+
+    public:
         v8::Persistent<v8::Function> callback;
 
         v8::Local<v8::Function> callbackAsLocal(void)
@@ -130,7 +139,6 @@ namespace detail
 
         // prevent copy
         qdb_request(const qdb_request &) {}
-
     };
     
     struct MethodMan

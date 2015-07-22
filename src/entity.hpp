@@ -29,7 +29,7 @@ namespace qdb
         // if an entry is expirable, we will register the expiry management functions
         // this simplifies organization here
         // in other APIs generally we have an ExpirableEntry that inherits from Entity
-        Entity(qdb_handle_t h, const char * alias) : _handle(h), _alias(new std::string(alias)) {}
+        Entity(std::shared_ptr<qdb_handle_t> h, const char * alias) : _handle(h), _alias(new std::string(alias)) {}
         virtual ~Entity(void)
         {
             _handle = nullptr;
@@ -54,14 +54,14 @@ namespace qdb
             queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_remove(qdb_req->handle, qdb_req->input.alias.c_str());
+                    qdb_req->output.error = qdb_remove(qdb_req->handle(), qdb_req->input.alias.c_str());
                 },
                 processVoidResult,
                 &ArgsEaterBinder::none);
         }
 
     public:
-        qdb_handle_t qdb_handle(void) const
+        std::shared_ptr<qdb_handle_t> qdb_handle(void) const
         {
             return _handle;
         }
@@ -108,7 +108,7 @@ namespace qdb
             queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_add_tag(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+                    qdb_req->output.error = qdb_add_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
                 },
                 processVoidResult,
                 &ArgsEaterBinder::string);
@@ -119,7 +119,7 @@ namespace qdb
             queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_remove_tag(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+                    qdb_req->output.error = qdb_remove_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
                 },
                 processVoidResult,
                 &ArgsEaterBinder::string);
@@ -130,7 +130,7 @@ namespace qdb
             queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_has_tag(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+                    qdb_req->output.error = qdb_has_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
                 },
                 processVoidResult,
                 &ArgsEaterBinder::string);
@@ -141,7 +141,7 @@ namespace qdb
             queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_get_tags(qdb_req->handle,
+                    qdb_req->output.error = qdb_get_tags(qdb_req->handle(),
                         qdb_req->input.alias.c_str(),
                         reinterpret_cast<const char ***>(const_cast<char **>(&(qdb_req->output.content.buffer.begin))),
                         &(qdb_req->output.content.buffer.size));
@@ -230,7 +230,7 @@ namespace qdb
                 node::Buffer::New(isolate, qdb_req->output.content.buffer.begin, qdb_req->output.content.buffer.size) : node::Buffer::New(isolate, 0);
 
             // safe to call even on null/invalid buffers
-            qdb_free_buffer(qdb_req->handle, qdb_req->output.content.buffer.begin);
+            qdb_free_buffer(qdb_req->handle(), qdb_req->output.content.buffer.begin);
 
             static const unsigned int argc = 2;
             v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
@@ -271,7 +271,7 @@ namespace qdb
                 }
 
                 // safe to call even on null/invalid buffers
-                qdb_free_results(qdb_req->handle, entries, entries_count);
+                qdb_free_results(qdb_req->handle(), entries, entries_count);
             }
             else
             {
@@ -371,7 +371,7 @@ namespace qdb
         }
 
     private:
-        qdb_handle_t _handle;
+        std::shared_ptr<qdb_handle_t> _handle;
         std::unique_ptr<std::string> _alias;
 
     };

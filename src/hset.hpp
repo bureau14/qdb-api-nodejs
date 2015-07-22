@@ -23,7 +23,7 @@ namespace qdb
         friend class Cluster;
 
     private:
-        Set(qdb_handle_t h, const char * alias) : Entity<Set>(h, alias) {}
+        Set(std::shared_ptr<qdb_handle_t> h, const char * alias) : Entity<Set>(h, alias) {}
         virtual ~Set(void) {}
 
     public:
@@ -43,7 +43,7 @@ namespace qdb
             Entity<Set>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_hset_insert(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                    qdb_req->output.error = qdb_hset_insert(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
                 }, 
                 Entity<Set>::processVoidResult,
                 &ArgsEaterBinder::buffer);
@@ -54,7 +54,7 @@ namespace qdb
             Entity<Set>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_hset_erase(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                    qdb_req->output.error = qdb_hset_erase(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
                 }, 
                 Entity<Set>::processVoidResult,
                 &ArgsEaterBinder::buffer);
@@ -65,7 +65,7 @@ namespace qdb
             Entity<Set>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_hset_contains(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                    qdb_req->output.error = qdb_hset_contains(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
                 }, 
                 Entity<Set>::processVoidResult,
                 &ArgsEaterBinder::buffer);

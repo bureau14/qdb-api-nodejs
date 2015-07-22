@@ -23,7 +23,7 @@ namespace qdb
         friend class Cluster;
 
     private:
-        Integer(qdb_handle_t h, const char * alias) : ExpirableEntity<Integer>(h, alias) {}
+        Integer(std::shared_ptr<qdb_handle_t> h, const char * alias) : ExpirableEntity<Integer>(h, alias) {}
         virtual ~Integer(void) {}
 
     public:
@@ -46,7 +46,7 @@ namespace qdb
             ExpirableEntity<Integer>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_int_put(qdb_req->handle, 
+                    qdb_req->output.error = qdb_int_put(qdb_req->handle(), 
                         qdb_req->input.alias.c_str(), 
                         qdb_req->input.content.value, 
                         qdb_req->input.expiry);
@@ -62,7 +62,7 @@ namespace qdb
             ExpirableEntity<Integer>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_int_update(qdb_req->handle, 
+                    qdb_req->output.error = qdb_int_update(qdb_req->handle(), 
                         qdb_req->input.alias.c_str(), 
                         qdb_req->input.content.value, 
                         qdb_req->input.expiry);
@@ -78,7 +78,7 @@ namespace qdb
             ExpirableEntity<Integer>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_int_get(qdb_req->handle, 
+                    qdb_req->output.error = qdb_int_get(qdb_req->handle(), 
                         qdb_req->input.alias.c_str(), 
                         &(qdb_req->output.content.value));
                 }, 
@@ -92,7 +92,7 @@ namespace qdb
             ExpirableEntity<Integer>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_remove(qdb_req->handle, 
+                    qdb_req->output.error = qdb_remove(qdb_req->handle(), 
                         qdb_req->input.alias.c_str());
                 }, 
                 ExpirableEntity<Integer>::processVoidResult,
@@ -105,7 +105,7 @@ namespace qdb
             ExpirableEntity<Integer>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_int_add(qdb_req->handle, 
+                    qdb_req->output.error = qdb_int_add(qdb_req->handle(), 
                         qdb_req->input.alias.c_str(), 
                         qdb_req->input.content.value, 
                         &(qdb_req->output.content.value));
