@@ -124,11 +124,11 @@ namespace detail
 
         query input;
         result output;
-
-    // prevent copy
+    
     private:
         std::function<void (qdb_request *)> _execute;
 
+        // prevent copy
         qdb_request(const qdb_request &) {}
 
     };

@@ -191,26 +191,13 @@ namespace qdb
             args.GetReturnValue().Set(instance);
         }
 
-    public:
-        static void processBufferResult(uv_work_t * req, int status)
+    private:
+        static void processCallAndCleanUp(v8::Isolate * isolate, 
+            v8::TryCatch & try_catch, 
+            qdb_request * qdb_req, 
+            unsigned int argc,
+            v8::Handle<v8::Value> argv[])
         {
-            v8::Isolate * isolate = v8::Isolate::GetCurrent();
-
-            v8::TryCatch try_catch;
-
-            qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
-            assert(qdb_req);
-
-            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
-            auto result_data = ((qdb_req->output.error == qdb_e_ok) && (qdb_req->output.content.buffer.size > 0u)) ?
-                node::Buffer::New(isolate, qdb_req->output.content.buffer.begin, qdb_req->output.content.buffer.size) : node::Buffer::New(isolate, 0);
-
-            // safe to call even on null/invalid buffers
-            qdb_free_buffer(qdb_req->handle, qdb_req->output.content.buffer.begin);
-
-            const unsigned argc = 2;
-            v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
-
             auto cb = qdb_req->callbackAsLocal();
 
             cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
@@ -223,10 +210,37 @@ namespace qdb
             }
         }
 
+        static auto processErrorCode(v8::Isolate * isolate, int status, const qdb_request * req) -> decltype(v8::Int32::New(isolate, 0))
+        {
+            return (status < 0) ? v8::Int32::New(isolate, qdb_e_internal) : v8::Int32::New(isolate, static_cast<int32_t>(req->output.error));
+        }
+
+    public:
+        static void processBufferResult(uv_work_t * req, int status)
+        {
+            v8::Isolate * isolate = v8::Isolate::GetCurrent();
+
+            v8::TryCatch try_catch;
+
+            qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
+            assert(qdb_req);
+
+            const auto error_code = processErrorCode(isolate, status, qdb_req);
+            const auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok) && (qdb_req->output.content.buffer.size > 0u)) ?
+                node::Buffer::New(isolate, qdb_req->output.content.buffer.begin, qdb_req->output.content.buffer.size) : node::Buffer::New(isolate, 0);
+
+            // safe to call even on null/invalid buffers
+            qdb_free_buffer(qdb_req->handle, qdb_req->output.content.buffer.begin);
+
+            static const unsigned int argc = 2;
+            v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
+
+            processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
+        }
+
         static void processArrayStringResult(uv_work_t * req, int status)
         {
             // build an array out of the buffer
-
             v8::Isolate * isolate = v8::Isolate::GetCurrent();
 
             v8::Handle<v8::Array> array;
@@ -236,8 +250,8 @@ namespace qdb
             qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
             assert(qdb_req);
 
-            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
-            if (qdb_req->output.error == qdb_e_ok)
+            auto error_code = processErrorCode(isolate, status, qdb_req);
+            if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
             {
                 const char ** entries = reinterpret_cast<const char **>(const_cast<char *>(qdb_req->output.content.buffer.begin));
                 const size_t entries_count = qdb_req->output.content.buffer.size;
@@ -265,20 +279,10 @@ namespace qdb
                 array = v8::Array::New(isolate, 0);
             }
 
-            const unsigned argc = 2;
+            static const unsigned int argc = 2;
             v8::Handle<v8::Value> argv[argc] = { error_code, array };
 
-            auto cb = qdb_req->callbackAsLocal();
-
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-
-            delete qdb_req;
-
-            if (try_catch.HasCaught())
-            {
-                node::FatalException(try_catch);
-            }
-
+            processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
         }
 
         static void processIntegerResult(uv_work_t * req, int status)
@@ -290,22 +294,14 @@ namespace qdb
             qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
             assert(qdb_req);
 
-            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
-            auto result_data = (qdb_req->output.error == qdb_e_ok) ? v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.value)) : v8::Number::New(isolate, 0.0);
+            const auto error_code = processErrorCode(isolate, status, qdb_req);
+            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok)) ? 
+                v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.value)) : v8::Number::New(isolate, 0.0);
 
-            const unsigned argc = 2;
+            static const unsigned int argc = 2;
             v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
 
-            auto cb = qdb_req->callbackAsLocal();
-
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-
-            delete qdb_req;
-
-            if (try_catch.HasCaught())
-            {
-                node::FatalException(try_catch);
-            }
+            processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
         }
 
         static void processDateResult(uv_work_t * req, int status)
@@ -317,22 +313,14 @@ namespace qdb
             qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
             assert(qdb_req);
 
-            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
-            auto result_data = (qdb_req->output.error == qdb_e_ok) ? v8::Date::New(isolate, static_cast<double>(qdb_req->output.content.value) * 1000.0) : v8::Date::New(isolate, 0.0);
+            const auto error_code = processErrorCode(isolate, status, qdb_req);
+            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok)) ? 
+                v8::Date::New(isolate, static_cast<double>(qdb_req->output.content.value) * 1000.0) : v8::Date::New(isolate, 0.0);
 
-            const unsigned argc = 2;
+            static const unsigned int argc = 2;
             v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
 
-            auto cb = qdb_req->callbackAsLocal();
-
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-
-            delete qdb_req;
-
-            if (try_catch.HasCaught())
-            {
-                node::FatalException(try_catch);
-            }
+            processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
         }
 
         static void processVoidResult(uv_work_t * req, int status)
@@ -344,21 +332,10 @@ namespace qdb
             qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
             assert(qdb_req);
 
-            auto error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_req->output.error));
+            static const unsigned int argc = 1;
+            v8::Handle<v8::Value> argv[argc] = { processErrorCode(isolate, status, qdb_req) };
 
-            const unsigned argc = 1;
-            v8::Handle<v8::Value> argv[argc] = { error_code };
-
-            auto cb = qdb_req->callbackAsLocal();
-
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-
-            delete qdb_req;
-
-            if (try_catch.HasCaught())
-            {
-                node::FatalException(try_catch);
-            }
+            processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
         }
 
     private:
