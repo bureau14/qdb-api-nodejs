@@ -23,7 +23,7 @@ namespace qdb
         friend class Cluster;
 
     private:
-        Queue(qdb_handle_t h, const char * alias) : Entity<Queue>(h, alias) {}
+        Queue(std::shared_ptr<qdb_handle_t> h, const char * alias) : Entity<Queue>(h, alias) {}
         virtual ~Queue(void) {}
 
     public:
@@ -46,7 +46,7 @@ namespace qdb
             Entity<Queue>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_queue_push_front(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                    qdb_req->output.error = qdb_queue_push_front(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
                 }, 
                 Entity<Queue>::processVoidResult,
                 &ArgsEaterBinder::buffer);
@@ -57,7 +57,7 @@ namespace qdb
             Entity<Queue>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_queue_push_back(qdb_req->handle, qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
+                    qdb_req->output.error = qdb_queue_push_back(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.buffer.begin, qdb_req->input.content.buffer.size);
                 }, 
                 Entity<Queue>::processVoidResult,
                 &ArgsEaterBinder::buffer);
@@ -68,7 +68,7 @@ namespace qdb
             Entity<Queue>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_queue_pop_front(qdb_req->handle, qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
+                    qdb_req->output.error = qdb_queue_pop_front(qdb_req->handle(), qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
                 }, 
                 Entity<Queue>::processBufferResult,
                 &ArgsEaterBinder::buffer);
@@ -79,7 +79,7 @@ namespace qdb
             Entity<Queue>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_queue_pop_back(qdb_req->handle, qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
+                    qdb_req->output.error = qdb_queue_pop_back(qdb_req->handle(), qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
                 }, 
                 Entity<Queue>::processBufferResult,
                 &ArgsEaterBinder::buffer);
@@ -90,7 +90,7 @@ namespace qdb
             Entity<Queue>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_queue_front(qdb_req->handle, qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
+                    qdb_req->output.error = qdb_queue_front(qdb_req->handle(), qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
                 }, 
                 Entity<Queue>::processBufferResult,
                 &ArgsEaterBinder::buffer);
@@ -101,7 +101,7 @@ namespace qdb
             Entity<Queue>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_queue_back(qdb_req->handle, qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
+                    qdb_req->output.error = qdb_queue_back(qdb_req->handle(), qdb_req->input.alias.c_str(), &(qdb_req->output.content.buffer.begin), &(qdb_req->output.content.buffer.size));
                 }, 
                 Entity<Queue>::processBufferResult,
                 &ArgsEaterBinder::buffer);

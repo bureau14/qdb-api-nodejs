@@ -24,7 +24,7 @@ namespace qdb
         friend class Cluster;
 
     private:
-        Blob(qdb_handle_t h, const char * alias) : ExpirableEntity<Blob>(h, alias) {}
+        Blob(std::shared_ptr<qdb_handle_t> h, const char * alias) : ExpirableEntity<Blob>(h, alias) {}
         virtual ~Blob(void) {}
 
     public:
@@ -45,7 +45,7 @@ namespace qdb
             ExpirableEntity<Blob>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_put(qdb_req->handle, 
+                    qdb_req->output.error = qdb_put(qdb_req->handle(), 
                         qdb_req->input.alias.c_str(), 
                         qdb_req->input.content.buffer.begin, 
                         qdb_req->input.content.buffer.size, 
@@ -62,7 +62,7 @@ namespace qdb
             ExpirableEntity<Blob>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_update(qdb_req->handle, 
+                    qdb_req->output.error = qdb_update(qdb_req->handle(), 
                         qdb_req->input.alias.c_str(), 
                         qdb_req->input.content.buffer.begin, 
                         qdb_req->input.content.buffer.size, 
@@ -79,7 +79,7 @@ namespace qdb
             ExpirableEntity<Blob>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_get(qdb_req->handle, 
+                    qdb_req->output.error = qdb_get(qdb_req->handle(), 
                         qdb_req->input.alias.c_str(), 
                         &(qdb_req->output.content.buffer.begin), 
                         &(qdb_req->output.content.buffer.size));

@@ -11,7 +11,7 @@ namespace qdb
     {
 
     public:
-        ExpirableEntity(qdb_handle_t h, const char * alias) : Entity<Derivate>(h, alias) {}
+        ExpirableEntity(std::shared_ptr<qdb_handle_t> h, const char * alias) : Entity<Derivate>(h, alias) {}
         virtual ~ExpirableEntity(void) {}
 
     public:
@@ -38,7 +38,7 @@ namespace qdb
             Entity<Derivate>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_expires_at(qdb_req->handle,
+                    qdb_req->output.error = qdb_expires_at(qdb_req->handle(),
                         qdb_req->input.alias.c_str(),
                         qdb_req->input.expiry);
                 },
@@ -51,7 +51,7 @@ namespace qdb
             Entity<Derivate>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_expires_from_now(qdb_req->handle,
+                    qdb_req->output.error = qdb_expires_from_now(qdb_req->handle(),
                         qdb_req->input.alias.c_str(),
                         static_cast<qdb_int>(qdb_req->input.content.value));
                 },
@@ -64,7 +64,7 @@ namespace qdb
             Entity<Derivate>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_get_expiry_time(qdb_req->handle,
+                    qdb_req->output.error = qdb_get_expiry_time(qdb_req->handle(),
                         qdb_req->input.alias.c_str(),
                         &(qdb_req->output.content.date));
                 },

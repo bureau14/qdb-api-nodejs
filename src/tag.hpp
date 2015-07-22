@@ -24,7 +24,7 @@ class Tag : public Entity<Tag>
     friend class Cluster;
 
 private:
-    Tag(qdb_handle_t h, const char * alias) : Entity<Tag>(h, alias) {}
+    Tag(std::shared_ptr<qdb_handle_t> h, const char * alias) : Entity<Tag>(h, alias) {}
     virtual ~Tag(void) {}
 
 public:
@@ -44,7 +44,8 @@ public:
             [](qdb_request * qdb_req)
         {
             qdb_req->output.error = qdb_get_tagged(
-                qdb_req->handle, qdb_req->input.alias.c_str(),
+                qdb_req->handle(), 
+                qdb_req->input.alias.c_str(),
                 reinterpret_cast<const char ***>(const_cast<char **>(&(qdb_req->output.content.buffer.begin))),
                 &(qdb_req->output.content.buffer.size));
         }, Entity<Tag>::processArrayStringResult);

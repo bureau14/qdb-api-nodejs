@@ -13,19 +13,36 @@
 namespace qdb
 {
 
+namespace detail
+{
+
+    inline std::shared_ptr<qdb_handle_t> make_shared_qdb_handle(qdb_handle_t h)
+    {
+        if (!h)
+        {
+            return std::shared_ptr<qdb_handle_t>();
+        }
+
+        auto custom_deleter = [](qdb_handle_t * h)
+        {
+            if (h)
+            {
+                qdb_close(*h);
+            }
+        };
+
+        return std::shared_ptr<qdb_handle_t>(new qdb_handle_t(h), custom_deleter);
+    }
+
+}
+
     // cAmelCaSe :(
     class Cluster : public node::ObjectWrap 
     {
 
     public:
-        explicit Cluster(qdb_handle_t h) : _handle(h) {}
-
-        virtual ~Cluster(void)
-        {
-            // close a nullptr handle is safe
-            qdb_close(_handle);
-            _handle = nullptr;
-        }
+        explicit Cluster(qdb_handle_t h) : _handle(detail::make_shared_qdb_handle(h)) {}
+        virtual ~Cluster(void) {}
 
     public:
         static void Init(v8::Handle<v8::Object> exports)
@@ -132,7 +149,7 @@ namespace qdb
                 // get access to the underlying handle
                 Cluster * c = ObjectWrap::Unwrap<Cluster>(obj.first);
 
-                Object * b = new Object(*c, *utf8str);
+                Object * b = new Object(c->qdb_handle(), *utf8str);
 
                 b->Wrap(args.This());
                 args.GetReturnValue().Set(args.This());
@@ -190,13 +207,13 @@ namespace qdb
         }
 
     public:
-        operator qdb_handle_t ()
+        std::shared_ptr<qdb_handle_t> qdb_handle(void) const
         {
             return _handle;
         }
 
     private:
-        qdb_handle_t _handle;
+        std::shared_ptr<qdb_handle_t> _handle;
 
         static v8::Persistent<v8::Function> constructor;
     };
