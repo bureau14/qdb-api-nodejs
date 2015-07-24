@@ -5,12 +5,27 @@ var qdb = require('../build/Release/qdb.node');
 var test = require('unit.js');
 
 var qdbd = null;
+var cluster = new qdb.Cluster('qdb://127.0.0.1:3030');
 
 before('run quasardb daemon', function(done)
 {
-    this.timeout(5000);
+    this.timeout(50000);
     qdbd = spawn('./deps/qdb/bin/qdbd', ['--transient','--address=127.0.0.1:3030']);
-    setTimeout(done, 2000);
+
+    // wait 2 seconds then try to connect
+    setTimeout(function()
+    {
+        cluster.connect(function()
+        {
+            // successfully connected
+            done();
+        },
+        function(err)
+        {
+            // could not connect or lost connection
+            throw "an error occured: " + err.toString();
+        });
+    }, 2000);
 });
 
 after('terminate quasardb daemon', function(done)
@@ -23,13 +38,13 @@ after('terminate quasardb daemon', function(done)
     });
 });
 
-describe('qdb', function()
+describe('qdb_connect', function()
 {
     it('test suite', function()
     {
         describe('blob', function()
         {
-            var c = new qdb.Cluster('qdb://127.0.0.1:3030');
+            var c = cluster;
             test.object(c).isInstanceOf(qdb.Cluster);
             var b = c.blob('bam');
             var tagName = 'myTag';
@@ -386,7 +401,7 @@ describe('qdb', function()
         describe('tag', function()
         {
             var dasTag = 'u96';
-            var c = new qdb.Cluster('qdb://127.0.0.1:3030');
+            var c = cluster;
             test.object(c).isInstanceOf(qdb.Cluster);
             var t = c.tag(dasTag);
 
@@ -629,7 +644,7 @@ describe('qdb', function()
 
         describe('integer', function()
         {
-            var c = new qdb.Cluster('qdb://127.0.0.1:3030');
+            var c = cluster;
             test.object(c).isInstanceOf(qdb.Cluster);
             var i = c.integer('int_test');
 
@@ -857,7 +872,7 @@ describe('qdb', function()
 
         describe('queue', function()
         {
-            var c = new qdb.Cluster('qdb://127.0.0.1:3030');
+            var c = cluster;
             test.object(c).isInstanceOf(qdb.Cluster);
             // some back push/pop
             // note that at every moment you can have back() and front() (these functions do not pop)
@@ -871,12 +886,73 @@ describe('qdb', function()
 
             describe('push back/pop front/push front/pop back', function()
             {
+
+                it('should not get entry 0', function(done)
+                {
+                    q.at(0, function(err, data)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(8);
+
+                        done();
+                    });
+                });
+
+                it('should not find the size', function(done)
+                {
+                    q.size(function(err, s)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(8);
+
+                        done();
+                    });
+                });
+
                 it('should push back without error', function(done)
                 {
                     q.pushBack(new Buffer('a'), function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
+
+                        done();
+                    });
+                });
+
+                it('should have a size of 1', function(done)
+                {
+                    q.size(function(err, s)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        test.must(s).be.a.number();
+                        test.must(s).be.equal(1);
+
+                        done();
+                    });
+                });
+
+                it('should get entry 0', function(done)
+                {
+                    q.at(0, function(err, data)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        test.must(data.toString()).be.equal('a');
+
+                        done();
+                    });
+                });
+
+                it('should not get entry 1', function(done)
+                {
+                    q.at(1, function(err, data)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(25);
 
                         done();
                     });
@@ -921,12 +997,53 @@ describe('qdb', function()
                     });
                 });
 
+                it('should have a size of 0', function(done)
+                {
+                    q.size(function(err, s)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        test.must(s).be.a.number();
+                        test.must(s).be.equal(0);
+
+                        done();
+                    });
+                });
+
                 it('should push front without error', function(done)
                 {
                     q.pushFront(new Buffer('b'), function(err)
                     {
                         test.must(err).be.a.number();
                         test.must(err).be.equal(0);
+
+                        done();
+                    });
+                });
+
+                it('should have a size of 1', function(done)
+                {
+                    q.size(function(err, s)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        test.must(s).be.a.number();
+                        test.must(s).be.equal(1);
+
+                        done();
+                    });
+                });
+
+                it('should get entry 0', function(done)
+                {
+                    q.at(0, function(err, data)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        test.must(data.toString()).be.equal('b');
 
                         done();
                     });
@@ -969,7 +1086,20 @@ describe('qdb', function()
 
                         done();
                     });
+                });
 
+                it('should have a size of 0', function(done)
+                {
+                    q.size(function(err, s)
+                    {
+                        test.must(err).be.a.number();
+                        test.must(err).be.equal(0);
+
+                        test.must(s).be.a.number();
+                        test.must(s).be.equal(0);
+
+                        done();
+                    });
                 });
 
             });
@@ -977,7 +1107,7 @@ describe('qdb', function()
 
         describe('set', function()
         {
-            var c = new qdb.Cluster('qdb://127.0.0.1:3030');
+            var c = cluster;
             test.object(c).isInstanceOf(qdb.Cluster);
             // some back push/pop
             // note that at every moment you can have back() and front() (these functions do not pop)

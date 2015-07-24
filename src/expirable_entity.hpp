@@ -11,7 +11,7 @@ namespace qdb
     {
 
     public:
-        ExpirableEntity(std::shared_ptr<qdb_handle_t> h, const char * alias) : Entity<Derivate>(h, alias) {}
+        ExpirableEntity(cluster_data_ptr cd, const char * alias) : Entity<Derivate>(cd, alias) {}
         virtual ~ExpirableEntity(void) {}
 
     public:

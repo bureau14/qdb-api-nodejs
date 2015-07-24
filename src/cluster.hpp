@@ -4,6 +4,7 @@
 #include <node.h>
 #include <node_object_wrap.h>
 
+#include "cluster_data.hpp"
 #include "blob.hpp"
 #include "integer.hpp"
 #include "queue.hpp"
@@ -13,35 +14,16 @@
 namespace qdb
 {
 
-namespace detail
-{
-
-    inline std::shared_ptr<qdb_handle_t> make_shared_qdb_handle(qdb_handle_t h)
-    {
-        if (!h)
-        {
-            return std::shared_ptr<qdb_handle_t>();
-        }
-
-        auto custom_deleter = [](qdb_handle_t * h)
-        {
-            if (h)
-            {
-                qdb_close(*h);
-            }
-        };
-
-        return std::shared_ptr<qdb_handle_t>(new qdb_handle_t(h), custom_deleter);
-    }
-
-}
-
     // cAmelCaSe :(
     class Cluster : public node::ObjectWrap 
     {
 
     public:
-        explicit Cluster(qdb_handle_t h) : _handle(detail::make_shared_qdb_handle(h)) {}
+        // we have a structure we can ref count that holds important data
+        // this makes sure we can keep things alive in asynchronous operations
+
+    public:
+        explicit Cluster(const char * uri) : _uri(new std::string(uri)) {}
         virtual ~Cluster(void) {}
 
     public:
@@ -55,6 +37,7 @@ namespace detail
             tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
             // Prototype
+            NODE_SET_PROTOTYPE_METHOD(tpl, "connect", connect);
             NODE_SET_PROTOTYPE_METHOD(tpl, "blob", blob);
             NODE_SET_PROTOTYPE_METHOD(tpl, "integer", integer);
             NODE_SET_PROTOTYPE_METHOD(tpl, "queue", queue);
@@ -74,31 +57,21 @@ namespace detail
 
                 if (args.Length() != 1) 
                 {
-                    call.throwException("Wrong number of arguments");
+                    call.throwException("Expected exactly one argument");
                     return;
                 }
 
                 auto str = call.checkedArgString(0);
                 if (!str.second)
                 {
-                    call.throwException("Expected a connection string as an argument");
+                    call.throwException("Expected a connection string as first argument");
                     return;
                 }
 
                 v8::String::Utf8Value utf8str(str.first);
 
-                // create and open handle
-                qdb_handle_t h = qdb_open_tcp();
-                const qdb_error_t err = qdb_connect(h, *utf8str);
-                if (err != qdb_e_ok)
-                {
-                    qdb_close(h);
-                    call.throwException(qdb_error(err));;
-                    return;    
-                }
-
                 // handle is now owned by the cluster object
-                Cluster * cl = new Cluster(h);
+                Cluster * cl = new Cluster(*utf8str);
 
                 cl->Wrap(args.This());
                 args.GetReturnValue().Set(args.This());
@@ -149,7 +122,14 @@ namespace detail
                 // get access to the underlying handle
                 Cluster * c = ObjectWrap::Unwrap<Cluster>(obj.first);
 
-                Object * b = new Object(c->qdb_handle(), *utf8str);
+                cluster_data_ptr data = c->data();
+                if (!data)
+                {
+                    call.throwException("Cluster is not connected");
+                    return;
+                }
+
+                Object * b = new Object(data, *utf8str);
 
                 b->Wrap(args.This());
                 args.GetReturnValue().Set(args.This());
@@ -162,7 +142,7 @@ namespace detail
                 v8::Local<v8::Value> argv[argc] = { args[0], args[1] };
                 v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
                 args.GetReturnValue().Set(cons->NewInstance(argc, argv));
-            }      
+            }
         }
 
     private:
@@ -178,6 +158,102 @@ namespace detail
             v8::Local<v8::Value> argv[argc] = { the_cluster, args[0] };
             v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Object::constructor);
             args.GetReturnValue().Set(cons->NewInstance(argc, argv));        
+        }
+
+    private:
+        struct connection_request
+        {
+            explicit connection_request(cluster_data_ptr cd) : data(cd) 
+            {
+                assert(data);
+            }
+
+            cluster_data_ptr data;
+            qdb_error_t error;
+
+            void execute(void)
+            {
+                error = data->connect();
+            }            
+        };
+
+    private:
+        static void processConnectionResult(uv_work_t * req, int status) 
+        {
+            v8::Isolate * isolate = v8::Isolate::GetCurrent();
+
+            v8::TryCatch try_catch;
+
+            connection_request * conn_req = static_cast<connection_request *>(req->data);
+            assert(conn_req);
+
+            cluster_data_ptr cd = conn_req->data;     
+            assert(cd);           
+
+            const qdb_error_t err = (status < 0) ? qdb_e_internal : conn_req->error;
+
+            // no longer needs the request object
+            delete conn_req;
+
+            // if we got any kind of error call "on error", otherwise call "on success"
+            if (err == qdb_e_ok)
+            {
+                cd->on_success(isolate);
+            }
+            else
+            {
+                cd->on_error(isolate, err);
+            }            
+
+            if (try_catch.HasCaught())
+            {
+                node::FatalException(try_catch);
+            }                       
+        }
+
+    private:
+        static void callback_wrapper(uv_work_t * req)
+        {
+            static_cast<connection_request *>(req->data)->execute();
+        }
+
+    public:
+        static void connect(const v8::FunctionCallbackInfo<v8::Value>& args)
+        {
+            MethodMan call(args);
+
+            if (args.Length() != 2) 
+            {
+                call.throwException("Wrong number of arguments");
+                return;
+            }
+
+            auto on_success = call.checkedArgCallback(0);
+
+            if (!on_success.second)
+            {
+                call.throwException("Expected a callback as first argument");
+                return;
+            }
+
+            auto on_error = call.checkedArgCallback(1);
+
+            if (!on_error.second)
+            {
+                call.throwException("Expected a callback as second argument");
+                return;                    
+            }
+
+            Cluster * c = call.nativeHolder<Cluster>();
+            assert(c);
+
+            uv_work_t * work = new uv_work_t();
+            work->data = new connection_request(c->new_data(on_success.first, on_error.first));
+            
+             uv_queue_work(uv_default_loop(),
+                work,
+                &Cluster::callback_wrapper,
+                &Cluster::processConnectionResult);    
         }
 
     public:
@@ -207,18 +283,31 @@ namespace detail
         }
 
     public:
-        std::shared_ptr<qdb_handle_t> qdb_handle(void) const
+        const std::string & uri(void) const
         {
-            return _handle;
+            assert(_uri);
+            return *_uri;
+        }
+
+    public:
+        cluster_data_ptr data(void)
+        {
+            return _data;
         }
 
     private:
-        std::shared_ptr<qdb_handle_t> _handle;
+        cluster_data_ptr new_data(v8::Local<v8::Function> on_success, v8::Local<v8::Function> on_error)
+        {
+            assert(_uri);
+            return _data = std::make_shared<cluster_data>(*_uri, on_success, on_error);
+        }
+
+    private:
+        std::unique_ptr<std::string> _uri;
+        cluster_data_ptr _data;
 
         static v8::Persistent<v8::Function> constructor;
     };
-
-
 
 }
 

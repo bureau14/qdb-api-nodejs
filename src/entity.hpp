@@ -12,12 +12,11 @@
 #include <qdb/client.h>
 #include <qdb/tag.h>
 
+#include "cluster_data.hpp"
 #include "utilities.hpp"
 
 namespace qdb
 {
-
-    class Cluster;
 
     template <typename Derivate>
     class Entity : public node::ObjectWrap
@@ -29,11 +28,8 @@ namespace qdb
         // if an entry is expirable, we will register the expiry management functions
         // this simplifies organization here
         // in other APIs generally we have an ExpirableEntry that inherits from Entity
-        Entity(std::shared_ptr<qdb_handle_t> h, const char * alias) : _handle(h), _alias(new std::string(alias)) {}
-        virtual ~Entity(void)
-        {
-            _handle = nullptr;
-        }
+        Entity(cluster_data_ptr cd, const char * alias) : _cluster_data(cd), _alias(new std::string(alias)) {}
+        virtual ~Entity(void) {}
 
     public:
         static void alias(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -61,9 +57,9 @@ namespace qdb
         }
 
     public:
-        std::shared_ptr<qdb_handle_t> qdb_handle(void) const
+        qdb_handle_ptr qdb_handle(void) const
         {
-            return _handle;
+            return _cluster_data->handle();
         }
 
         const std::string & native_alias(void) const
@@ -79,7 +75,7 @@ namespace qdb
             Derivate * pthis = call.nativeHolder<Derivate>();
             assert(pthis);
 
-            qdb_request * qdb_req = new qdb_request(pthis->qdb_handle(), f, pthis->native_alias());
+            qdb_request * qdb_req = new qdb_request(pthis->_cluster_data, f, pthis->native_alias());
 
             ArgsEaterBinder eaterBinder(call);
 
@@ -151,8 +147,6 @@ namespace qdb
                 &ArgsEaterBinder::none);
         }
 
-
-
     public:
         template <typename F>
         static void Init(v8::Handle<v8::Object> exports, const char * className, F init)
@@ -198,9 +192,17 @@ namespace qdb
             unsigned int argc,
             v8::Handle<v8::Value> argv[])
         {
-            auto cb = qdb_req->callbackAsLocal();
+            const qdb_error_t err = (argc > 0) ? static_cast<qdb_error_t>(static_cast<unsigned int>(argv[0]->NumberValue())) : qdb_e_ok;
 
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+            if (!fatal_error(err))
+            {
+                auto cb = qdb_req->callbackAsLocal();         
+                cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+            }
+            else
+            {
+                qdb_req->on_error(isolate, err);
+            }
 
             delete qdb_req;
 
@@ -212,7 +214,7 @@ namespace qdb
 
         static auto processErrorCode(v8::Isolate * isolate, int status, const qdb_request * req) -> decltype(v8::Int32::New(isolate, 0))
         {
-            return (status < 0) ? v8::Int32::New(isolate, qdb_e_internal) : v8::Int32::New(isolate, static_cast<int32_t>(req->output.error));
+            return (status < 0) ? v8::Int32::New(isolate, qdb_e_internal) : v8::Int32::New(isolate, static_cast<int32_t>(req->output.error)); 
         }
 
     public:
@@ -371,7 +373,7 @@ namespace qdb
         }
 
     private:
-        std::shared_ptr<qdb_handle_t> _handle;
+        cluster_data_ptr _cluster_data;
         std::unique_ptr<std::string> _alias;
 
     };

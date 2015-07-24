@@ -9,6 +9,8 @@
 #include <qdb/client.h>
 #include <qdb/integer.h>
 
+#include "cluster_data.hpp"
+
 namespace qdb
 {
 
@@ -38,6 +40,26 @@ namespace detail
     
     };
 }
+
+
+    inline bool fatal_error(qdb_error_t err)
+    {
+        return (err == qdb_e_system) || 
+            (err == qdb_e_internal) || 
+            (err == qdb_e_no_memory) || 
+            (err == qdb_e_invalid_protocol) ||
+            (err == qdb_e_host_not_found) ||
+            (err == qdb_e_timeout) ||
+            (err == qdb_e_buffer_too_small) ||
+            (err == qdb_e_connection_refused) ||
+            (err == qdb_e_connection_reset) ||
+            (err == qdb_e_unexpected_reply) ||
+            (err == qdb_e_protocol_error) ||
+            (err == qdb_e_invalid_version) ||
+            (err == qdb_e_not_connected) ||
+            (err == qdb_e_invalid_handle);
+    }
+
 
     // client.hpp has some try/catch which prevents inclusion as exception are disabled in node.js
     // we however like the make_error_string convenience function very much and therefore implement it here again
@@ -96,18 +118,26 @@ namespace detail
             qdb_error_t error;      
         };
 
-        explicit qdb_request (qdb_error_t err) : _handle(nullptr), output(err) {}
+        explicit qdb_request (qdb_error_t err) : _cluster_data(nullptr), output(err) {}
 
-        qdb_request(std::shared_ptr<qdb_handle_t> h, std::function<void (qdb_request *)> exec, std::string a) : _handle(h), input(a), _execute(exec) {}
+        qdb_request(cluster_data_ptr cd, std::function<void (qdb_request *)> exec, std::string a) : _cluster_data(cd), input(a), _execute(exec) {}
 
     private:
         // make sure the handle is alive for the duration of the request
-        std::shared_ptr<qdb_handle_t> _handle;
+        cluster_data_ptr _cluster_data;
 
     public:
-        qdb_handle_t handle(void) const
+        qdb_handle_t handle(void) 
         {
-            return _handle ? *_handle : static_cast<qdb_handle_t>(0);
+            return _cluster_data ? _cluster_data->handle().get() : nullptr;
+        }
+
+        void on_error(v8::Isolate * isolate, qdb_error_t err)
+        {
+            if (_cluster_data)
+            {
+                _cluster_data->on_error(isolate, err);
+            }            
         }
 
     public:

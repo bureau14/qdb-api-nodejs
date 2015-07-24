@@ -24,7 +24,7 @@ class Tag : public Entity<Tag>
     friend class Cluster;
 
 private:
-    Tag(std::shared_ptr<qdb_handle_t> h, const char * alias) : Entity<Tag>(h, alias) {}
+    Tag(cluster_data_ptr cd, const char * alias) : Entity<Tag>(cd, alias) {}
     virtual ~Tag(void) {}
 
 public:

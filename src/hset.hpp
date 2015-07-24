@@ -23,7 +23,7 @@ namespace qdb
         friend class Cluster;
 
     private:
-        Set(std::shared_ptr<qdb_handle_t> h, const char * alias) : Entity<Set>(h, alias) {}
+        Set(cluster_data_ptr cd, const char * alias) : Entity<Set>(cd, alias) {}
         virtual ~Set(void) {}
 
     public:

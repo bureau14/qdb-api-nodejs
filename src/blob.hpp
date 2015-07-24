@@ -24,7 +24,7 @@ namespace qdb
         friend class Cluster;
 
     private:
-        Blob(std::shared_ptr<qdb_handle_t> h, const char * alias) : ExpirableEntity<Blob>(h, alias) {}
+        Blob(cluster_data_ptr cd, const char * alias) : ExpirableEntity<Blob>(cd, alias) {}
         virtual ~Blob(void) {}
 
     public:

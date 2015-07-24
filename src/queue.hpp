@@ -23,7 +23,7 @@ namespace qdb
         friend class Cluster;
 
     private:
-        Queue(std::shared_ptr<qdb_handle_t> h, const char * alias) : Entity<Queue>(h, alias) {}
+        Queue(cluster_data_ptr cd, const char * alias) : Entity<Queue>(cd, alias) {}
         virtual ~Queue(void) {}
 
     public:
@@ -37,6 +37,8 @@ namespace qdb
                 NODE_SET_PROTOTYPE_METHOD(tpl, "popBack", popBack);
                 NODE_SET_PROTOTYPE_METHOD(tpl, "front", front);
                 NODE_SET_PROTOTYPE_METHOD(tpl, "back", back);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "size", size);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "at", at);
             });
         }
 
@@ -105,6 +107,33 @@ namespace qdb
                 }, 
                 Entity<Queue>::processBufferResult,
                 &ArgsEaterBinder::buffer);
+        }
+
+        static void size(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            Entity<Queue>::queue_work(args, 
+                [](qdb_request * qdb_req)
+                {
+                    qdb_size_t got_size = 0;
+                    qdb_req->output.error = qdb_queue_size(qdb_req->handle(), qdb_req->input.alias.c_str(), &got_size);
+                    qdb_req->output.content.value = static_cast<qdb_int>(got_size);
+                }, 
+                Entity<Queue>::processIntegerResult);
+        }
+
+        static void at(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            Entity<Queue>::queue_work(args, 
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_queue_get_at(qdb_req->handle(), 
+                        qdb_req->input.alias.c_str(), 
+                        qdb_req->input.content.value,
+                        &(qdb_req->output.content.buffer.begin), 
+                        &(qdb_req->output.content.buffer.size));
+                }, 
+                Entity<Queue>::processBufferResult,
+                &ArgsEaterBinder::integer);
         }
 
     private:

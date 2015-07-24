@@ -23,7 +23,7 @@ namespace qdb
         friend class Cluster;
 
     private:
-        Integer(std::shared_ptr<qdb_handle_t> h, const char * alias) : ExpirableEntity<Integer>(h, alias) {}
+        Integer(cluster_data_ptr cd, const char * alias) : ExpirableEntity<Integer>(cd, alias) {}
         virtual ~Integer(void) {}
 
     public:
@@ -82,8 +82,7 @@ namespace qdb
                         qdb_req->input.alias.c_str(), 
                         &(qdb_req->output.content.value));
                 }, 
-                ExpirableEntity<Integer>::processIntegerResult,
-                &ArgsEaterBinder::integer);
+                ExpirableEntity<Integer>::processIntegerResult);
         }
 
         // remove the alias
@@ -95,8 +94,7 @@ namespace qdb
                     qdb_req->output.error = qdb_remove(qdb_req->handle(), 
                         qdb_req->input.alias.c_str());
                 }, 
-                ExpirableEntity<Integer>::processVoidResult,
-                &ArgsEaterBinder::integer);
+                ExpirableEntity<Integer>::processVoidResult);
         }
 
         // add

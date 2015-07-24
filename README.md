@@ -32,6 +32,22 @@ Using *quasardb* starts with a Cluster:
     var c = new qdb.Cluster('qdb://127.0.0.1:2836');
 ```
 
+And creating a connection:
+
+```javascript
+
+    c.connect(function()
+        {
+            // successfully connected to the cluster
+        },
+        function(err)
+        {
+            // error
+        });
+```
+
+ > The error callback you provide on the connect will also be called if you later get disconnected from the cluster or a fatal error preventing normal operation occurs.
+
 Now that we have a connection to the cluster, let's store some binary data:
 
 ```javascript
@@ -49,6 +65,8 @@ Want a queue? We have distributed queues.
     q.pushBack(new Buffer("boom"), function(err) { /* */ });
     q.popFront(function(err, data) { /* */ });
     q.pushFront(new Buffer("bang"), function(err) { /* */ });
+    q.size(function(err, s) { /* */ });
+    q.at(2, function(err, data) { /* */ });
 ```
 
 quasardb comes out of the box with server-side atomic integers:
