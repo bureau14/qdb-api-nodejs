@@ -1,6 +1,6 @@
 # quasardb node.js API
 
-This API is still experimental and poorly documented. Use at your own risks!
+This is the official quasardb API, suitable for production. The full documentation is available [here](https://doc.quasardb.net/).
 
 [quasardb](https://www.quasardb.net/) 2.0 or later required. You need a C++ 11 compiler to compile this addon.
 
