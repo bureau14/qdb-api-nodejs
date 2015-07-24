@@ -60,17 +60,6 @@ namespace detail
             (err == qdb_e_invalid_handle);
     }
 
-
-    // client.hpp has some try/catch which prevents inclusion as exception are disabled in node.js
-    // we however like the make_error_string convenience function very much and therefore implement it here again
-    inline std::string make_error_string(qdb_error_t error)
-    {
-        // qdb_error never fails and always appends a terminating null
-        // the only exception is when providing an empty buffer, which is not the case here
-     //   return std::string(qdb_error(error));
-        return std::string();
-    }
-
     struct qdb_request
     {
 

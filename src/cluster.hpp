@@ -70,7 +70,11 @@ namespace qdb
 
                 v8::String::Utf8Value utf8str(str.first);
 
-                // handle is now owned by the cluster object
+                // the cluster only owns the uri
+                // when we will connect we will create a reference counted cluster_data
+                // with a handle
+                // because the cluster_data is reference counted and transmitted to every 
+                // callback we are sure it is kept alive for as long as needed
                 Cluster * cl = new Cluster(*utf8str);
 
                 cl->Wrap(args.This());
