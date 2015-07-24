@@ -152,4 +152,3 @@ The quasardb nodejs addon is still a work in progress, the following quasardb fe
 
  * Advanced atomic operations such as compare and swap and conditional removal
  * Batches and transactions
- * Queue size and random access to elements in the queue
