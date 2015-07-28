@@ -116,7 +116,7 @@ namespace qdb
                 {
                     qdb_size_t got_size = 0;
                     qdb_req->output.error = qdb_queue_size(qdb_req->handle(), qdb_req->input.alias.c_str(), &got_size);
-                    qdb_req->output.content.value = static_cast<qdb_int>(got_size);
+                    qdb_req->output.content.value = static_cast<qdb_int_t>(got_size);
                 }, 
                 Entity<Queue>::processIntegerResult);
         }

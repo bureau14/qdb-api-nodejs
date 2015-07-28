@@ -53,7 +53,7 @@ namespace qdb
                 {
                     qdb_req->output.error = qdb_expires_from_now(qdb_req->handle(),
                         qdb_req->input.alias.c_str(),
-                        static_cast<qdb_int>(qdb_req->input.content.value));
+                        static_cast<qdb_int_t>(qdb_req->input.content.value));
                 },
                 Entity<Derivate>::processVoidResult,
                 &ArgsEaterBinder::integer);

@@ -85,7 +85,7 @@ namespace detail
 
                 std::string str;
                 slice buffer;
-                qdb_int value;
+                qdb_int_t value;
             };
 
             query_content content;
@@ -100,7 +100,7 @@ namespace detail
             union 
             {
                 slice buffer;
-                qdb_int value;
+                qdb_int_t value;
                 qdb_time_t date;
             } content;
 
@@ -341,9 +341,9 @@ namespace detail
         }
 
     public:
-        qdb_int eatAndConvertInteger(void)
+        qdb_int_t eatAndConvertInteger(void)
         {
-            return eatInteger<qdb_int>().first;
+            return eatInteger<qdb_int_t>().first;
         }
 
         qdb_time_t eatAndConvertDate(void)
