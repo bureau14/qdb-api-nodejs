@@ -8,7 +8,7 @@
 #include <node_object_wrap.h>
 #include <uv.h>
 
-#include <qdb/client.h>
+#include <qdb/blob.h>
 
 #include "expirable_entity.hpp"
 
