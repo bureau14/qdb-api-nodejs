@@ -22,16 +22,44 @@
         "src/tag.hpp",
         "src/utilities.hpp" ],
       "conditions": [ 
-            [ "OS=='win'", { "copies": [ { 
-                                            "destination" : "<(module_root_dir)/build/Release/",
-                                            "files": [ "<(module_root_dir)/deps/qdb/bin/qdb_api.dll" ] 
-                                        } ],
-                              "include_dirs": [ "<(module_root_dir)/deps/qdb/include" ], 
-                              "msvs_settings": { "VCCLCompilerTool": { "ExceptionHandling": "2", "DisableSpecificWarnings": [ "4530" ] } },
-                              "link_settings": { "libraries": [ "<(module_root_dir)/deps/qdb/lib/qdb_api.lib" ] } }, 
-                            { "include_dirs": [ "/usr/local/include", "<(module_root_dir)/deps/qdb/include" ], 
-                              "libraries": [ "-L/usr/local/lib", "-L<(module_root_dir)/deps/qdb/lib", "-lqdb_api"],
-                               "cflags": [ "-std=c++11", "-Wno-strict-aliasing" ] } ]
+            [ "OS=='mac'",
+              { 
+               "copies": [ { 
+                              "destination" : "<(module_root_dir)/build/Release/",
+                              "files": [ "<(module_root_dir)/deps/qdb/lib/libqdb_api.dylib" ] 
+                             } ],
+                  "libraries": [ "-L<(module_root_dir)/deps/qdb/lib", "-lqdb_api", "-Wl,-rpath,<(module_root_dir)/deps/qdb/lib"], 
+                  "xcode_settings":{
+                      'OTHER_CFLAGS': [
+                        "-std=c++11", "-stdlib=libc++", "-Wno-strict-aliasing", "-mmacosx-version-min=10.7"
+                      ],
+                    }
+              }
+            ],
+            [ "OS=='freebsd'",
+              { 
+                  "libraries": [ "-L/usr/local/lib", "-L<(module_root_dir)/deps/qdb/lib", "-lqdb_api"], 
+                  "cflags": [ "-std=c++11", "-stdlib=libc++", "-Wno-strict-aliasing" ] 
+              }
+            ],
+            [ "OS=='linux'",
+              { 
+                "libraries": [ "-L/usr/local/lib", "-L<(module_root_dir)/deps/qdb/lib", "-lqdb_api"], 
+                "cflags": [ "-std=c++11", "-Wno-strict-aliasing" ] 
+              }
+            ],            
+            [ "OS=='win'", 
+              { "copies": [ { 
+                              "destination" : "<(module_root_dir)/build/Release/",
+                              "files": [ "<(module_root_dir)/deps/qdb/bin/qdb_api.dll" ] 
+                             } ],
+                "include_dirs": [ "<(module_root_dir)/deps/qdb/include" ], 
+                "msvs_settings": { "VCCLCompilerTool": { "ExceptionHandling": "2", "DisableSpecificWarnings": [ "4530" ] } },
+                "link_settings": { "libraries": [ "<(module_root_dir)/deps/qdb/lib/qdb_api.lib" ] }
+               }, { # OS != "win"
+                "include_dirs": [ "/usr/local/include", "<(module_root_dir)/deps/qdb/include" ],                         
+               }
+            ]
         ]
     }
   ]
