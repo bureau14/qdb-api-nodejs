@@ -15,11 +15,7 @@ before('run quasardb daemon', function(done)
     // wait 2 seconds then try to connect
     setTimeout(function()
     {
-        cluster.connect(function()
-        {
-            // successfully connected
-            done();
-        },
+        cluster.connect(done, // success
         function(err)
         {
             // could not connect or lost connection
@@ -42,6 +38,35 @@ describe('qdb_connect', function()
 {
     it('test suite', function()
     {
+        // tests for race condition in connect
+        describe('faulty connect', function()
+        {
+            var wrong_cluster = new qdb.Cluster('qdb://127.0.0.1:4444');
+
+            it('should not connect but not crash', function(done)
+            {
+                this.timeout(100000);
+
+                wrong_cluster.connect(function(){}, function(err)
+                {
+                    wrong_cluster.connect(function(){}, function(err)
+                    {
+                        wrong_cluster.connect(function(){}, function(err)
+                        {
+                            wrong_cluster.connect(function(){}, function(err)
+                            {
+                                wrong_cluster.connect(function(){}, function(err)
+                                {
+                                    wrong_cluster.connect(function(){}, function(err){ done(); });
+                                });
+                            });
+                        });
+                    });
+                });
+
+            });
+        });
+
         describe('blob', function()
         {
             var c = cluster;

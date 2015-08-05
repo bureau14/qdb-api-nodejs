@@ -4,6 +4,8 @@
 #include <node.h>
 #include <node_object_wrap.h>
 
+#include <mutex>
+
 #include "cluster_data.hpp"
 #include "blob.hpp"
 #include "integer.hpp"
@@ -23,7 +25,7 @@ namespace qdb
         // this makes sure we can keep things alive in asynchronous operations
 
     public:
-        explicit Cluster(const char * uri) : _uri(new std::string(uri)) {}
+        explicit Cluster(const char * uri) : _uri(uri) {}
         virtual ~Cluster(void) {}
 
     public:
@@ -289,25 +291,40 @@ namespace qdb
     public:
         const std::string & uri(void) const
         {
-            assert(_uri);
-            return *_uri;
+            return _uri;
         }
 
     public:
         cluster_data_ptr data(void)
         {
-            return _data;
+            cluster_data_ptr res;
+
+            {
+                std::unique_lock<std::mutex> lock(_data_mutex);
+                res = _data;
+            }
+
+            return res;
         }
 
     private:
         cluster_data_ptr new_data(v8::Local<v8::Function> on_success, v8::Local<v8::Function> on_error)
         {
-            assert(_uri);
-            return _data = std::make_shared<cluster_data>(*_uri, on_success, on_error);
+            cluster_data_ptr res;
+
+            {
+                std::unique_lock<std::mutex> lock(_data_mutex);
+                res = _data = std::make_shared<cluster_data>(_uri, on_success, on_error);
+            }
+
+            return res;
         }
 
     private:
-        std::unique_ptr<std::string> _uri;
+        const std::string _uri;
+        
+        mutable std::mutex _data_mutex;
+        
         cluster_data_ptr _data;
 
         static v8::Persistent<v8::Function> constructor;
