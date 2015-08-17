@@ -26,7 +26,7 @@ namespace qdb
         }
 
     public:
-        cluster_data(std::string uri, v8::Local<v8::Function> os, v8::Local<v8::Function> oe) : _uri(uri) 
+        cluster_data(std::string uri, int timeout, v8::Local<v8::Function> os, v8::Local<v8::Function> oe) : _uri(uri), _timeout(timeout)
         {
             bindCallbacks(os, oe);
         }
@@ -88,7 +88,12 @@ namespace qdb
                 return qdb_e_no_memory;
             }
 
-            return qdb_connect(_handle.get(), _uri.c_str());
+            qdb_error_t res = qdb_connect(_handle.get(), _uri.c_str());
+            if (res != qdb_e_ok)
+            {
+                return res;
+            }
+            return qdb_option_set_timeout(_handle.get(), _timeout);
         }
 
         qdb_handle_ptr handle(void)
@@ -96,8 +101,17 @@ namespace qdb
             return _handle;
         }
 
+        qdb_error_t set_timeout(int timeout)
+        {
+            _timeout = timeout;
+
+            // if we already have a handle, update the timeout
+            return !_handle ? qdb_e_ok : qdb_option_set_timeout(_handle.get(), _timeout);
+        }
+
     private:
-        std::string _uri;
+        const std::string _uri;
+        int _timeout;
         v8::Persistent<v8::Function> _on_success;
         v8::Persistent<v8::Function> _on_error;
 

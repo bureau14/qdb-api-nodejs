@@ -146,6 +146,20 @@ You can query the expiry time of an entry with getExpiry:
 
 Tags, sets and queues do not expire (but can of course be manually removed).
 
+## Timeout
+
+You can configure the *client-side* timeout (the server-side timeout is a cluster configuration which cannot be remotely changed). 
+
+The client-side timeout is the time duration after which a client will consider a request to have timed out. The default value is one minute (60,000 ms). You may want to lower this value on low-latency networks. 
+
+
+```javascript
+    // sets the timeout to 10s
+    c.setTimeout(10000);
+```
+
+Ideally the timeout should be set before calling connect.
+
 ## Not supported yet
 
 The quasardb nodejs addon is still a work in progress, the following quasardb features are not supported:

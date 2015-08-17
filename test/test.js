@@ -67,6 +67,22 @@ describe('qdb_connect', function()
             });
         });
 
+        describe('setTimeout', function()
+        {
+            var c = cluster;
+            // set timeout to 5s
+            it('should set the timeout to 5,000 ms', function()
+            {
+                cluster.setTimeout(5000);
+            });
+
+            it('should refuse to set the timeout to 400 ms', function()
+            {
+                test.exception(function() { cluster.setTimeout(400); });
+            });
+
+        });
+
         describe('blob', function()
         {
             var c = cluster;

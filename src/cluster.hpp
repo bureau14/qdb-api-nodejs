@@ -25,7 +25,7 @@ namespace qdb
         // this makes sure we can keep things alive in asynchronous operations
 
     public:
-        explicit Cluster(const char * uri) : _uri(uri) {}
+        explicit Cluster(const char * uri) : _uri(uri), _timeout(60000) {}
         virtual ~Cluster(void) {}
 
     public:
@@ -45,6 +45,8 @@ namespace qdb
             NODE_SET_PROTOTYPE_METHOD(tpl, "queue", queue);
             NODE_SET_PROTOTYPE_METHOD(tpl, "set", set);
             NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
+
+            NODE_SET_PROTOTYPE_METHOD(tpl, "setTimeout", setTimeout);
 
             constructor.Reset(isolate, tpl->GetFunction());
             exports->Set(v8::String::NewFromUtf8(isolate, "Cluster"), tpl->GetFunction());
@@ -289,6 +291,46 @@ namespace qdb
         }
 
     public:
+        static void setTimeout(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            MethodMan call(args);
+
+            if (args.Length() != 1) 
+            {
+                call.throwException("Wrong number of arguments");
+                return;
+            }            
+
+            auto timeout_value = call.checkedArgNumber(0);
+            if (!timeout_value.second)
+            {
+                call.throwException("setTimeout expect a timeout value in seconds");
+                return;                    
+            }
+
+            const int new_timeout = static_cast<int>(timeout_value.first);
+            if (new_timeout < 1000)
+            {
+                call.throwException("The timeout value cannot be less than one second.");  
+                return;              
+            }
+
+            Cluster * c = call.nativeHolder<Cluster>();
+            assert(c);     
+
+            c->_timeout = new_timeout;
+
+            cluster_data_ptr cd = c->data();
+            if (cd)
+            {
+                if (cd->set_timeout(c->_timeout) != qdb_e_ok)
+                {
+                    call.throwException("Could not set timeout.");                    
+                }
+            }
+        }
+
+    public:
         const std::string & uri(void) const
         {
             return _uri;
@@ -314,7 +356,7 @@ namespace qdb
 
             {
                 std::unique_lock<std::mutex> lock(_data_mutex);
-                res = _data = std::make_shared<cluster_data>(_uri, on_success, on_error);
+                res = _data = std::make_shared<cluster_data>(_uri, _timeout, on_success, on_error);
             }
 
             return res;
@@ -325,6 +367,7 @@ namespace qdb
         
         mutable std::mutex _data_mutex;
         
+        int _timeout;
         cluster_data_ptr _data;
 
         static v8::Persistent<v8::Function> constructor;
