@@ -45,7 +45,7 @@ namespace qdb
             ExpirableEntity<Blob>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_put(qdb_req->handle(), 
+                    qdb_req->output.error = qdb_blob_put(qdb_req->handle(), 
                         qdb_req->input.alias.c_str(), 
                         qdb_req->input.content.buffer.begin, 
                         qdb_req->input.content.buffer.size, 
@@ -62,7 +62,7 @@ namespace qdb
             ExpirableEntity<Blob>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_update(qdb_req->handle(), 
+                    qdb_req->output.error = qdb_blob_update(qdb_req->handle(), 
                         qdb_req->input.alias.c_str(), 
                         qdb_req->input.content.buffer.begin, 
                         qdb_req->input.content.buffer.size, 
@@ -79,7 +79,7 @@ namespace qdb
             ExpirableEntity<Blob>::queue_work(args, 
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_get(qdb_req->handle(), 
+                    qdb_req->output.error = qdb_blob_get(qdb_req->handle(), 
                         qdb_req->input.alias.c_str(), 
                         &(qdb_req->output.content.buffer.begin), 
                         &(qdb_req->output.content.buffer.size));

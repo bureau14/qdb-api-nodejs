@@ -456,7 +456,7 @@ describe('qdb_connect', function()
             {
                 var b = c.blob('blob_tag_test');
                 var i = c.integer('int_tag_test');
-                var q = c.queue('queue_tag_test');
+                var q = c.deque('deque_tag_test');
                 var s = c.set('set_tag_test');
 
                 it('should return an empty tag list', function(done)
@@ -494,7 +494,7 @@ describe('qdb_connect', function()
                     });
                 });
 
-                it('should create the queue for tag test', function(done)
+                it('should create the deque for tag test', function(done)
                 {
                     q.pushBack(new Buffer('mmm ok'), function(err)
                     {
@@ -538,7 +538,7 @@ describe('qdb_connect', function()
                     });
                 });
 
-                it('should tag the queue successfully', function(done)
+                it('should tag the deque successfully', function(done)
                 {
                     q.addTag(dasTag, function(err)
                     {
@@ -571,7 +571,7 @@ describe('qdb_connect', function()
 
                         test.must(entries.indexOf('blob_tag_test')).be.gte(0);
                         test.must(entries.indexOf('int_tag_test')).be.gte(0);
-                        test.must(entries.indexOf('queue_tag_test')).be.gte(0);
+                        test.must(entries.indexOf('deque_tag_test')).be.gte(0);
                         test.must(entries.indexOf('set_tag_test')).be.gte(0);
 
                         done();
@@ -600,7 +600,7 @@ describe('qdb_connect', function()
                     });
                 });
 
-                it('should untag the queue successfully', function(done)
+                it('should untag the deque successfully', function(done)
                 {
                     q.removeTag(dasTag, function(err)
                     {
@@ -657,7 +657,7 @@ describe('qdb_connect', function()
                     });
                 });
 
-                it('should remove the queue for tag test', function(done)
+                it('should remove the deque for tag test', function(done)
                 {
                     q.remove(function(err)
                     {
@@ -911,15 +911,15 @@ describe('qdb_connect', function()
 
         }); // integer
 
-        describe('queue', function()
+        describe('deque', function()
         {
             var c = cluster;
             test.object(c).isInstanceOf(qdb.Cluster);
             // some back push/pop
             // note that at every moment you can have back() and front() (these functions do not pop)
-            var q = c.queue('q1');
+            var q = c.deque('q1');
 
-            test.object(q).isInstanceOf(qdb.Queue);
+            test.object(q).isInstanceOf(qdb.Deque);
 
             test.object(q).hasProperty('alias');
             test.must(q.alias()).be.a.string();
@@ -1144,7 +1144,7 @@ describe('qdb_connect', function()
                 });
 
             });
-        }); // queue
+        }); // deque
 
         describe('set', function()
         {

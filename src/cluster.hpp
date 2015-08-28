@@ -9,7 +9,7 @@
 #include "cluster_data.hpp"
 #include "blob.hpp"
 #include "integer.hpp"
-#include "queue.hpp"
+#include "deque.hpp"
 #include "hset.hpp"
 #include "tag.hpp"
 
@@ -42,7 +42,7 @@ namespace qdb
             NODE_SET_PROTOTYPE_METHOD(tpl, "connect", connect);
             NODE_SET_PROTOTYPE_METHOD(tpl, "blob", blob);
             NODE_SET_PROTOTYPE_METHOD(tpl, "integer", integer);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "queue", queue);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "deque", deque);
             NODE_SET_PROTOTYPE_METHOD(tpl, "set", set);
             NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
 
@@ -275,9 +275,9 @@ namespace qdb
             objectFactory<Integer>(args);
         }
         
-        static void queue(const v8::FunctionCallbackInfo<v8::Value> & args) 
+        static void deque(const v8::FunctionCallbackInfo<v8::Value> & args) 
         {
-            objectFactory<Queue>(args);
+            objectFactory<Deque>(args);
         }
 
         static void set(const v8::FunctionCallbackInfo<v8::Value> & args) 
