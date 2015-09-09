@@ -57,10 +57,10 @@ Now that we have a connection to the cluster, let's store some binary data:
     b.get(function(err, data) { /* */  });
 ```
 
-Want a queue? We have distributed queues.
+Want a queue? We have distributed double-ended queues (aka deques).
 
 ```javascript
-    var q = c.queue('q2');
+    var q = c.deque('q2');
 
     q.pushBack(new Buffer("boom"), function(err) { /* */ });
     q.popFront(function(err, data) { /* */ });
