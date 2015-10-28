@@ -5,7 +5,7 @@
 
 #include "cluster.hpp"
 
-void InitAll(v8::Handle<v8::Object> exports, v8::Handle<v8::Object> module) 
+void InitAll(v8::Local<v8::Object> exports) 
 {
     std::setlocale(LC_ALL, "en_US.UTF-8");
 

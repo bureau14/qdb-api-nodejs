@@ -88,12 +88,12 @@ namespace qdb
                 return qdb_e_no_memory;
             }
 
-            qdb_error_t res = qdb_connect(_handle.get(), _uri.c_str());
+            qdb_error_t res = qdb_connect(static_cast<qdb_handle_t>(_handle.get()), _uri.c_str());
             if (res != qdb_e_ok)
             {
                 return res;
             }
-            return qdb_option_set_timeout(_handle.get(), _timeout);
+            return qdb_option_set_timeout(static_cast<qdb_handle_t>(_handle.get()), _timeout);
         }
 
         qdb_handle_ptr handle(void)
@@ -106,7 +106,7 @@ namespace qdb
             _timeout = timeout;
 
             // if we already have a handle, update the timeout
-            return !_handle ? qdb_e_ok : qdb_option_set_timeout(_handle.get(), _timeout);
+            return !_handle ? qdb_e_ok : qdb_option_set_timeout(static_cast<qdb_handle_t>(_handle.get()), _timeout);
         }
 
     private:

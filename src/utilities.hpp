@@ -5,6 +5,7 @@
 #include <utility>
 
 #include <node.h>
+#include <node_buffer.h>
 
 #include <qdb/client.h>
 #include <qdb/integer.h>
@@ -30,23 +31,30 @@ namespace detail
     template <>
     struct NewObject<v8::String>
     {
-    
+
         template <typename P>
         v8::Local<v8::String> operator()(v8::Isolate * i, P && p)
         {
             // strings don't use new, they use newfromutf8
             return v8::String::NewFromUtf8(i, std::forward<P>(p));
         }
-    
-    };
-}
 
+    };
+
+    inline void release_node_buffer(char * data, void * hint)
+    {
+        if (data && hint)
+        {
+            qdb_free_buffer(static_cast<qdb_handle_t>(hint), data);
+        }
+    }
+}
 
     inline bool fatal_error(qdb_error_t err)
     {
-        return (err == qdb_e_system) || 
-            (err == qdb_e_internal) || 
-            (err == qdb_e_no_memory) || 
+        return (err == qdb_e_system) ||
+            (err == qdb_e_internal) ||
+            (err == qdb_e_no_memory) ||
             (err == qdb_e_invalid_protocol) ||
             (err == qdb_e_host_not_found) ||
             (err == qdb_e_timeout) ||
@@ -72,7 +80,7 @@ namespace detail
         struct query
         {
             query(std::string a = "") : alias(a), expiry(0) {}
-            
+
             std::string alias;
 
             struct query_content
@@ -89,22 +97,22 @@ namespace detail
             };
 
             query_content content;
-            
-            qdb_time_t expiry;    
+
+            qdb_time_t expiry;
         };
 
         struct result
         {
             result(qdb_error_t err = qdb_e_uninitialized) : error(err) {}
 
-            union 
+            union
             {
                 slice buffer;
                 qdb_int_t value;
                 qdb_time_t date;
             } content;
 
-            qdb_error_t error;      
+            qdb_error_t error;
         };
 
         explicit qdb_request (qdb_error_t err) : _cluster_data(nullptr), output(err) {}
@@ -116,9 +124,9 @@ namespace detail
         cluster_data_ptr _cluster_data;
 
     public:
-        qdb_handle_t handle(void) 
+        qdb_handle_t handle(void)
         {
-            return _cluster_data ? _cluster_data->handle().get() : nullptr;
+            return _cluster_data ? static_cast<qdb_handle_t>(_cluster_data->handle().get()) : nullptr;
         }
 
         void on_error(v8::Isolate * isolate, qdb_error_t err)
@@ -126,7 +134,29 @@ namespace detail
             if (_cluster_data)
             {
                 _cluster_data->on_error(isolate, err);
-            }            
+            }
+        }
+
+    public:
+        v8::MaybeLocal<v8::Object> make_node_buffer(v8::Isolate* isolate, const void * buf, size_t length)
+        {
+            qdb_handle_t h = handle();
+
+            if (!h || !buf || !length)
+            {
+                return node::Buffer::New(isolate, static_cast<size_t>(0u));
+            }
+
+            return node::Buffer::New(isolate,
+                static_cast<char *>(const_cast<void *>(buf)), 
+                length,
+                detail::release_node_buffer,
+                h);
+        }
+
+        v8::MaybeLocal<v8::Object> make_node_buffer(v8::Isolate* isolate)
+        {
+            return make_node_buffer(isolate, output.content.buffer.begin, output.content.buffer.size);
         }
 
     public:
@@ -134,11 +164,11 @@ namespace detail
 
         v8::Local<v8::Function> callbackAsLocal(void)
         {
-            if (callback.IsWeak()) 
+            if (callback.IsWeak())
             {
                 return v8::Local<v8::Function>::New(v8::Isolate::GetCurrent(), callback);
             }
-        
+
             return *reinterpret_cast<v8::Local<v8::Function>*>(const_cast<v8::Persistent<v8::Function>*>(&callback));
         }
 
@@ -152,14 +182,14 @@ namespace detail
 
         query input;
         result output;
-    
+
     private:
         std::function<void (qdb_request *)> _execute;
 
         // prevent copy
         qdb_request(const qdb_request &) {}
     };
-    
+
     struct MethodMan
     {
         explicit MethodMan(const v8::FunctionCallbackInfo<v8::Value> & args) : _isolate(v8::Isolate::GetCurrent()), _scope(_isolate), _args(args) {}
@@ -213,8 +243,8 @@ namespace detail
         // std::optional not available in VS 2013
         std::pair<v8::Local<v8::Object>, bool> checkedArgObject(int i) const
         {
-            return checkArg<v8::Local<v8::Object>>(i, 
-                [](v8::Local<v8::Value> v) -> bool { return !v->IsFunction() && v->IsObject(); }, 
+            return checkArg<v8::Local<v8::Object>>(i,
+                [](v8::Local<v8::Value> v) -> bool { return !v->IsFunction() && v->IsObject(); },
                 &MethodMan::argObject);
         }
 
@@ -225,8 +255,8 @@ namespace detail
 
         std::pair<v8::Local<v8::Function>, bool> checkedArgCallback(int i) const
         {
-            return checkArg<v8::Local<v8::Function>>(i, 
-                [](v8::Local<v8::Value> v) -> bool { return v->IsFunction(); }, 
+            return checkArg<v8::Local<v8::Function>>(i,
+                [](v8::Local<v8::Value> v) -> bool { return v->IsFunction(); },
                 &MethodMan::argCallback);
         }
 
@@ -234,11 +264,11 @@ namespace detail
         {
             return _args[i]->ToString();
         }
-     
+
         std::pair<v8::Local<v8::String>, bool> checkedArgString(int i) const
         {
-            return checkArg<v8::Local<v8::String>>(i, 
-                [](v8::Local<v8::Value> v) -> bool { return v->IsString(); }, 
+            return checkArg<v8::Local<v8::String>>(i,
+                [](v8::Local<v8::Value> v) -> bool { return v->IsString(); },
                 &MethodMan::argString);
         }
 
@@ -246,11 +276,11 @@ namespace detail
         {
             return _args[i]->NumberValue();
         }
-     
+
         std::pair<double, bool> checkedArgNumber(int i) const
         {
-            return checkArg<double>(i, 
-                [](v8::Local<v8::Value> v) -> bool { return v->IsNumber(); }, 
+            return checkArg<double>(i,
+                [](v8::Local<v8::Value> v) -> bool { return v->IsNumber(); },
                 &MethodMan::argNumber);
         }
 
@@ -260,9 +290,9 @@ namespace detail
         }
 
         std::pair<v8::Local<v8::Date>, bool> checkedArgDate(int i) const
-        {            
-            return checkArg<v8::Local<v8::Date>>(i, 
-                [](v8::Local<v8::Value> v) -> bool { return v->IsDate(); }, 
+        {
+            return checkArg<v8::Local<v8::Date>>(i,
+                [](v8::Local<v8::Value> v) -> bool { return v->IsDate(); },
                 &MethodMan::argDate);
         }
 
@@ -297,18 +327,18 @@ namespace detail
         template <typename Pair>
         const Pair processResult(Pair && pair)
         {
-            _pos += static_cast<int>(pair.second); // increment if successful            
+            _pos += static_cast<int>(pair.second); // increment if successful
             return std::forward<Pair>(pair);
         }
 
     public:
-        std::pair<double, bool> eatNumber(void) 
+        std::pair<double, bool> eatNumber(void)
         {
             return processResult(_method.checkedArgNumber(_pos));
         }
 
         template <typename Integer>
-        std::pair<Integer, bool> eatInteger(void) 
+        std::pair<Integer, bool> eatInteger(void)
         {
             auto res = eatNumber();
             if (!res.second)
@@ -320,24 +350,24 @@ namespace detail
             return std::make_pair(static_cast<Integer>(res.first), true);
         }
 
-        std::pair<v8::Local<v8::String>, bool> eatString(void) 
+        std::pair<v8::Local<v8::String>, bool> eatString(void)
         {
-            return processResult(_method.checkedArgString(_pos));            
+            return processResult(_method.checkedArgString(_pos));
         }
 
-        std::pair<v8::Local<v8::Function>, bool> eatCallback(void) 
+        std::pair<v8::Local<v8::Function>, bool> eatCallback(void)
         {
-            return processResult(_method.checkedArgCallback(_pos));  
+            return processResult(_method.checkedArgCallback(_pos));
         }
 
-        std::pair<v8::Local<v8::Object>, bool> eatObject(void) 
+        std::pair<v8::Local<v8::Object>, bool> eatObject(void)
         {
-            return processResult(_method.checkedArgObject(_pos));  
+            return processResult(_method.checkedArgObject(_pos));
         }
 
         std::pair<v8::Local<v8::Date>, bool> eatDate(void)
         {
-            return processResult(_method.checkedArgDate(_pos));  
+            return processResult(_method.checkedArgDate(_pos));
         }
 
     public:
@@ -355,7 +385,7 @@ namespace detail
 
             if (date.second)
             {
-                res = static_cast<qdb_time_t>(date.first->ValueOf() / 1000.0);               
+                res = static_cast<qdb_time_t>(date.first->ValueOf() / 1000.0);
             }
 
             return res;
@@ -385,7 +415,7 @@ namespace detail
             if (buf.second)
             {
                 res.begin = node::Buffer::Data(buf.first);
-                res.size = node::Buffer::Length(buf.first);   
+                res.size = node::Buffer::Length(buf.first);
             }
             else
             {

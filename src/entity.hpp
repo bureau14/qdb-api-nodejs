@@ -96,7 +96,7 @@ namespace qdb
 
             return req;
         }
-        
+
     public:
         // tag management function
         static void addTag(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -149,15 +149,16 @@ namespace qdb
 
     public:
         template <typename F>
-        static void Init(v8::Handle<v8::Object> exports, const char * className, F init)
+        static void Init(v8::Local<v8::Object> exports, const char * className, F init)
         {
             v8::Isolate* isolate = v8::Isolate::GetCurrent();
+            v8::HandleScope scope(isolate);            
 
             // Prepare constructor template
             v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Derivate::New);
             tpl->SetClassName(v8::String::NewFromUtf8(isolate, className));
             tpl->InstanceTemplate()->SetInternalFieldCount(Entity<Derivate>::FieldsCount);
-
+            
             // Prototype
             NODE_SET_PROTOTYPE_METHOD(tpl, "alias",         Entity<Derivate>::alias);
             NODE_SET_PROTOTYPE_METHOD(tpl, "remove",        Entity<Derivate>::remove);
@@ -178,7 +179,7 @@ namespace qdb
             v8::HandleScope scope(isolate);
 
             const unsigned argc = 2;
-            v8::Handle<v8::Value> argv[argc] = { args[0], args[1] };
+            v8::Local<v8::Value> argv[argc] = { args[0], args[1] };
             v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
             v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
 
@@ -186,17 +187,17 @@ namespace qdb
         }
 
     private:
-        static void processCallAndCleanUp(v8::Isolate * isolate, 
-            v8::TryCatch & try_catch, 
-            qdb_request * qdb_req, 
+        static void processCallAndCleanUp(v8::Isolate * isolate,
+            v8::TryCatch & try_catch,
+            qdb_request * qdb_req,
             unsigned int argc,
-            v8::Handle<v8::Value> argv[])
+            v8::Local<v8::Value> argv[])
         {
             const qdb_error_t err = (argc > 0) ? static_cast<qdb_error_t>(static_cast<unsigned int>(argv[0]->NumberValue())) : qdb_e_ok;
 
             if (!fatal_error(err))
             {
-                auto cb = qdb_req->callbackAsLocal();         
+                auto cb = qdb_req->callbackAsLocal();
                 cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
             }
             else
@@ -208,19 +209,20 @@ namespace qdb
 
             if (try_catch.HasCaught())
             {
-                node::FatalException(try_catch);
+                node::FatalException(isolate, try_catch);
             }
         }
 
         static auto processErrorCode(v8::Isolate * isolate, int status, const qdb_request * req) -> decltype(v8::Int32::New(isolate, 0))
         {
-            return (status < 0) ? v8::Int32::New(isolate, qdb_e_internal) : v8::Int32::New(isolate, static_cast<int32_t>(req->output.error)); 
+            return (status < 0) ? v8::Int32::New(isolate, qdb_e_internal) : v8::Int32::New(isolate, static_cast<int32_t>(req->output.error));
         }
 
     public:
         static void processBufferResult(uv_work_t * req, int status)
         {
             v8::Isolate * isolate = v8::Isolate::GetCurrent();
+            v8::HandleScope scope(isolate);
 
             v8::TryCatch try_catch;
 
@@ -229,13 +231,13 @@ namespace qdb
 
             const auto error_code = processErrorCode(isolate, status, qdb_req);
             const auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok) && (qdb_req->output.content.buffer.size > 0u)) ?
-                node::Buffer::New(isolate, qdb_req->output.content.buffer.begin, qdb_req->output.content.buffer.size) : node::Buffer::New(isolate, 0);
+                qdb_req->make_node_buffer(isolate).ToLocalChecked() : node::Buffer::New(isolate, 0).ToLocalChecked();
 
-            // safe to call even on null/invalid buffers
-            qdb_free_buffer(qdb_req->handle(), qdb_req->output.content.buffer.begin);
+            // don't free the buffer qdb_req->output.content.buffer.begin
+            // we handed over ownership in make_node_buffer            
 
             static const unsigned int argc = 2;
-            v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
+            v8::Local<v8::Value> argv[argc] = { error_code, result_data };
 
             processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
         }
@@ -244,6 +246,7 @@ namespace qdb
         {
             // build an array out of the buffer
             v8::Isolate * isolate = v8::Isolate::GetCurrent();
+            v8::HandleScope scope(isolate);
 
             v8::Handle<v8::Array> array;
 
@@ -277,12 +280,12 @@ namespace qdb
             }
             else
             {
-                // provide an empty array 
+                // provide an empty array
                 array = v8::Array::New(isolate, 0);
             }
 
             static const unsigned int argc = 2;
-            v8::Handle<v8::Value> argv[argc] = { error_code, array };
+            v8::Local<v8::Value> argv[argc] = { error_code, array };
 
             processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
         }
@@ -290,6 +293,7 @@ namespace qdb
         static void processIntegerResult(uv_work_t * req, int status)
         {
             v8::Isolate * isolate = v8::Isolate::GetCurrent();
+            v8::HandleScope scope(isolate);
 
             v8::TryCatch try_catch;
 
@@ -297,11 +301,11 @@ namespace qdb
             assert(qdb_req);
 
             const auto error_code = processErrorCode(isolate, status, qdb_req);
-            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok)) ? 
+            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok)) ?
                 v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.value)) : v8::Number::New(isolate, 0.0);
 
             static const unsigned int argc = 2;
-            v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
+            v8::Local<v8::Value> argv[argc] = { error_code, result_data };
 
             processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
         }
@@ -309,6 +313,7 @@ namespace qdb
         static void processDateResult(uv_work_t * req, int status)
         {
             v8::Isolate * isolate = v8::Isolate::GetCurrent();
+            v8::HandleScope scope(isolate);
 
             v8::TryCatch try_catch;
 
@@ -316,11 +321,11 @@ namespace qdb
             assert(qdb_req);
 
             const auto error_code = processErrorCode(isolate, status, qdb_req);
-            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok)) ? 
+            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok)) ?
                 v8::Date::New(isolate, static_cast<double>(qdb_req->output.content.value) * 1000.0) : v8::Date::New(isolate, 0.0);
 
             static const unsigned int argc = 2;
-            v8::Handle<v8::Value> argv[argc] = { error_code, result_data };
+            v8::Local<v8::Value> argv[argc] = { error_code, result_data };
 
             processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
         }
@@ -328,6 +333,7 @@ namespace qdb
         static void processVoidResult(uv_work_t * req, int status)
         {
             v8::Isolate * isolate = v8::Isolate::GetCurrent();
+            v8::HandleScope scope(isolate);
 
             v8::TryCatch try_catch;
 
@@ -335,7 +341,7 @@ namespace qdb
             assert(qdb_req);
 
             static const unsigned int argc = 1;
-            v8::Handle<v8::Value> argv[argc] = { processErrorCode(isolate, status, qdb_req) };
+            v8::Local<v8::Value> argv[argc] = { processErrorCode(isolate, status, qdb_req) };
 
             processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
         }
@@ -358,7 +364,9 @@ namespace qdb
 
              if (try_catch.HasCaught())
              {
-                node::FatalException(try_catch);
+                v8::Isolate * isolate = v8::Isolate::GetCurrent();
+                v8::HandleScope scope(isolate);
+                node::FatalException(isolate, try_catch);
              }
 
              assert(work);

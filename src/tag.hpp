@@ -28,7 +28,7 @@ private:
     virtual ~Tag(void) {}
 
 public:
-    static void Init(v8::Handle<v8::Object> exports)
+    static void Init(v8::Local<v8::Object> exports)
     {
         Entity<Tag>::Init(exports, "Tag", [](v8::Local<v8::FunctionTemplate> tpl)
         {

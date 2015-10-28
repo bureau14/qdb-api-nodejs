@@ -27,7 +27,7 @@ namespace qdb
         virtual ~Set(void) {}
 
     public:
-        static void Init(v8::Handle<v8::Object> exports)
+        static void Init(v8::Local<v8::Object> exports)
         {
             Entity<Set>::Init(exports, "Set", [](v8::Local<v8::FunctionTemplate> tpl)
             {

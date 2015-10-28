@@ -29,7 +29,7 @@ namespace qdb
         virtual ~Cluster(void) {}
 
     public:
-        static void Init(v8::Handle<v8::Object> exports)
+        static void Init(v8::Local<v8::Object> exports)
         {
             v8::Isolate* isolate = v8::Isolate::GetCurrent();
 
@@ -189,6 +189,7 @@ namespace qdb
         static void processConnectionResult(uv_work_t * req, int status) 
         {
             v8::Isolate * isolate = v8::Isolate::GetCurrent();
+            v8::HandleScope scope(isolate);
 
             v8::TryCatch try_catch;
 
@@ -215,7 +216,7 @@ namespace qdb
 
             if (try_catch.HasCaught())
             {
-                node::FatalException(try_catch);
+                node::FatalException(isolate, try_catch);
             }                       
         }
 

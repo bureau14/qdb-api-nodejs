@@ -27,7 +27,7 @@ namespace qdb
         virtual ~Integer(void) {}
 
     public:
-        static void Init(v8::Handle<v8::Object> exports)
+        static void Init(v8::Local<v8::Object> exports)
         {
             ExpirableEntity<Integer>::Init(exports, "Integer", [](v8::Local<v8::FunctionTemplate> tpl)
             {
