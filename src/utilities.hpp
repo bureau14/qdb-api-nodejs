@@ -73,7 +73,7 @@ namespace detail
 
         struct slice
         {
-            const char * begin;
+            const void * begin;
             size_t size;
         };
 

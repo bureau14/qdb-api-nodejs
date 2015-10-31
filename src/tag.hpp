@@ -46,7 +46,7 @@ public:
             qdb_req->output.error = qdb_get_tagged(
                 qdb_req->handle(), 
                 qdb_req->input.alias.c_str(),
-                reinterpret_cast<const char ***>(const_cast<char **>(&(qdb_req->output.content.buffer.begin))),
+                reinterpret_cast<const char ***>(const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
                 &(qdb_req->output.content.buffer.size));
         }, Entity<Tag>::processArrayStringResult);
     }

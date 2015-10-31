@@ -139,7 +139,7 @@ namespace qdb
                 {
                     qdb_req->output.error = qdb_get_tags(qdb_req->handle(),
                         qdb_req->input.alias.c_str(),
-                        reinterpret_cast<const char ***>(const_cast<char **>(&(qdb_req->output.content.buffer.begin))),
+                        reinterpret_cast<const char ***>(const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
                         &(qdb_req->output.content.buffer.size));
 
                 },
@@ -258,7 +258,7 @@ namespace qdb
             auto error_code = processErrorCode(isolate, status, qdb_req);
             if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
             {
-                const char ** entries = reinterpret_cast<const char **>(const_cast<char *>(qdb_req->output.content.buffer.begin));
+                const char ** entries = reinterpret_cast<const char **>(const_cast<void *>(qdb_req->output.content.buffer.begin));
                 const size_t entries_count = qdb_req->output.content.buffer.size;
 
                 array = v8::Array::New(isolate, static_cast<int>(entries_count));
