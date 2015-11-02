@@ -5,11 +5,12 @@
 
 #include "cluster.hpp"
 
-void InitAll(v8::Local<v8::Object> exports) 
+void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module) 
 {
     std::setlocale(LC_ALL, "en_US.UTF-8");
 
     qdb::Cluster::Init(exports);
+    
     qdb::Blob::Init(exports);
     qdb::Integer::Init(exports);
     qdb::Deque::Init(exports);

@@ -31,12 +31,12 @@ namespace qdb
     public:
         static void Init(v8::Local<v8::Object> exports)
         {
-            v8::Isolate* isolate = v8::Isolate::GetCurrent();
+            v8::Isolate* isolate = exports->GetIsolate();
 
             // Prepare constructor template
             v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, New);
             tpl->SetClassName(v8::String::NewFromUtf8(isolate, "Cluster"));
-            tpl->InstanceTemplate()->SetInternalFieldCount(1);
+            tpl->InstanceTemplate()->SetInternalFieldCount(4);
 
             // Prototype
             NODE_SET_PROTOTYPE_METHOD(tpl, "connect", connect);
@@ -86,13 +86,20 @@ namespace qdb
             } 
             else 
             {
-                v8::Isolate* isolate = v8::Isolate::GetCurrent();
-                // Invoked as plain function `MyObject(...)`, turn into construct call.
-                const int argc = 1;
-                v8::Local<v8::Value> argv[argc] = { args[0] };
-                v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
-                args.GetReturnValue().Set(cons->NewInstance(argc, argv));
+                NewInstance(args);
             }
+        }
+
+    public:
+        static void NewInstance(const v8::FunctionCallbackInfo<v8::Value>& args)
+        {
+            v8::Isolate* isolate = args.GetIsolate();
+            // Invoked as plain function `MyObject(...)`, turn into construct call.
+            const int argc = 1;
+            v8::Local<v8::Value> argv[argc] = { args[0] };
+            v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
+            v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+            args.GetReturnValue().Set(instance);        
         }
 
     public:

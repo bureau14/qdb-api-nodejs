@@ -151,8 +151,7 @@ namespace qdb
         template <typename F>
         static void Init(v8::Local<v8::Object> exports, const char * className, F init)
         {
-            v8::Isolate* isolate = v8::Isolate::GetCurrent();
-            v8::HandleScope scope(isolate);            
+            v8::Isolate* isolate = exports->GetIsolate();
 
             // Prepare constructor template
             v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Derivate::New);
@@ -170,13 +169,13 @@ namespace qdb
             init(tpl);
 
             Derivate::constructor.Reset(isolate, tpl->GetFunction());
+
             exports->Set(v8::String::NewFromUtf8(isolate, className), tpl->GetFunction());
         }
 
         static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            v8::Isolate* isolate = v8::Isolate::GetCurrent();
-            v8::HandleScope scope(isolate);
+            v8::Isolate* isolate = args.GetIsolate();
 
             const unsigned argc = 2;
             v8::Local<v8::Value> argv[argc] = { args[0], args[1] };
@@ -189,6 +188,7 @@ namespace qdb
     private:
         static void processCallAndCleanUp(v8::Isolate * isolate,
             v8::TryCatch & try_catch,
+            uv_work_t * req,
             qdb_request * qdb_req,
             unsigned int argc,
             v8::Local<v8::Value> argv[])
@@ -206,6 +206,7 @@ namespace qdb
             }
 
             delete qdb_req;
+            delete req;
 
             if (try_catch.HasCaught())
             {
@@ -239,7 +240,7 @@ namespace qdb
             static const unsigned int argc = 2;
             v8::Local<v8::Value> argv[argc] = { error_code, result_data };
 
-            processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
+            processCallAndCleanUp(isolate, try_catch, req, qdb_req, argc, argv);
         }
 
         static void processArrayStringResult(uv_work_t * req, int status)
@@ -287,7 +288,7 @@ namespace qdb
             static const unsigned int argc = 2;
             v8::Local<v8::Value> argv[argc] = { error_code, array };
 
-            processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
+            processCallAndCleanUp(isolate, try_catch, req, qdb_req, argc, argv);
         }
 
         static void processIntegerResult(uv_work_t * req, int status)
@@ -307,7 +308,7 @@ namespace qdb
             static const unsigned int argc = 2;
             v8::Local<v8::Value> argv[argc] = { error_code, result_data };
 
-            processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
+            processCallAndCleanUp(isolate, try_catch, req, qdb_req, argc, argv);
         }
 
         static void processDateResult(uv_work_t * req, int status)
@@ -327,7 +328,7 @@ namespace qdb
             static const unsigned int argc = 2;
             v8::Local<v8::Value> argv[argc] = { error_code, result_data };
 
-            processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
+            processCallAndCleanUp(isolate, try_catch, req, qdb_req, argc, argv);
         }
 
         static void processVoidResult(uv_work_t * req, int status)
@@ -343,7 +344,7 @@ namespace qdb
             static const unsigned int argc = 1;
             v8::Local<v8::Value> argv[argc] = { processErrorCode(isolate, status, qdb_req) };
 
-            processCallAndCleanUp(isolate, try_catch, qdb_req, argc, argv);
+            processCallAndCleanUp(isolate, try_catch, req, qdb_req, argc, argv);
         }
 
     private:

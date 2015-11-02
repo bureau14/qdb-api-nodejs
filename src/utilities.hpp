@@ -119,6 +119,11 @@ namespace detail
 
         qdb_request(cluster_data_ptr cd, std::function<void (qdb_request *)> exec, std::string a) : _cluster_data(cd), input(a), _execute(exec) {}
 
+        ~qdb_request(void)
+        {
+            callback.Reset();
+        }
+
     private:
         // make sure the handle is alive for the duration of the request
         cluster_data_ptr _cluster_data;
