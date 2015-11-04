@@ -204,14 +204,29 @@ Because you may want to try again before giving up, you can check if an error is
     });
 ```
 
-You can also query if an error is *informational*. An informational error means that the query has been succesfully processed by the server and your parameters were valid but the result is either empty or unavailabe. Typical informational errors are:
+You can also query if an error is *informational*. An informational error means that the query has been succesfully processed by the server and your parameters were valid but the result is either empty or unavailable. Typical informational errors are:
 
- * Non-existin entry
+ * Non-existing entry
  * Empty collection
  * Index out of range
  * Integer overflow/underflow
 
-You may want to treat informational errors differently than other errors and the informational method is there just for that purpose.
+```javascript
+    var b = c.blob('bam');
+
+    b.put(new Buffer("boom"), function(err)
+    {
+        if (err)
+        {
+            if (err.informational())
+            {
+                // let's do something different
+            }
+        }
+
+        // ...
+    });
+```
 
 ## Not supported yet
 
