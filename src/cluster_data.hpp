@@ -52,10 +52,10 @@ namespace qdb
         }
 
         // can also be called by other objects
-        void on_error(v8::Isolate * isolate, qdb_error_t err)
+        void on_error(v8::Isolate * isolate, const v8::Local<v8::Object> & error_object)
         {
             static const unsigned int argc = 1;
-            v8::Handle<v8::Value> argv[argc] = { v8::Int32::New(isolate, err) };             
+            v8::Handle<v8::Value> argv[argc] = { error_object };
 
             v8::Local<v8::Function> c = callbackAsLocal(isolate, _on_error);
 

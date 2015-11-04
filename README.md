@@ -148,9 +148,9 @@ Tags, sets and queues do not expire (but can of course be manually removed).
 
 ## Timeout
 
-You can configure the *client-side* timeout (the server-side timeout is a cluster configuration which cannot be remotely changed). 
+You can configure the *client-side* timeout (the server-side timeout is a cluster configuration which cannot be remotely changed).
 
-The client-side timeout is the time duration after which a client will consider a request to have timed out. The default value is one minute (60,000 ms). You may want to lower this value on low-latency networks. 
+The client-side timeout is the time duration after which a client will consider a request to have timed out. The default value is one minute (60,000 ms). You may want to lower this value on low-latency networks.
 
 
 ```javascript
@@ -159,6 +159,59 @@ The client-side timeout is the time duration after which a client will consider 
 ```
 
 Ideally the timeout should be set before calling connect.
+
+## Errors
+
+Quasardb callback return error objects. When the callback is successful, the error object is null. You can therefore safely write:
+
+```javascript
+    var b = c.blob('bam');
+
+    b.put(new Buffer("boom"), function(err)
+    {
+        if (err)
+        {
+            // error management
+            throw error.message();
+        }
+
+        // ...
+    });
+```
+
+You may not want to throw at every error. Some errors are *transient*. Meaning the underlying problem may (or may not) solve by itself. Transient errors are typically:
+
+  * Transactions conflicts
+  * Network timeouts
+  * Cluster is currently stabilizing
+
+Because you may want to try again before giving up, you can check if an error is transient with the transient() method:
+
+```javascript
+    var b = c.blob('bam');
+
+    b.put(new Buffer("boom"), function(err)
+    {
+        if (err)
+        {
+            if (err.transient())
+            {
+                // let's try again
+            }
+        }
+
+        // ...
+    });
+```
+
+You can also query if an error is *informational*. An informational error means that the query has been succesfully processed by the server and your parameters were valid but the result is either empty or unavailabe. Typical informational errors are:
+
+ * Non-existin entry
+ * Empty collection
+ * Index out of range
+ * Integer overflow/underflow
+
+You may want to treat informational errors differently than other errors and the informational method is there just for that purpose.
 
 ## Not supported yet
 

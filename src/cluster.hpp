@@ -6,6 +6,7 @@
 
 #include <mutex>
 
+#include "error.hpp"
 #include "cluster_data.hpp"
 #include "blob.hpp"
 #include "integer.hpp"
@@ -17,7 +18,7 @@ namespace qdb
 {
 
     // cAmelCaSe :(
-    class Cluster : public node::ObjectWrap 
+    class Cluster : public node::ObjectWrap
     {
 
     public:
@@ -55,11 +56,11 @@ namespace qdb
     private:
         static void New(const v8::FunctionCallbackInfo<v8::Value>& args)
         {
-            if (args.IsConstructCall()) 
+            if (args.IsConstructCall())
             {
                 MethodMan call(args);
 
-                if (args.Length() != 1) 
+                if (args.Length() != 1)
                 {
                     call.throwException("Expected exactly one argument");
                     return;
@@ -77,14 +78,14 @@ namespace qdb
                 // the cluster only owns the uri
                 // when we will connect we will create a reference counted cluster_data
                 // with a handle
-                // because the cluster_data is reference counted and transmitted to every 
+                // because the cluster_data is reference counted and transmitted to every
                 // callback we are sure it is kept alive for as long as needed
                 Cluster * cl = new Cluster(*utf8str);
 
                 cl->Wrap(args.This());
                 args.GetReturnValue().Set(args.This());
-            } 
-            else 
+            }
+            else
             {
                 NewInstance(args);
             }
@@ -99,18 +100,18 @@ namespace qdb
             v8::Local<v8::Value> argv[argc] = { args[0] };
             v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
             v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
-            args.GetReturnValue().Set(instance);        
+            args.GetReturnValue().Set(instance);
         }
 
     public:
         template <typename Object>
         static void newObject(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            if (args.IsConstructCall()) 
+            if (args.IsConstructCall())
             {
                 MethodMan call(args);
 
-                if (args.Length() != 2) 
+                if (args.Length() != 2)
                 {
                     call.throwException("Wrong number of arguments");
                     return;
@@ -123,7 +124,7 @@ namespace qdb
                 {
                     call.throwException("Invalid parameter supplied to object");
                     return;
-                } 
+                }
 
                 auto str = call.checkedArgString(1);
                 if (!str.second)
@@ -148,8 +149,8 @@ namespace qdb
 
                 b->Wrap(args.This());
                 args.GetReturnValue().Set(args.This());
-            } 
-            else 
+            }
+            else
             {
                 v8::Isolate* isolate = v8::Isolate::GetCurrent();
                 // Invoked as plain function `MyObject(...)`, turn into construct call.
@@ -172,13 +173,13 @@ namespace qdb
             const int argc = 2;
             v8::Local<v8::Value> argv[argc] = { the_cluster, args[0] };
             v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Object::constructor);
-            args.GetReturnValue().Set(cons->NewInstance(argc, argv));        
+            args.GetReturnValue().Set(cons->NewInstance(argc, argv));
         }
 
     private:
         struct connection_request
         {
-            explicit connection_request(cluster_data_ptr cd) : data(cd) 
+            explicit connection_request(cluster_data_ptr cd) : data(cd)
             {
                 assert(data);
             }
@@ -189,11 +190,11 @@ namespace qdb
             void execute(void)
             {
                 error = data->connect();
-            }            
+            }
         };
 
     private:
-        static void processConnectionResult(uv_work_t * req, int status) 
+        static void processConnectionResult(uv_work_t * req, int status)
         {
             v8::Isolate * isolate = v8::Isolate::GetCurrent();
             v8::HandleScope scope(isolate);
@@ -203,8 +204,8 @@ namespace qdb
             connection_request * conn_req = static_cast<connection_request *>(req->data);
             assert(conn_req);
 
-            cluster_data_ptr cd = conn_req->data;     
-            assert(cd);           
+            cluster_data_ptr cd = conn_req->data;
+            assert(cd);
 
             const qdb_error_t err = (status < 0) ? qdb_e_internal : conn_req->error;
 
@@ -218,13 +219,14 @@ namespace qdb
             }
             else
             {
-                cd->on_error(isolate, err);
-            }            
+                v8::Local<v8::Object> error_object = Error::MakeError(isolate, err);
+                cd->on_error(isolate, error_object);
+            }
 
             if (try_catch.HasCaught())
             {
                 node::FatalException(isolate, try_catch);
-            }                       
+            }
         }
 
     private:
@@ -238,7 +240,7 @@ namespace qdb
         {
             MethodMan call(args);
 
-            if (args.Length() != 2) 
+            if (args.Length() != 2)
             {
                 call.throwException("Wrong number of arguments");
                 return;
@@ -257,7 +259,7 @@ namespace qdb
             if (!on_error.second)
             {
                 call.throwException("Expected a callback as second argument");
-                return;                    
+                return;
             }
 
             Cluster * c = call.nativeHolder<Cluster>();
@@ -265,35 +267,35 @@ namespace qdb
 
             uv_work_t * work = new uv_work_t();
             work->data = new connection_request(c->new_data(on_success.first, on_error.first));
-            
+
              uv_queue_work(uv_default_loop(),
                 work,
                 &Cluster::callback_wrapper,
-                &Cluster::processConnectionResult);    
+                &Cluster::processConnectionResult);
         }
 
     public:
-        static void blob(const v8::FunctionCallbackInfo<v8::Value> & args) 
+        static void blob(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             objectFactory<Blob>(args);
         }
 
-        static void integer(const v8::FunctionCallbackInfo<v8::Value> & args) 
+        static void integer(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             objectFactory<Integer>(args);
         }
-        
-        static void deque(const v8::FunctionCallbackInfo<v8::Value> & args) 
+
+        static void deque(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             objectFactory<Deque>(args);
         }
 
-        static void set(const v8::FunctionCallbackInfo<v8::Value> & args) 
+        static void set(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             objectFactory<Set>(args);
         }
 
-        static void tag(const v8::FunctionCallbackInfo<v8::Value> & args) 
+        static void tag(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             objectFactory<Tag>(args);
         }
@@ -303,28 +305,28 @@ namespace qdb
         {
             MethodMan call(args);
 
-            if (args.Length() != 1) 
+            if (args.Length() != 1)
             {
                 call.throwException("Wrong number of arguments");
                 return;
-            }            
+            }
 
             auto timeout_value = call.checkedArgNumber(0);
             if (!timeout_value.second)
             {
                 call.throwException("setTimeout expect a timeout value in seconds");
-                return;                    
+                return;
             }
 
             const int new_timeout = static_cast<int>(timeout_value.first);
             if (new_timeout < 1000)
             {
-                call.throwException("The timeout value cannot be less than one second.");  
-                return;              
+                call.throwException("The timeout value cannot be less than one second.");
+                return;
             }
 
             Cluster * c = call.nativeHolder<Cluster>();
-            assert(c);     
+            assert(c);
 
             c->_timeout = new_timeout;
 
@@ -333,7 +335,7 @@ namespace qdb
             {
                 if (cd->set_timeout(c->_timeout) != qdb_e_ok)
                 {
-                    call.throwException("Could not set timeout.");                    
+                    call.throwException("Could not set timeout.");
                 }
             }
         }
@@ -372,9 +374,9 @@ namespace qdb
 
     private:
         const std::string _uri;
-        
+
         mutable std::mutex _data_mutex;
-        
+
         int _timeout;
         cluster_data_ptr _data;
 

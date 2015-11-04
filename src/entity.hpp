@@ -157,7 +157,7 @@ namespace qdb
             v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Derivate::New);
             tpl->SetClassName(v8::String::NewFromUtf8(isolate, className));
             tpl->InstanceTemplate()->SetInternalFieldCount(Entity<Derivate>::FieldsCount);
-            
+
             // Prototype
             NODE_SET_PROTOTYPE_METHOD(tpl, "alias",         Entity<Derivate>::alias);
             NODE_SET_PROTOTYPE_METHOD(tpl, "remove",        Entity<Derivate>::remove);
@@ -195,14 +195,16 @@ namespace qdb
         {
             const qdb_error_t err = (argc > 0) ? static_cast<qdb_error_t>(static_cast<unsigned int>(argv[0]->NumberValue())) : qdb_e_ok;
 
-            if (!fatal_error(err))
+            if (QDB_SEVERITY(err) == QDB_STATUS_SUCCESS)
             {
                 auto cb = qdb_req->callbackAsLocal();
                 cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
             }
             else
             {
-                qdb_req->on_error(isolate, err);
+                // create the error object and pass it to the callback
+                v8::Local<v8::Object> error_object = Error::MakeError(isolate, err);
+                qdb_req->on_error(isolate, error_object);
             }
 
             delete qdb_req;
@@ -214,9 +216,20 @@ namespace qdb
             }
         }
 
-        static auto processErrorCode(v8::Isolate * isolate, int status, const qdb_request * req) -> decltype(v8::Int32::New(isolate, 0))
+        static auto processErrorCode(v8::Isolate * isolate, int status, const qdb_request * req) -> v8::Local<v8::Value>
         {
-            return (status < 0) ? v8::Int32::New(isolate, qdb_e_internal) : v8::Int32::New(isolate, static_cast<int32_t>(req->output.error));
+            if (status < 0)
+            {
+                return Error::MakeError(isolate, qdb_e_internal);
+            }
+
+            if (QDB_SEVERITY(req->output.error) == QDB_STATUS_SUCCESS)
+            {
+                // nullptr for success
+                return v8::Null(isolate);
+            }
+
+            return Error::MakeError(isolate, req->output.error); //req->output.error);
         }
 
     public:
@@ -235,7 +248,7 @@ namespace qdb
                 qdb_req->make_node_buffer(isolate).ToLocalChecked() : node::Buffer::New(isolate, 0).ToLocalChecked();
 
             // don't free the buffer qdb_req->output.content.buffer.begin
-            // we handed over ownership in make_node_buffer            
+            // we handed over ownership in make_node_buffer
 
             static const unsigned int argc = 2;
             v8::Local<v8::Value> argv[argc] = { error_code, result_data };
@@ -273,7 +286,7 @@ namespace qdb
                 }
                 else
                 {
-                    error_code = v8::Int32::New(isolate, static_cast<int32_t>(qdb_e_no_memory));
+                    error_code = Error::MakeError(isolate, qdb_e_no_memory);
                 }
 
                 // safe to call even on null/invalid buffers

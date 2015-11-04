@@ -134,11 +134,11 @@ namespace detail
             return _cluster_data ? static_cast<qdb_handle_t>(_cluster_data->handle().get()) : nullptr;
         }
 
-        void on_error(v8::Isolate * isolate, qdb_error_t err)
+        void on_error(v8::Isolate * isolate, const v8::Local<v8::Object> & error_object)
         {
             if (_cluster_data)
             {
-                _cluster_data->on_error(isolate, err);
+                _cluster_data->on_error(isolate, error_object);
             }
         }
 
