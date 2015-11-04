@@ -12,6 +12,7 @@
 #include <qdb/client.h>
 #include <qdb/tag.h>
 
+#include "error.hpp"
 #include "cluster_data.hpp"
 #include "utilities.hpp"
 
