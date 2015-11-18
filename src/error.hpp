@@ -26,11 +26,25 @@ namespace qdb
             tpl->SetClassName(v8::String::NewFromUtf8(isolate, "Error"));
             tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-            // Prototype
-            NODE_SET_PROTOTYPE_METHOD(tpl, "informational", informational);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "transient", transient);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "message", message);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "code", code);
+            v8::HandleScope handle_scope(isolate);
+            v8::Local<v8::Signature> s = v8::Signature::New(isolate, tpl);
+
+            tpl->PrototypeTemplate()->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "informational"),
+                v8::FunctionTemplate::New(isolate, Error::informational, v8::Local<v8::Value>(), s),
+                v8::Local<v8::FunctionTemplate>(),
+                v8::ReadOnly);
+            tpl->PrototypeTemplate()->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "transient"),
+                v8::FunctionTemplate::New(isolate, Error::transient, v8::Local<v8::Value>(), s),
+                v8::Local<v8::FunctionTemplate>(),
+                v8::ReadOnly);
+            tpl->PrototypeTemplate()->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "message"),
+                v8::FunctionTemplate::New(isolate, Error::message, v8::Local<v8::Value>(), s),
+                v8::Local<v8::FunctionTemplate>(),
+                v8::ReadOnly);
+            tpl->PrototypeTemplate()->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "code"),
+                v8::FunctionTemplate::New(isolate, Error::code, v8::Local<v8::Value>(), s),
+                v8::Local<v8::FunctionTemplate>(),
+                v8::ReadOnly);
 
             constructor.Reset(isolate, tpl->GetFunction());
             exports->Set(v8::String::NewFromUtf8(isolate, "Error"), tpl->GetFunction());

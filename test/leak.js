@@ -1,4 +1,4 @@
-/*var qdb = require('d:/sources/qdb-api-nodejs/build/Debug/qdb.node');
+/*var qdb = require('../build/Release/qdb.node');
 var c = new qdb.Cluster('qdb://127.0.0.1:2836');
 
 function getter(t, i)

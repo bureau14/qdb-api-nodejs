@@ -19,7 +19,7 @@ before('run quasardb daemon', function(done)
         function(err)
         {
             // could not connect or lost connection
-            throw "an error occured: " + err.message();
+            throw "an error occured: " + err.message;
         });
     }, 2000);
 });
@@ -54,14 +54,16 @@ describe('qdb_connect', function()
                         wrong_cluster.connect(function(){}, function(err)
                         {
                             wrong_cluster.connect(function(){}, function(err)
-                            { 
-                            	test.must(err.message()).be.a.string();
-                            	test.must(err.message()).not.be.empty;
-                				test.must(err.code()).be.a.number();
-                				test.must(err.transient()).be.ok;
-                				test.must(err.informational()).not.be.ok;
+                            {
+                                test.must(err).not.be.equal(null);
 
-                            	done(); 
+                            //	test.must(err.message).be.a.string();
+                            	test.must(err.message).not.be.empty;
+                				test.must(err.code).be.a.number();
+                				test.must(err.transient).be.ok;
+                				test.must(err.informational).not.be.ok;
+
+                            	done();
                             });
                         });
                     });
@@ -106,12 +108,12 @@ describe('qdb_connect', function()
                 {
                     b.getTags(function(err, tags)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(8);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;                        
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(8);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         tags.must.be.empty;
 
@@ -125,9 +127,9 @@ describe('qdb_connect', function()
                     b.update(new Buffer('bam_content'), function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
-                    }); 
+                    });
                 });
 
                 it('should get the previous value', function(done)
@@ -157,9 +159,9 @@ describe('qdb_connect', function()
                     b.put(new Buffer('boom_content'), function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
-                    }); 
+                    });
                 });
 
                  it('should get the new value', function(done)
@@ -191,24 +193,24 @@ describe('qdb_connect', function()
                 {
                     b.hasTag(tagName, function(err)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(42);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(42);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
 
-                });         
+                });
 
                 it('should tag without an error', function(done)
                 {
                     b.addTag(tagName, function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
                     });
 
@@ -218,13 +220,13 @@ describe('qdb_connect', function()
                 {
                     b.addTag(tagName, function(err)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(41);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
-                        
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(41);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
+
                         done();
                     });
 
@@ -239,7 +241,7 @@ describe('qdb_connect', function()
                         done();
                     });
 
-                });    
+                });
 
                 it('should get a tag list with the tag', function(done)
                 {
@@ -261,7 +263,7 @@ describe('qdb_connect', function()
                     b.removeTag(tagName, function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
                     });
 
@@ -271,13 +273,13 @@ describe('qdb_connect', function()
                 {
                     b.removeTag(tagName, function(err)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(42);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
-                        
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(42);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
+
                         done();
                     });
 
@@ -287,17 +289,17 @@ describe('qdb_connect', function()
                 {
                     b.hasTag(tagName, function(err)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(42);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(42);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
 
-                });  
+                });
 
                 it('should get an empty tag list again', function(done)
                 {
@@ -320,7 +322,7 @@ describe('qdb_connect', function()
 
                         done();
                     });
-                });     
+                });
 
             }); // update/get/delete
 
@@ -329,6 +331,12 @@ describe('qdb_connect', function()
 
             describe('expiry', function()
             {
+                it('constants should be defined', function()
+                {
+                    test.must(qdb.NEVER_EXPIRES).be.a.number();
+                    test.must(qdb.PRESERVE_EXPIRATION).be.a.number();
+                });
+
                 it('should update with an expiry in 2s without error', function(done)
                 {
                     var test_exp = new Date();
@@ -337,9 +345,9 @@ describe('qdb_connect', function()
                     b.update(new Buffer('bam_content'), test_exp, function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
-                    }); 
+                    });
                 });
 
                 it('should wait three seconds', function(done)
@@ -352,12 +360,12 @@ describe('qdb_connect', function()
                 {
                     b.get(function(err, data)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(8);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(8);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
@@ -370,7 +378,7 @@ describe('qdb_connect', function()
                     b.put(new Buffer('bam_content'), test_exp, function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
                     });
 
@@ -383,7 +391,31 @@ describe('qdb_connect', function()
                     b.getExpiry(function(err, entry_expiry)
                     {
                         test.must(err).be.equal(null);
-                        
+
+                        test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
+
+                        done();
+                    });
+                });
+
+                it('should leave the expiry untouched', function(done)
+                {
+                    b.update(new Buffer('bim_content'), qdb.PRESERVE_EXPIRATION, function(err)
+                    {
+                        test.must(err).be.equal(null);
+                        done();
+                    });
+
+                });
+
+                it('should return the untouched expiry', function(done)
+                {
+                    var test_exp = new Date(2030, 1, 1, 10, 50, 0, 0);
+
+                    b.getExpiry(function(err, entry_expiry)
+                    {
+                        test.must(err).be.equal(null);
+
                         test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
 
                         done();
@@ -397,7 +429,7 @@ describe('qdb_connect', function()
                     b.expiresAt(test_exp, function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
                     });
 
@@ -410,7 +442,7 @@ describe('qdb_connect', function()
                     b.getExpiry(function(err, entry_expiry)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
 
                         done();
@@ -422,7 +454,7 @@ describe('qdb_connect', function()
                     b.expiresFromNow(2, function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
                     });
                 });
@@ -437,12 +469,12 @@ describe('qdb_connect', function()
                 {
                     b.get(function(err, data)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(8);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(8);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
@@ -463,7 +495,7 @@ describe('qdb_connect', function()
 
             test.object(t).hasProperty('alias');
             test.must(t.alias()).be.a.string();
-            test.must(t.alias()).be.equal(dasTag);  
+            test.must(t.alias()).be.equal(dasTag);
 
             describe('entries list test', function()
             {
@@ -500,7 +532,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();                  
+                        done();
                     });
                 });
 
@@ -510,7 +542,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();                  
+                        done();
                     });
                 });
 
@@ -520,7 +552,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();                  
+                        done();
                     });
                 });
 
@@ -530,7 +562,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();   
+                        done();
                     });
                 });
 
@@ -540,7 +572,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();   
+                        done();
                     });
                 });
 
@@ -550,7 +582,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();   
+                        done();
                     });
                 });
 
@@ -560,7 +592,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();   
+                        done();
                     });
                 });
 
@@ -587,7 +619,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();   
+                        done();
                     });
                 });
 
@@ -597,7 +629,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();   
+                        done();
                     });
                 });
 
@@ -607,7 +639,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();   
+                        done();
                     });
                 });
 
@@ -617,7 +649,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();   
+                        done();
                     });
                 });
 
@@ -649,7 +681,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();                  
+                        done();
                     });
                 });
 
@@ -659,7 +691,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();                  
+                        done();
                     });
                 });
 
@@ -669,7 +701,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        done();                  
+                        done();
                     });
                 });
 
@@ -785,14 +817,14 @@ describe('qdb_connect', function()
                     i.update(10, test_exp, function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
-                    }); 
+                    });
                 });
 
                 it('should wait three seconds', function(done)
                 {
-                    this.timeout(5000);                    
+                    this.timeout(5000);
                     setTimeout(done, 3000);
                 });
 
@@ -800,12 +832,12 @@ describe('qdb_connect', function()
                 {
                     i.get(function(err, data)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(8);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(8);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
@@ -818,7 +850,7 @@ describe('qdb_connect', function()
                     i.put(20, test_exp, function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
                     });
 
@@ -831,7 +863,7 @@ describe('qdb_connect', function()
                     i.getExpiry(function(err, entry_expiry)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
 
                         done();
@@ -845,7 +877,7 @@ describe('qdb_connect', function()
                     i.expiresAt(test_exp, function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
                     });
 
@@ -858,7 +890,7 @@ describe('qdb_connect', function()
                     i.getExpiry(function(err, entry_expiry)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
 
                         done();
@@ -870,7 +902,7 @@ describe('qdb_connect', function()
                     i.expiresFromNow(2, function(err)
                     {
                         test.must(err).be.equal(null);
-                        
+
                         done();
                     });
                 });
@@ -885,12 +917,12 @@ describe('qdb_connect', function()
                 {
                     i.get(function(err, data)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(8);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(8);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
@@ -921,12 +953,12 @@ describe('qdb_connect', function()
                 {
                     q.at(0, function(err, data)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(8);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(8);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
                         done();
                     });
                 });
@@ -935,12 +967,12 @@ describe('qdb_connect', function()
                 {
                     q.size(function(err, s)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(8);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(8);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
@@ -984,12 +1016,12 @@ describe('qdb_connect', function()
                 {
                     q.at(1, function(err, data)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(25);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(25);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
@@ -1151,12 +1183,12 @@ describe('qdb_connect', function()
                 {
                     s.contains(new Buffer('da'), function(err)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(8);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(8);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
@@ -1176,12 +1208,12 @@ describe('qdb_connect', function()
                 {
                     s.insert(new Buffer('da'), function(err)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(38);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(38);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
@@ -1211,12 +1243,12 @@ describe('qdb_connect', function()
                 {
                     s.contains(new Buffer('da'), function(err)
                     {
-                    	test.must(err.message()).be.a.string();
-                    	test.must(err.message()).not.be.empty;
-        				test.must(err.code()).be.a.number();
-        				test.must(err.code()).be.equal(37);
-        				test.must(err.transient()).be.not.ok;
-        				test.must(err.informational()).be.ok;   
+                    	test.must(err.message).be.a.string();
+                    	test.must(err.message).not.be.empty;
+        				test.must(err.code).be.a.number();
+        				test.must(err.code).be.equal(37);
+        				test.must(err.transient).be.not.ok;
+        				test.must(err.informational).be.ok;
 
                         done();
                     });
@@ -1227,5 +1259,5 @@ describe('qdb_connect', function()
     }); // connect
 
 }); // qdb
-    
+
 

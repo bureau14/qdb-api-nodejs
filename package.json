@@ -13,7 +13,7 @@
     "store"
   ],
   "main": "build/Release/qdb.node",
-  "version": "2.0.0beta6",
+  "version": "2.0.0rc1",
   "repository": {
     "type": "git",
     "url": "https://github.com/bureau14/qdb-api-nodejs"

@@ -197,7 +197,7 @@ namespace detail
 
     struct MethodMan
     {
-        explicit MethodMan(const v8::FunctionCallbackInfo<v8::Value> & args) : _isolate(v8::Isolate::GetCurrent()), _scope(_isolate), _args(args) {}
+        explicit MethodMan(const v8::FunctionCallbackInfo<v8::Value> & args) : _isolate(args.GetIsolate()), _scope(_isolate), _args(args) {}
 
     public:
         v8::Local<v8::Object> holder(void) const { return _args.Holder(); }
@@ -384,14 +384,32 @@ namespace detail
         qdb_time_t eatAndConvertDate(void)
         {
             // we get a Date object a convert that to qdb_time_t
-            auto date = eatDate();
-
-            qdb_time_t res = 0;
+            const auto date = _method.checkedArgDate(_pos);
 
             if (date.second)
             {
-                res = static_cast<qdb_time_t>(date.first->ValueOf() / 1000.0);
+                ++_pos;
+                return static_cast<qdb_time_t>(date.first->ValueOf() / 1000.0);
             }
+
+            // it might be a "special date"
+            const auto number = _method.checkedArgNumber(_pos);
+            if (!number.second)
+            {
+                // nope
+                return static_cast<qdb_time_t>(0);
+            }
+
+            const qdb_time_t res = static_cast<qdb_time_t>(number.first);
+
+            // only special values allowed
+            if ((res != qdb_never_expires) && (res != qdb_preserve_expiration))
+            {
+                return static_cast<qdb_time_t>(0);
+            }
+
+            // this is a special value, increment position index
+            ++_pos;
 
             return res;
         }

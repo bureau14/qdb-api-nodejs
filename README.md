@@ -144,6 +144,23 @@ You can query the expiry time of an entry with getExpiry:
     var expiry = b.getExpiry();
 ```
 
+What if you want to update but *do not want to change the expiry*?
+
+There is a special value `qdb.PRESERVE_EXPIRATION` that can be used:
+
+```javascript
+    var b = c.blob('bam');
+
+    // value will be removed at the specified time
+    b.put(new Buffer("boom"), new Date("October 1st, 2016 11:13:00"), function(err) { /* */  });
+
+    // do stuff
+
+    b.update(new Buffer("bang"), qdb.PRESERVE_EXPIRATION, function(err) { /* */ });
+```
+
+When using the special value `qdb.PRESERVE_EXPIRATION` updates will keep the previous expiration. If you want an entry to never expire you can either not specify an expiration or use `qdb.NEVER_EXPIRES`.
+
 Tags, sets and queues do not expire (but can of course be manually removed).
 
 ## Timeout
@@ -172,7 +189,7 @@ Quasardb callback return error objects. When the callback is successful, the err
         if (err)
         {
             // error management
-            throw error.message();
+            throw error.message;
         }
 
         // ...
@@ -194,7 +211,7 @@ Because you may want to try again before giving up, you can check if an error is
     {
         if (err)
         {
-            if (err.transient())
+            if (err.transient)
             {
                 // let's try again
             }
@@ -218,7 +235,7 @@ You can also query if an error is *informational*. An informational error means 
     {
         if (err)
         {
-            if (err.informational())
+            if (err.informational)
             {
                 // let's do something different
             }
