@@ -60,7 +60,6 @@ describe('qdb_connect', function()
                             //	test.must(err.message).be.a.string();
                             	test.must(err.message).not.be.empty;
                 				test.must(err.code).be.a.number();
-                				test.must(err.transient).be.ok;
                 				test.must(err.informational).not.be.ok;
 
                             	done();
@@ -112,7 +111,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         tags.must.be.empty;
@@ -197,7 +195,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(42);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -224,7 +221,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(41);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -277,7 +273,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(42);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -293,7 +288,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(42);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -364,7 +358,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -473,7 +466,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -836,7 +828,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -921,7 +912,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -957,7 +947,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
                         done();
                     });
@@ -971,7 +960,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -1020,7 +1008,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(25);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -1187,7 +1174,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -1212,7 +1198,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(38);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();
@@ -1247,7 +1232,6 @@ describe('qdb_connect', function()
                     	test.must(err.message).not.be.empty;
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(37);
-        				test.must(err.transient).be.not.ok;
         				test.must(err.informational).be.ok;
 
                         done();

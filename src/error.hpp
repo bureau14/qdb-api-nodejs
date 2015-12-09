@@ -33,8 +33,8 @@ namespace qdb
                 v8::FunctionTemplate::New(isolate, Error::informational, v8::Local<v8::Value>(), s),
                 v8::Local<v8::FunctionTemplate>(),
                 v8::ReadOnly);
-            tpl->PrototypeTemplate()->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "transient"),
-                v8::FunctionTemplate::New(isolate, Error::transient, v8::Local<v8::Value>(), s),
+            tpl->PrototypeTemplate()->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "origin"),
+                v8::FunctionTemplate::New(isolate, Error::origin, v8::Local<v8::Value>(), s),
                 v8::Local<v8::FunctionTemplate>(),
                 v8::ReadOnly);
             tpl->PrototypeTemplate()->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "message"),
@@ -128,16 +128,16 @@ namespace qdb
             Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e)
             {
                 v8::Isolate* isolate = args.GetIsolate();
-                args.GetReturnValue().Set(v8::Boolean::New(isolate, QDB_SEVERITY(e->_error) == QDB_STATUS_INFO));
+                args.GetReturnValue().Set(v8::Boolean::New(isolate, QDB_SUCCESS(e->_error)));
             });
         }
 
-        static void transient(const v8::FunctionCallbackInfo<v8::Value> & args)
+        static void origin(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e)
             {
                 v8::Isolate* isolate = args.GetIsolate();
-                args.GetReturnValue().Set(v8::Boolean::New(isolate, QDB_TRANSIENT(e->_error)));
+                args.GetReturnValue().Set(v8::Boolean::New(isolate, QDB_ERROR_ORIGIN(e->_error)));
             });
         }
 

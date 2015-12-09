@@ -196,7 +196,7 @@ namespace qdb
         {
             const qdb_error_t err = (argc > 0) ? static_cast<qdb_error_t>(static_cast<unsigned int>(argv[0]->NumberValue())) : qdb_e_ok;
 
-            if (QDB_SEVERITY(err) == QDB_STATUS_SUCCESS)
+            if (QDB_SUCCESS(err))
             {
                 auto cb = qdb_req->callbackAsLocal();
                 cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
@@ -221,10 +221,12 @@ namespace qdb
         {
             if (status < 0)
             {
-                return Error::MakeError(isolate, qdb_e_internal);
+                return Error::MakeError(isolate, qdb_e_internal_local);
             }
 
-            if (QDB_SEVERITY(req->output.error) == QDB_STATUS_SUCCESS)
+            // only when the error is strictly ok, we avoid to create an error object
+            // in other cases, even if it is informational we want to create it
+            if (req->output.error == qdb_e_ok)
             {
                 // nullptr for success
                 return v8::Null(isolate);
@@ -287,7 +289,7 @@ namespace qdb
                 }
                 else
                 {
-                    error_code = Error::MakeError(isolate, qdb_e_no_memory);
+                    error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
                 }
 
                 // safe to call even on null/invalid buffers

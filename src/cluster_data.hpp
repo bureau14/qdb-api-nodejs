@@ -85,7 +85,7 @@ namespace qdb
             _handle = make_shared_qdb_handle();
             if (!_handle)
             {
-                return qdb_e_no_memory;
+                return qdb_e_no_memory_local;
             }
 
             qdb_error_t res = qdb_connect(static_cast<qdb_handle_t>(_handle.get()), _uri.c_str());

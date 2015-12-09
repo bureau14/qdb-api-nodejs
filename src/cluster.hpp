@@ -207,7 +207,7 @@ namespace qdb
             cluster_data_ptr cd = conn_req->data;
             assert(cd);
 
-            const qdb_error_t err = (status < 0) ? qdb_e_internal : conn_req->error;
+            const qdb_error_t err = (status < 0) ? qdb_e_internal_local : conn_req->error;
 
             // no longer needs the request object
             delete conn_req;

@@ -50,24 +50,6 @@ namespace detail
     }
 }
 
-    inline bool fatal_error(qdb_error_t err)
-    {
-        return (err == qdb_e_system) ||
-            (err == qdb_e_internal) ||
-            (err == qdb_e_no_memory) ||
-            (err == qdb_e_invalid_protocol) ||
-            (err == qdb_e_host_not_found) ||
-            (err == qdb_e_timeout) ||
-            (err == qdb_e_buffer_too_small) ||
-            (err == qdb_e_connection_refused) ||
-            (err == qdb_e_connection_reset) ||
-            (err == qdb_e_unexpected_reply) ||
-            (err == qdb_e_protocol_error) ||
-            (err == qdb_e_invalid_version) ||
-            (err == qdb_e_not_connected) ||
-            (err == qdb_e_invalid_handle);
-    }
-
     struct qdb_request
     {
 
