@@ -19,7 +19,7 @@ before('run quasardb daemon', function(done)
         function(err)
         {
             // could not connect or lost connection
-            throw "an error occured: " + err.message;
+            throw "an error occured in cluster launch: " + err.message;
         });
     }, 2000);
 });
@@ -57,10 +57,11 @@ describe('qdb_connect', function()
                             {
                                 test.must(err).not.be.equal(null);
 
-                            //	test.must(err.message).be.a.string();
                             	test.must(err.message).not.be.empty;
                 				test.must(err.code).be.a.number();
-                				test.must(err.informational).not.be.ok;
+                                test.must(err.severity).be.a.number();
+                                test.must(err.origin).be.a.number();
+                				test.must(err.informational).be.false();
 
                             	done();
                             });
@@ -108,12 +109,14 @@ describe('qdb_connect', function()
                     b.getTags(function(err, tags)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+        				test.must(err.informational).be.false();
 
-                        tags.must.be.empty;
+                        tags.must.be.empty();
 
                         done();
                     });
@@ -192,10 +195,12 @@ describe('qdb_connect', function()
                     b.hasTag(tagName, function(err)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(42);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.true();
 
                         done();
                     });
@@ -218,10 +223,12 @@ describe('qdb_connect', function()
                     b.addTag(tagName, function(err)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(41);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.true();
 
                         done();
                     });
@@ -270,10 +277,12 @@ describe('qdb_connect', function()
                     b.removeTag(tagName, function(err)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(42);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.true();
 
                         done();
                     });
@@ -285,10 +294,12 @@ describe('qdb_connect', function()
                     b.hasTag(tagName, function(err)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(42);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.true();
 
                         done();
                     });
@@ -355,10 +366,12 @@ describe('qdb_connect', function()
                     b.get(function(err, data)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.false();
 
                         done();
                     });
@@ -463,10 +476,12 @@ describe('qdb_connect', function()
                     b.get(function(err, data)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.false();
 
                         done();
                     });
@@ -825,10 +840,12 @@ describe('qdb_connect', function()
                     i.get(function(err, data)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.false();
 
                         done();
                     });
@@ -909,10 +926,12 @@ describe('qdb_connect', function()
                     i.get(function(err, data)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.false();
 
                         done();
                     });
@@ -944,10 +963,10 @@ describe('qdb_connect', function()
                     q.at(0, function(err, data)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.informational).be.ok;
+        				test.must(err.informational).be.false();
                         done();
                     });
                 });
@@ -957,10 +976,10 @@ describe('qdb_connect', function()
                     q.size(function(err, s)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.informational).be.ok;
+        				test.must(err.informational).be.false();
 
                         done();
                     });
@@ -1005,10 +1024,12 @@ describe('qdb_connect', function()
                     q.at(1, function(err, data)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(25);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.false();
 
                         done();
                     });
@@ -1171,10 +1192,12 @@ describe('qdb_connect', function()
                     s.contains(new Buffer('da'), function(err)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.false();
 
                         done();
                     });
@@ -1195,10 +1218,12 @@ describe('qdb_connect', function()
                     s.insert(new Buffer('da'), function(err)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(38);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.false();
 
                         done();
                     });
@@ -1229,10 +1254,12 @@ describe('qdb_connect', function()
                     s.contains(new Buffer('da'), function(err)
                     {
                     	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty;
+                    	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(37);
-        				test.must(err.informational).be.ok;
+                        test.must(err.severity).be.a.number();
+                        test.must(err.origin).be.a.number();
+                        test.must(err.informational).be.false();
 
                         done();
                     });
@@ -1243,5 +1270,3 @@ describe('qdb_connect', function()
     }); // connect
 
 }); // qdb
-
-

@@ -37,6 +37,10 @@ namespace qdb
                 v8::FunctionTemplate::New(isolate, Error::origin, v8::Local<v8::Value>(), s),
                 v8::Local<v8::FunctionTemplate>(),
                 v8::ReadOnly);
+            tpl->PrototypeTemplate()->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "severity"),
+                v8::FunctionTemplate::New(isolate, Error::severity, v8::Local<v8::Value>(), s),
+                v8::Local<v8::FunctionTemplate>(),
+                v8::ReadOnly);
             tpl->PrototypeTemplate()->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "message"),
                 v8::FunctionTemplate::New(isolate, Error::message, v8::Local<v8::Value>(), s),
                 v8::Local<v8::FunctionTemplate>(),
@@ -137,7 +141,16 @@ namespace qdb
             Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e)
             {
                 v8::Isolate* isolate = args.GetIsolate();
-                args.GetReturnValue().Set(v8::Boolean::New(isolate, QDB_ERROR_ORIGIN(e->_error)));
+                args.GetReturnValue().Set(v8::Integer::New(isolate, QDB_ERROR_ORIGIN(e->_error)));
+            });
+        }
+
+        static void severity(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e)
+            {
+                v8::Isolate* isolate = args.GetIsolate();
+                args.GetReturnValue().Set(v8::Integer::New(isolate, QDB_ERROR_SEVERITY(e->_error)));
             });
         }
 
