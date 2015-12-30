@@ -960,13 +960,26 @@ describe('qdb_connect', function()
 
                 it('should not get entry 0', function(done)
                 {
-                    q.at(0, function(err, data)
+                    q.getAt(0, function(err, data)
                     {
                     	test.must(err.message).be.a.string();
                     	test.must(err.message).not.be.empty();
         				test.must(err.code).be.a.number();
         				test.must(err.code).be.equal(8);
         				test.must(err.informational).be.false();
+                        done();
+                    });
+                });
+
+                it('should not set entry 0', function(done)
+                {
+                    q.setAt(0, Buffer('a'), function(err)
+                    {
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(8);
+                        test.must(err.informational).be.false();
                         done();
                     });
                 });
@@ -1009,7 +1022,7 @@ describe('qdb_connect', function()
 
                 it('should get entry 0', function(done)
                 {
-                    q.at(0, function(err, data)
+                    q.getAt(0, function(err, data)
                     {
                         test.must(err).be.equal(null);
 
@@ -1019,9 +1032,31 @@ describe('qdb_connect', function()
                     });
                 });
 
+                it('should set entry 0', function(done)
+                {
+                    q.setAt(0, Buffer('c'), function(err)
+                    {
+                        test.must(err).be.equal(null);
+                        done();
+                    });
+
+                });
+
+                it('should get updated value of entry 0', function(done)
+                {
+                    q.getAt(0, function(err, data)
+                    {
+                        test.must(err).be.equal(null);
+
+                        test.must(data.toString()).be.equal('c');
+
+                        done();
+                    });
+                });
+
                 it('should not get entry 1', function(done)
                 {
-                    q.at(1, function(err, data)
+                    q.getAt(1, function(err, data)
                     {
                     	test.must(err.message).be.a.string();
                     	test.must(err.message).not.be.empty();
@@ -1041,7 +1076,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        test.must(data.toString()).be.equal('a');
+                        test.must(data.toString()).be.equal('c');
 
                         done();
                     });
@@ -1053,7 +1088,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        test.must(data.toString()).be.equal('a');
+                        test.must(data.toString()).be.equal('c');
 
                         done();
                     });
@@ -1065,7 +1100,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        test.must(data.toString()).be.equal('a');
+                        test.must(data.toString()).be.equal('c');
 
                         done();
                     });
@@ -1107,9 +1142,32 @@ describe('qdb_connect', function()
                     });
                 });
 
-                it('should get entry 0', function(done)
+                it('should push front without error', function(done)
                 {
-                    q.at(0, function(err, data)
+                    q.pushFront(new Buffer('d'), function(err)
+                    {
+                        test.must(err).be.equal(null);
+
+                        done();
+                    });
+                });
+
+                it('should have a size of 2', function(done)
+                {
+                    q.size(function(err, s)
+                    {
+                        test.must(err).be.equal(null);
+
+                        test.must(s).be.a.number();
+                        test.must(s).be.equal(2);
+
+                        done();
+                    });
+                });
+
+                it('should get entry 1', function(done)
+                {
+                    q.getAt(1, function(err, data)
                     {
                         test.must(err).be.equal(null);
 
@@ -1137,7 +1195,7 @@ describe('qdb_connect', function()
                     {
                         test.must(err).be.equal(null);
 
-                        test.must(data.toString()).be.equal('b');
+                        test.must(data.toString()).be.equal('d');
 
                         done();
                     });
@@ -1155,14 +1213,14 @@ describe('qdb_connect', function()
                     });
                 });
 
-                it('should have a size of 0', function(done)
+                it('should have a size of 1', function(done)
                 {
                     q.size(function(err, s)
                     {
                         test.must(err).be.equal(null);
 
                         test.must(s).be.a.number();
-                        test.must(s).be.equal(0);
+                        test.must(s).be.equal(1);
 
                         done();
                     });

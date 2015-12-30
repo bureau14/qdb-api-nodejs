@@ -38,7 +38,8 @@ namespace qdb
                 NODE_SET_PROTOTYPE_METHOD(tpl, "front", front);
                 NODE_SET_PROTOTYPE_METHOD(tpl, "back", back);
                 NODE_SET_PROTOTYPE_METHOD(tpl, "size", size);
-                NODE_SET_PROTOTYPE_METHOD(tpl, "at", at);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "getAt", getAt);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "setAt", setAt);
             });
         }
 
@@ -121,7 +122,7 @@ namespace qdb
                 Entity<Deque>::processIntegerResult);
         }
 
-        static void at(const v8::FunctionCallbackInfo<v8::Value> & args)
+        static void getAt(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             Entity<Deque>::queue_work(args, 
                 [](qdb_request * qdb_req)
@@ -134,6 +135,22 @@ namespace qdb
                 }, 
                 Entity<Deque>::processBufferResult,
                 &ArgsEaterBinder::integer);
+        }
+
+        static void setAt(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            Entity<Deque>::queue_work(args, 
+                [](qdb_request * qdb_req)
+                {
+                    qdb_req->output.error = qdb_deque_set_at(qdb_req->handle(), 
+                        qdb_req->input.alias.c_str(), 
+                        qdb_req->input.content.value,
+                        qdb_req->input.content.buffer.begin, 
+                        qdb_req->input.content.buffer.size);
+                }, 
+                Entity<Deque>::processVoidResult,
+                &ArgsEaterBinder::integer,
+                &ArgsEaterBinder::buffer);
         }
 
     private:
