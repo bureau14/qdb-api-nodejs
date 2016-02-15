@@ -1,0 +1,15 @@
+# http://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+BasedOnStyle: LLVM
+
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: true
+BreakBeforeBraces: Allman
+ColumnLimit: 120
+IndentWidth: 4
+PointerAlignment: Middle
+TabWidth: 4
+UseTab: Never

@@ -98,6 +98,20 @@ namespace qdb
             return req;
         }
 
+    private:
+        static std::vector<const char *> convertStrings(const std::vector<std::string> & strs)
+        {
+            std::vector<const char *> cstrs;
+            cstrs.reserve(strs.size());
+
+            for (const auto & s : strs)
+            {
+                cstrs.push_back(s.c_str());
+            }
+
+            return cstrs;
+        }
+
     public:
         // tag management function
         static void addTag(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -105,10 +119,25 @@ namespace qdb
             queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_add_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+                    qdb_req->output.error = qdb_add_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                        qdb_req->input.content.str.c_str());
                 },
                 processVoidResult,
                 &ArgsEaterBinder::string);
+        }
+
+        static void addTags(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            queue_work(args,
+                [](qdb_request * qdb_req)
+                {
+                    std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
+
+                    qdb_req->output.error =
+                        qdb_add_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
+                },
+                processVoidResult,
+                &ArgsEaterBinder::strings);
         }
 
         static void removeTag(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -116,18 +145,33 @@ namespace qdb
             queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_remove_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+                    qdb_req->output.error = qdb_remove_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                           qdb_req->input.content.str.c_str());
                 },
                 processVoidResult,
                 &ArgsEaterBinder::string);
         }
 
+        static void removeTags(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            queue_work(args,
+                [](qdb_request * qdb_req)
+                {
+                    std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
+
+                    qdb_req->output.error =
+                        qdb_remove_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
+                },
+                processVoidResult,
+                &ArgsEaterBinder::strings);
+        }
         static void hasTag(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_has_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+                    qdb_req->output.error = qdb_has_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                        qdb_req->input.content.str.c_str());
                 },
                 processVoidResult,
                 &ArgsEaterBinder::string);
@@ -138,8 +182,8 @@ namespace qdb
             queue_work(args,
                 [](qdb_request * qdb_req)
                 {
-                    qdb_req->output.error = qdb_get_tags(qdb_req->handle(),
-                        qdb_req->input.alias.c_str(),
+                    qdb_req->output.error = qdb_get_tags(
+                        qdb_req->handle(), qdb_req->input.alias.c_str(),
                         reinterpret_cast<const char ***>(const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
                         &(qdb_req->output.content.buffer.size));
 
@@ -163,7 +207,9 @@ namespace qdb
             NODE_SET_PROTOTYPE_METHOD(tpl, "alias",         Entity<Derivate>::alias);
             NODE_SET_PROTOTYPE_METHOD(tpl, "remove",        Entity<Derivate>::remove);
             NODE_SET_PROTOTYPE_METHOD(tpl, "addTag",        Entity<Derivate>::addTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "addTags",       Entity<Derivate>::addTags);
             NODE_SET_PROTOTYPE_METHOD(tpl, "removeTag",     Entity<Derivate>::removeTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "removeTags",    Entity<Derivate>::removeTags);
             NODE_SET_PROTOTYPE_METHOD(tpl, "hasTag",        Entity<Derivate>::hasTag);
             NODE_SET_PROTOTYPE_METHOD(tpl, "getTags",       Entity<Derivate>::getTags);
 

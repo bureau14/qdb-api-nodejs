@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <utility>
+#include <vector>
 
 #include <node.h>
 #include <node_buffer.h>
@@ -48,11 +49,11 @@ namespace detail
             qdb_free_buffer(static_cast<qdb_handle_t>(hint), data);
         }
     }
-}
+
+} // namespace detail
 
     struct qdb_request
     {
-
         struct slice
         {
             const void * begin;
@@ -74,6 +75,7 @@ namespace detail
                 }
 
                 std::string str;
+                std::vector<std::string> strs;
                 slice buffer;
                 qdb_int_t value;
             };
@@ -135,7 +137,7 @@ namespace detail
             }
 
             return node::Buffer::New(isolate,
-                static_cast<char *>(const_cast<void *>(buf)), 
+                static_cast<char *>(const_cast<void *>(buf)),
                 length,
                 detail::release_node_buffer,
                 h);
@@ -259,6 +261,18 @@ namespace detail
                 &MethodMan::argString);
         }
 
+        v8::Local<v8::Array> argArray(int i) const
+        {
+            return v8::Local<v8::Array>::Cast(_args[i]);
+        }
+
+        std::pair<v8::Local<v8::Array>, bool> checkedArgArray(int i) const
+        {
+            return checkArg<v8::Local<v8::Array>>(i,
+                [](v8::Local<v8::Value> v) -> bool { return v->IsArray(); },
+                &MethodMan::argArray);
+        }
+
         double argNumber(int i) const
         {
             return _args[i]->NumberValue();
@@ -342,6 +356,11 @@ namespace detail
             return processResult(_method.checkedArgString(_pos));
         }
 
+        std::pair<v8::Local<v8::Array>, bool> eatArray(void)
+        {
+            return processResult(_method.checkedArgArray(_pos));
+        }
+
         std::pair<v8::Local<v8::Function>, bool> eatCallback(void)
         {
             return processResult(_method.checkedArgCallback(_pos));
@@ -411,6 +430,31 @@ namespace detail
             return res;
         }
 
+        std::vector<std::string> eatAndConvertStringArray(void)
+        {
+            using string_vector = std::vector<std::string>;
+            string_vector res;
+
+            auto arr = eatArray();
+
+            if (arr.second)
+            {
+                auto len = arr.first->Length();
+                res.reserve(len);
+
+                for (auto i = 0u; i < len; ++i)
+                {
+                    auto vi = arr.first->Get(i);
+                    if (!vi->IsString()) return string_vector();
+
+                    v8::String::Utf8Value val(vi->ToString());
+                    res.push_back(std::string(*val, val.length()));
+                }
+            }
+
+            return res;
+        }
+
         qdb_request::slice eatAndConvertBuffer(void)
         {
             auto buf = eatObject();
@@ -458,6 +502,12 @@ namespace detail
         qdb_request & string(qdb_request & req)
         {
             req.input.content.str = _eater.eatAndConvertString();
+            return req;
+        }
+
+        qdb_request & strings(qdb_request & req)
+        {
+            req.input.content.strs = _eater.eatAndConvertStringArray();
             return req;
         }
 

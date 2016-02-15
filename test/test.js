@@ -57,13 +57,13 @@ describe('qdb_connect', function()
                             {
                                 test.must(err).not.be.equal(null);
 
-                            	test.must(err.message).not.be.empty;
-                				test.must(err.code).be.a.number();
+                                test.must(err.message).not.be.empty;
+                                test.must(err.code).be.a.number();
                                 test.must(err.severity).be.a.number();
                                 test.must(err.origin).be.a.number();
-                				test.must(err.informational).be.false();
+                                test.must(err.informational).be.false();
 
-                            	done();
+                                done();
                             });
                         });
                     });
@@ -108,13 +108,13 @@ describe('qdb_connect', function()
                 {
                     b.getTags(function(err, tags)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(8);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(8);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
-        				test.must(err.informational).be.false();
+                        test.must(err.informational).be.false();
 
                         tags.must.be.empty();
 
@@ -194,10 +194,10 @@ describe('qdb_connect', function()
                 {
                     b.hasTag(tagName, function(err)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(42);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(42);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.true();
@@ -222,10 +222,10 @@ describe('qdb_connect', function()
                 {
                     b.addTag(tagName, function(err)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(41);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(41);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.true();
@@ -276,10 +276,10 @@ describe('qdb_connect', function()
                 {
                     b.removeTag(tagName, function(err)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(42);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(42);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.true();
@@ -293,10 +293,10 @@ describe('qdb_connect', function()
                 {
                     b.hasTag(tagName, function(err)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(42);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(42);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.true();
@@ -365,10 +365,10 @@ describe('qdb_connect', function()
                 {
                     b.get(function(err, data)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(8);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(8);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.false();
@@ -475,10 +475,10 @@ describe('qdb_connect', function()
                 {
                     b.get(function(err, data)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(8);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(8);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.false();
@@ -714,6 +714,114 @@ describe('qdb_connect', function()
 
             });  // entries list test
 
+            describe('multiple tags', function ()
+            {
+                var b = c.blob('blob_tag_test');
+                var tags = [ 'line720_0', 'line720_1' ];
+                var ts = tags.map(function(t) { return c.tag(t); });
+
+                it('should return an empty tag list', function(done)
+                {
+                    ts.forEach(function (t)
+                    {
+                        t.getEntries(function (err, entries)
+                        {
+                            test.must(err).be.equal(null);
+
+                            entries.must.have.length(0);
+                        });
+                    });
+
+                    done();
+                });
+
+                it('should update the blob for tag test', function(done)
+                {
+                    b.update(new Buffer('untz'), function(err)
+                    {
+                        test.must(err).be.equal(null);
+
+                        done();
+                    });
+                });
+
+                describe('addTags', function ()
+                {
+
+                    it('should add multiple tags successfully', function(done)
+                    {
+                        b.addTags(tags, function(err)
+                        {
+                            test.must(err).be.equal(null);
+
+                            done();
+                        });
+                    });
+
+                    it('should find the tags', function(done)
+                    {
+                        tags.forEach(function (tagName)
+                        {
+                            b.hasTag(tagName, function(err)
+                            {
+                                test.must(err).be.equal(null);
+                            });
+                        });
+
+                        done();
+                    });
+
+                    it('should return the whole list of entries', function(done)
+                    {
+                        ts.forEach(function (t)
+                        {
+                            t.getEntries(function(err, entries)
+                            {
+                                test.must(err).be.equal(null);
+
+                                entries.must.have.length(1);
+
+                                test.must(entries.indexOf('blob_tag_test')).be.gte(0);
+                            });
+                        });
+
+                        done();
+                    });
+
+                }); // addTags
+
+                describe('removeTags', function ()
+                {
+
+                    it('should remove multiple tags successfully', function(done)
+                    {
+                        b.removeTags(tags, function(err)
+                        {
+                            test.must(err).be.equal(null);
+
+                            done();
+                        });
+                    });
+
+                    it('should return an empty tag list', function(done)
+                    {
+                        ts.forEach(function (t)
+                        {
+                            t.getEntries(function (err, entries)
+                            {
+                                test.must(err).be.equal(null);
+
+                                entries.must.have.length(0);
+                            });
+                        });
+
+                        done();
+                    });
+
+                }); // removeTags
+
+            }); // multiple tags
+
         }); // tag
 
         describe('integer', function()
@@ -839,10 +947,10 @@ describe('qdb_connect', function()
                 {
                     i.get(function(err, data)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(8);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(8);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.false();
@@ -925,10 +1033,10 @@ describe('qdb_connect', function()
                 {
                     i.get(function(err, data)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(8);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(8);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.false();
@@ -962,11 +1070,11 @@ describe('qdb_connect', function()
                 {
                     q.getAt(0, function(err, data)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(8);
-        				test.must(err.informational).be.false();
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(8);
+                        test.must(err.informational).be.false();
                         done();
                     });
                 });
@@ -988,11 +1096,11 @@ describe('qdb_connect', function()
                 {
                     q.size(function(err, s)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(8);
-        				test.must(err.informational).be.false();
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(8);
+                        test.must(err.informational).be.false();
 
                         done();
                     });
@@ -1058,10 +1166,10 @@ describe('qdb_connect', function()
                 {
                     q.getAt(1, function(err, data)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(25);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(25);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.false();
@@ -1249,10 +1357,10 @@ describe('qdb_connect', function()
                 {
                     s.contains(new Buffer('da'), function(err)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(8);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(8);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.false();
@@ -1275,10 +1383,10 @@ describe('qdb_connect', function()
                 {
                     s.insert(new Buffer('da'), function(err)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(38);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(38);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.false();
@@ -1311,10 +1419,10 @@ describe('qdb_connect', function()
                 {
                     s.contains(new Buffer('da'), function(err)
                     {
-                    	test.must(err.message).be.a.string();
-                    	test.must(err.message).not.be.empty();
-        				test.must(err.code).be.a.number();
-        				test.must(err.code).be.equal(37);
+                        test.must(err.message).be.a.string();
+                        test.must(err.message).not.be.empty();
+                        test.must(err.code).be.a.number();
+                        test.must(err.code).be.equal(37);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
                         test.must(err.informational).be.false();
