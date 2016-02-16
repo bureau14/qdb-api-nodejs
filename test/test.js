@@ -155,7 +155,7 @@ describe('qdb_connect', function()
                     });
                 });
 
-                it('should put again without an error', function(done)
+                it('should put again without an error', function (done)
                 {
                     b.put(new Buffer('boom_content'), function(err)
                     {
@@ -237,7 +237,7 @@ describe('qdb_connect', function()
 
                 it('should find the tag', function(done)
                 {
-                    b.hasTag(tagName, function(err)
+                    b.hasTag(tagName, function (err)
                     {
                         test.must(err).be.equal(null);
 
@@ -291,7 +291,7 @@ describe('qdb_connect', function()
 
                 it('should not find the tag', function(done)
                 {
-                    b.hasTag(tagName, function(err)
+                    b.hasTag(tagName, function (err)
                     {
                         test.must(err.message).be.a.string();
                         test.must(err.message).not.be.empty();

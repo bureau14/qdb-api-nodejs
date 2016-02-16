@@ -1,17 +1,17 @@
-
 #pragma once
 
-#include <functional>
-#include <utility>
-#include <vector>
+#include "cluster_data.hpp"
+
+#include <qdb/batch.h>
+#include <qdb/client.h>
+#include <qdb/integer.h>
 
 #include <node.h>
 #include <node_buffer.h>
 
-#include <qdb/client.h>
-#include <qdb/integer.h>
-
-#include "cluster_data.hpp"
+#include <functional>
+#include <utility>
+#include <vector>
 
 namespace qdb
 {
@@ -87,14 +87,21 @@ namespace detail
 
         struct result
         {
-            result(qdb_error_t err = qdb_e_uninitialized) : error(err) {}
-
-            union
+            result(qdb_error_t err = qdb_e_uninitialized) : error(err)
             {
+            }
+
+            union {
                 slice buffer;
                 qdb_int_t value;
                 qdb_time_t date;
             } content;
+
+            struct
+            {
+                std::vector<qdb_operation_t> operations;
+                qdb_size_t success_count;
+            } batch;
 
             qdb_error_t error;
         };

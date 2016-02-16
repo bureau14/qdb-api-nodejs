@@ -7,6 +7,7 @@ AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakTemplateDeclarations: true
+BinPackParameters: false
 BreakBeforeBraces: Allman
 ColumnLimit: 120
 IndentWidth: 4
