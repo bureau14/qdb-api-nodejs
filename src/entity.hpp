@@ -12,6 +12,7 @@
 #include <node_object_wrap.h>
 #include <uv.h>
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <string>
