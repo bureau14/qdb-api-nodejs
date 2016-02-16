@@ -180,6 +180,32 @@ public:
                    processVoidResult, &ArgsEaterBinder::string);
     }
 
+    static void hasTags(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       auto & tags = qdb_req->input.content.strs;
+                       auto & ops = qdb_req->output.batch.operations;
+                       ops.resize(tags.size());
+
+                       qdb_req->output.error = qdb_init_operations(ops.data(), ops.size());
+                       if (!QDB_SUCCESS(qdb_req->output.error)) return;
+
+                       std::transform(tags.cbegin(), tags.cend(), ops.begin(), [qdb_req](const std::string & tag) {
+                           qdb_operation_t op;
+                           op.type = qdb_op_has_tag;
+                           op.alias = qdb_req->input.alias.c_str();
+                           op.has_tag.tag = tag.c_str();
+                           return op;
+                       });
+
+                       qdb_req->output.batch.success_count = qdb_run_batch(qdb_req->handle(), ops.data(), ops.size());
+                       qdb_req->output.error = qdb_e_ok;
+                   },
+                   processBatchHasTagResult, &ArgsEaterBinder::strings);
+    }
+
     static void getTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -386,6 +412,23 @@ public:
         processResult<1>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
             const auto error_code = processErrorCode(isolate, status, qdb_req);
             return make_value_array(error_code);
+        });
+    }
+
+    static void processBatchHasTagResult(uv_work_t * req, int status)
+    {
+        processResult<3>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+            const auto error_code = processErrorCode(isolate, status, qdb_req);
+            auto success_count = v8::Number::New(isolate, static_cast<double>(qdb_req->output.batch.success_count));
+            v8::Handle<v8::Object> obj = v8::Object::New(isolate);
+
+            for (const auto & op : qdb_req->output.batch.operations)
+            {
+                obj->Set(v8::String::NewFromUtf8(isolate, op.has_tag.tag),
+                         v8::Boolean::New(isolate, qdb_e_ok == op.error));
+            }
+
+            return make_value_array(error_code, success_count, obj);
         });
     }
 
