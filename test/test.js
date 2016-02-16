@@ -735,6 +735,22 @@ describe('qdb_connect', function()
                     done();
                 });
 
+                it('should return false (tag not set) for every tag', function(done)
+                {
+                    b.hasTags(tags, function (err, success_count, result)
+                    {
+                        test.must(err).be.equal(null);
+                        test.must(success_count).be.equal(0);
+
+                        tags.forEach(function (t)
+                        {
+                            test.must(result[t]).be.false();
+                        });
+
+                        done();
+                    });
+                });
+
                 it('should update the blob for tag test', function(done)
                 {
                     b.update(new Buffer('untz'), function(err)
@@ -790,6 +806,27 @@ describe('qdb_connect', function()
 
                 }); // addTags
 
+                describe('hasTags', function ()
+                {
+
+                    it('should return true (tag set) for every tag', function(done)
+                    {
+                        b.hasTags(tags, function (err, success_count, result)
+                        {
+                            test.must(err).be.equal(null);
+                            test.must(success_count).be.equal(tags.length);
+
+                            tags.forEach(function (t)
+                            {
+                                test.must(result[t]).be.true();
+                            });
+
+                            done();
+                        });
+                    });
+
+                }); // hasTags
+
                 describe('removeTags', function ()
                 {
 
@@ -819,6 +856,27 @@ describe('qdb_connect', function()
                     });
 
                 }); // removeTags
+
+                describe('hasTags', function ()
+                {
+
+                    it('should return false (tag not set) for every tag', function(done)
+                    {
+                        b.hasTags(tags, function (err, success_count, result)
+                        {
+                            test.must(err).be.equal(null);
+                            test.must(success_count).be.equal(0);
+
+                            tags.forEach(function (t)
+                            {
+                                test.must(result[t]).be.false();
+                            });
+
+                            done();
+                        });
+                    });
+
+                }); // hasTags
 
             }); // multiple tags
 
