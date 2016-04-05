@@ -247,7 +247,6 @@ namespace qdb
             }
 
             auto on_success = call.checkedArgCallback(0);
-
             if (!on_success.second)
             {
                 call.throwException("Expected a callback as first argument");
@@ -255,7 +254,6 @@ namespace qdb
             }
 
             auto on_error = call.checkedArgCallback(1);
-
             if (!on_error.second)
             {
                 call.throwException("Expected a callback as second argument");

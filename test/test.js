@@ -19,7 +19,7 @@ before('run quasardb daemon', function(done)
         function(err)
         {
             // could not connect or lost connection
-            throw "an error occured in cluster launch: " + err.message;
+            throw "an error occurred in cluster launch: " + err.message;
         });
     }, 2000);
 });
@@ -75,7 +75,7 @@ describe('qdb_connect', function()
         describe('setTimeout', function()
         {
             var c = cluster;
-            // set timeout to 5s
+            // set timeout to 5 seconds
             it('should set the timeout to 5,000 ms', function()
             {
                 cluster.setTimeout(5000);
@@ -1447,7 +1447,7 @@ describe('qdb_connect', function()
                         test.must(err.code).be.equal(38);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
-                        test.must(err.informational).be.false();
+                        test.must(err.informational).be.true();
 
                         done();
                     });
@@ -1483,7 +1483,7 @@ describe('qdb_connect', function()
                         test.must(err.code).be.equal(37);
                         test.must(err.severity).be.a.number();
                         test.must(err.origin).be.a.number();
-                        test.must(err.informational).be.false();
+                        test.must(err.informational).be.true();
 
                         done();
                     });
