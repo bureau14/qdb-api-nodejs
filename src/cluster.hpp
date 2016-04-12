@@ -1,18 +1,18 @@
-
 #pragma once
+
+#include "blob.hpp"
+#include "cluster_data.hpp"
+#include "deque.hpp"
+#include "error.hpp"
+#include "hset.hpp"
+#include "integer.hpp"
+#include "prefix.hpp"
+#include "tag.hpp"
 
 #include <node.h>
 #include <node_object_wrap.h>
 
 #include <mutex>
-
-#include "error.hpp"
-#include "cluster_data.hpp"
-#include "blob.hpp"
-#include "integer.hpp"
-#include "deque.hpp"
-#include "hset.hpp"
-#include "tag.hpp"
 
 namespace qdb
 {
@@ -41,11 +41,14 @@ namespace qdb
 
             // Prototype
             NODE_SET_PROTOTYPE_METHOD(tpl, "connect", connect);
+
             NODE_SET_PROTOTYPE_METHOD(tpl, "blob", blob);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "integer", integer);
             NODE_SET_PROTOTYPE_METHOD(tpl, "deque", deque);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "integer", integer);
             NODE_SET_PROTOTYPE_METHOD(tpl, "set", set);
             NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
+
+            NODE_SET_PROTOTYPE_METHOD(tpl, "prefix", prefix);
 
             NODE_SET_PROTOTYPE_METHOD(tpl, "setTimeout", setTimeout);
 
@@ -278,14 +281,19 @@ namespace qdb
             objectFactory<Blob>(args);
         }
 
+        static void deque(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            objectFactory<Deque>(args);
+        }
+
         static void integer(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             objectFactory<Integer>(args);
         }
 
-        static void deque(const v8::FunctionCallbackInfo<v8::Value> & args)
+        static void prefix(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            objectFactory<Deque>(args);
+            objectFactory<Prefix>(args);
         }
 
         static void set(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -309,10 +317,12 @@ namespace qdb
                 return;
             }
 
-            auto timeout_value = call.checkedArgNumber(0);
+            ArgsEater argsEater(call);
+
+            auto timeout_value = argsEater.eatNumber();
             if (!timeout_value.second)
             {
-                call.throwException("setTimeout expect a timeout value in seconds");
+                call.throwException("setTimeout expects a timeout value in seconds");
                 return;
             }
 

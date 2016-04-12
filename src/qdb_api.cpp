@@ -26,8 +26,9 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     qdb::Error::Init(exports);
 
     qdb::Blob::Init(exports);
-    qdb::Integer::Init(exports);
     qdb::Deque::Init(exports);
+    qdb::Integer::Init(exports);
+    qdb::Prefix::Init(exports);
     qdb::Set::Init(exports);
     qdb::Tag::Init(exports);
 

@@ -326,7 +326,6 @@ namespace detail
         const v8::FunctionCallbackInfo<v8::Value> & _args;
     };
 
-
     struct ArgsEater
     {
         explicit ArgsEater(const MethodMan & meth) : _method(meth), _pos(0) {}
@@ -422,19 +421,18 @@ namespace detail
             return res;
         }
 
+        std::string convertString(const v8::Local<v8::String> & s)
+        {
+            v8::String::Utf8Value val(s);
+            return std::string(*val, val.length());
+        }
+
         std::string eatAndConvertString(void)
         {
-            std::string res;
-
             auto str = eatString();
+            if (str.second) return convertString(str.first);
 
-            if (str.second)
-            {
-                v8::String::Utf8Value val(str.first);
-                res = std::string(*val, val.length());
-            }
-
-            return res;
+            return std::string();
         }
 
         std::vector<std::string> eatAndConvertStringArray(void)
@@ -485,9 +483,7 @@ namespace detail
     private:
         const MethodMan & _method;
         int _pos;
-
     };
-
 
     class ArgsEaterBinder
     {
@@ -565,4 +561,4 @@ namespace detail
         ArgsEater _eater;
     };
 
-}
+} // namespace qdb

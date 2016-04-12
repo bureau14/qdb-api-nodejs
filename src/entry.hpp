@@ -27,8 +27,46 @@ template <typename... T>
     return {{std::forward<T>(t)...}};
 }
 
+namespace detail
+{
+
+static void callback_wrapper(uv_work_t * req)
+{
+    static_cast<qdb_request *>(req->data)->execute();
+}
+
+template <typename SpawnRequest, typename F, typename... Params>
+static void queue_work(const v8::FunctionCallbackInfo<v8::Value> & args,
+                       SpawnRequest spawnRequest,
+                       F f,
+                       uv_after_work_cb after_work_cb,
+                       Params... p)
+{
+    v8::TryCatch try_catch;
+
+    MethodMan call(args);
+
+    uv_work_t * work = spawnRequest(call, f, p...);
+
+    if (try_catch.HasCaught())
+    {
+        v8::Isolate * isolate = v8::Isolate::GetCurrent();
+        v8::HandleScope scope(isolate);
+        node::FatalException(isolate, try_catch);
+    }
+
+    assert(work);
+
+    uv_queue_work(uv_default_loop(), work, detail::callback_wrapper, after_work_cb);
+
+    // this is callback, the return value is undefined and the callback will get everything
+    call.setUndefinedReturnValue();
+}
+
+} // namespace detail
+
 template <typename Derivate>
-class Entity : public node::ObjectWrap
+class Entry : public node::ObjectWrap
 {
 public:
     static const int FieldsCount = 2;
@@ -36,12 +74,12 @@ public:
 public:
     // if an entry is expirable, we will register the expiry management functions
     // this simplifies organization here
-    // in other APIs generally we have an ExpirableEntry that inherits from Entity
-    Entity(cluster_data_ptr cd, const char * alias) : _cluster_data(cd), _alias(new std::string(alias))
+    // in other APIs generally we have an ExpirableEntry that inherits from Entry
+    Entry(cluster_data_ptr cd, const char * alias) : _cluster_data(cd), _alias(new std::string(alias))
     {
     }
 
-    virtual ~Entity(void)
+    virtual ~Entry(void)
     {
     }
 
@@ -77,7 +115,7 @@ public:
         return *_alias;
     }
 
-public:
+private:
     template <typename F, typename... Params>
     static uv_work_t * spawnRequest(const MethodMan & call, F f, Params... p)
     {
@@ -87,7 +125,6 @@ public:
         qdb_request * qdb_req = new qdb_request(pthis->_cluster_data, f, pthis->native_alias());
 
         ArgsEaterBinder eaterBinder(call);
-
         eaterBinder.eatThem(*qdb_req, p...);
 
         uv_work_t * req = nullptr;
@@ -230,18 +267,18 @@ public:
         // Prepare constructor template
         v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Derivate::New);
         tpl->SetClassName(v8::String::NewFromUtf8(isolate, className));
-        tpl->InstanceTemplate()->SetInternalFieldCount(Entity<Derivate>::FieldsCount);
+        tpl->InstanceTemplate()->SetInternalFieldCount(Entry<Derivate>::FieldsCount);
 
         // Prototype
-        NODE_SET_PROTOTYPE_METHOD(tpl, "alias", Entity<Derivate>::alias);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "remove", Entity<Derivate>::remove);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "addTag", Entity<Derivate>::addTag);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "addTags", Entity<Derivate>::addTags);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "removeTag", Entity<Derivate>::removeTag);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "removeTags", Entity<Derivate>::removeTags);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "hasTag", Entity<Derivate>::hasTag);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "hasTags", Entity<Derivate>::hasTags);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "getTags", Entity<Derivate>::getTags);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "alias", Entry<Derivate>::alias);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "remove", Entry<Derivate>::remove);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "addTag", Entry<Derivate>::addTag);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "addTags", Entry<Derivate>::addTags);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "removeTag", Entry<Derivate>::removeTag);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "removeTags", Entry<Derivate>::removeTags);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "hasTag", Entry<Derivate>::hasTag);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "hasTags", Entry<Derivate>::hasTags);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "getTags", Entry<Derivate>::getTags);
 
         init(tpl);
 
@@ -433,36 +470,12 @@ public:
         });
     }
 
-private:
-    static void callback_wrapper(uv_work_t * req)
-    {
-        static_cast<qdb_request *>(req->data)->execute();
-    }
-
-public:
+protected:
     template <typename F, typename... Params>
     static void
     queue_work(const v8::FunctionCallbackInfo<v8::Value> & args, F f, uv_after_work_cb after_work_cb, Params... p)
     {
-        v8::TryCatch try_catch;
-
-        MethodMan call(args);
-
-        uv_work_t * work = spawnRequest(call, f, p...);
-
-        if (try_catch.HasCaught())
-        {
-            v8::Isolate * isolate = v8::Isolate::GetCurrent();
-            v8::HandleScope scope(isolate);
-            node::FatalException(isolate, try_catch);
-        }
-
-        assert(work);
-
-        uv_queue_work(uv_default_loop(), work, &Entity<Derivate>::callback_wrapper, after_work_cb);
-
-        // this is callback, the return value is undefined and the callback will get everything
-        call.setUndefinedReturnValue();
+        detail::queue_work(args, spawnRequest<F, Params...>, f, after_work_cb, p...);
     }
 
 private:

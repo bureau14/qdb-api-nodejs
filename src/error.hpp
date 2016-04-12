@@ -8,7 +8,6 @@
 namespace qdb
 {
 
-
     class Error : public node::ObjectWrap
     {
 
@@ -114,7 +113,7 @@ namespace qdb
         {
             MethodMan call(args);
 
-            if (args.Length() != 0) 
+            if (args.Length() != 0)
             {
                 call.throwException("Wrong number of arguments");
                 return;
@@ -122,7 +121,7 @@ namespace qdb
 
             Error * e = call.nativeHolder<Error>();
             assert(e);
-            
+
             f(args, e);
         }
 
@@ -178,11 +177,7 @@ namespace qdb
 
     private:
         const qdb_error_t _error;
-                
+
         static v8::Persistent<v8::Function> constructor;
     };
-
-
-
-
 }

@@ -1,28 +1,28 @@
-
 #pragma once
 
-#include <string>
-#include <memory>
+#include <qdb/client.h>
+#include <qdb/prefix.h>
 
 #include <node.h>
 #include <node_object_wrap.h>
 
-#include <qdb/client.h>
+#include <memory>
+#include <string>
 
 namespace qdb
 {
 
     using qdb_handle_ptr = std::shared_ptr<void>;
 
-    struct cluster_data 
+    struct cluster_data
     {
-        
+
     private:
         void bindCallbacks(v8::Local<v8::Function> os, v8::Local<v8::Function> oe)
         {
             v8::Isolate* isolate = v8::Isolate::GetCurrent();
             _on_success.Reset(isolate, os);
-            _on_error.Reset(isolate, oe);            
+            _on_error.Reset(isolate, oe);
         }
 
     public:
@@ -35,7 +35,7 @@ namespace qdb
         template <typename Callback>
         v8::Local<v8::Function> callbackAsLocal(v8::Isolate * isolate, Callback & callback)
         {
-            if (callback.IsWeak()) 
+            if (callback.IsWeak())
             {
                 return v8::Local<v8::Function>::New(isolate, callback);
             }
@@ -107,6 +107,15 @@ namespace qdb
 
             // if we already have a handle, update the timeout
             return !_handle ? qdb_e_ok : qdb_option_set_timeout(static_cast<qdb_handle_t>(_handle.get()), _timeout);
+        }
+
+        qdb_error_t prefix_get(const std::string & prefix, qdb_int_t max_count)
+        {
+            const char ** results = NULL;
+            size_t result_count = 0u;
+
+            return !_handle ? qdb_e_ok : qdb_prefix_get(static_cast<qdb_handle_t>(_handle.get()), prefix.c_str(),
+                                                        max_count, &results, &result_count);
         }
 
     private:

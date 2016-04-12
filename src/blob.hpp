@@ -10,27 +10,27 @@
 
 #include <qdb/blob.h>
 
-#include "expirable_entity.hpp"
+#include "expirable_entry.hpp"
 
 namespace qdb
 {
 
     class Cluster;
 
-    class Blob : public ExpirableEntity<Blob>
+    class Blob : public ExpirableEntry<Blob>
     {
 
-        friend class Entity<Blob>;
+        friend class Entry<Blob>;
         friend class Cluster;
 
     private:
-        Blob(cluster_data_ptr cd, const char * alias) : ExpirableEntity<Blob>(cd, alias) {}
+        Blob(cluster_data_ptr cd, const char * alias) : ExpirableEntry<Blob>(cd, alias) {}
         virtual ~Blob(void) {}
 
     public:
         static void Init(v8::Local<v8::Object> exports)
         {
-            ExpirableEntity<Blob>::Init(exports, "Blob", [](v8::Local<v8::FunctionTemplate> tpl)
+            ExpirableEntry<Blob>::Init(exports, "Blob", [](v8::Local<v8::FunctionTemplate> tpl)
             {
                 NODE_SET_PROTOTYPE_METHOD(tpl, "put", put);
                 NODE_SET_PROTOTYPE_METHOD(tpl, "update", update);
@@ -42,7 +42,7 @@ namespace qdb
         // put a new entry, with an optional expiry time
         static void put(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity<Blob>::queue_work(args,
+            ExpirableEntry<Blob>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_blob_put(qdb_req->handle(),
@@ -51,7 +51,7 @@ namespace qdb
                         qdb_req->input.content.buffer.size,
                         qdb_req->input.expiry);
                 },
-                ExpirableEntity<Blob>::processVoidResult,
+                ExpirableEntry<Blob>::processVoidResult,
                 &ArgsEaterBinder::buffer,
                 &ArgsEaterBinder::expiry);
         }
@@ -59,7 +59,7 @@ namespace qdb
         // put a new entry, with an optional expiry time
         static void update(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity<Blob>::queue_work(args,
+            ExpirableEntry<Blob>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_blob_update(qdb_req->handle(),
@@ -68,7 +68,7 @@ namespace qdb
                         qdb_req->input.content.buffer.size,
                         qdb_req->input.expiry);
                 },
-                ExpirableEntity<Blob>::processVoidResult,
+                ExpirableEntry<Blob>::processVoidResult,
                 &ArgsEaterBinder::buffer,
                 &ArgsEaterBinder::expiry);
         }
@@ -76,7 +76,7 @@ namespace qdb
         // return the alias content
         static void get(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            ExpirableEntity<Blob>::queue_work(args,
+            ExpirableEntry<Blob>::queue_work(args,
                 [](qdb_request * qdb_req)
                 {
                     qdb_req->output.error = qdb_blob_get(qdb_req->handle(),
@@ -84,7 +84,7 @@ namespace qdb
                         &(qdb_req->output.content.buffer.begin),
                         &(qdb_req->output.content.buffer.size));
                 },
-                ExpirableEntity<Blob>::processBufferResult,
+                ExpirableEntry<Blob>::processBufferResult,
                 &ArgsEaterBinder::buffer);
         }
 
