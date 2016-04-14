@@ -22,6 +22,9 @@ namespace qdb
         friend class Entry<Integer>;
         friend class Cluster;
 
+    public:
+        static const size_t ParameterCount = 1;
+
     private:
         Integer(cluster_data_ptr cd, const char * alias) : ExpirableEntry<Integer>(cd, alias) {}
         virtual ~Integer(void) {}

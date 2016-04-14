@@ -7,6 +7,7 @@
 #include "hset.hpp"
 #include "integer.hpp"
 #include "prefix.hpp"
+#include "range.hpp"
 #include "tag.hpp"
 
 #include <node.h>
@@ -49,6 +50,7 @@ namespace qdb
             NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
 
             NODE_SET_PROTOTYPE_METHOD(tpl, "prefix", prefix);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "range", range);
 
             NODE_SET_PROTOTYPE_METHOD(tpl, "setTimeout", setTimeout);
 
@@ -69,7 +71,9 @@ namespace qdb
                     return;
                 }
 
-                auto str = call.checkedArgString(0);
+                ArgsEater argsEater(call);
+
+                auto str = argsEater.eatString();
                 if (!str.second)
                 {
                     call.throwException("Expected a connection string as first argument");
@@ -100,18 +104,56 @@ namespace qdb
             v8::Isolate* isolate = args.GetIsolate();
             // Invoked as plain function `MyObject(...)`, turn into construct call.
             const int argc = 1;
-            v8::Local<v8::Value> argv[argc] = { args[0] };
+            assert(args.Length() == argc);
+            v8::Local<v8::Value> argv[argc] = {args[0]};
             v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
             v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
             args.GetReturnValue().Set(instance);
         }
 
-    public:
+    private:
+        template <typename Object, size_t ArgsLength>
+        struct ObjectConstructor;
+
         template <typename Object>
-        static void newObject(const v8::FunctionCallbackInfo<v8::Value> & args)
+        struct ObjectConstructor<Object, 1>
         {
-            if (args.IsConstructCall())
+            static void constructObject(const v8::FunctionCallbackInfo<v8::Value> & args)
             {
+                assert(args.IsConstructCall());
+
+                MethodMan call(args);
+
+                if (args.Length() != 1)
+                {
+                    call.throwException("Wrong number of arguments");
+                    return;
+                }
+
+                ArgsEater argsEater(call);
+
+                cluster_data_ptr data = eatClusterData(call, argsEater);
+                if (!data)
+                {
+                    call.throwException("Cluster is not connected");
+                    return;
+                }
+
+                auto b = new Object(data);
+                assert(b);
+
+                b->Wrap(args.This());
+                args.GetReturnValue().Set(args.This());
+            }
+        };
+
+        template <typename Object>
+        struct ObjectConstructor<Object, 2>
+        {
+            static void constructObject(const v8::FunctionCallbackInfo<v8::Value> & args)
+            {
+                assert(args.IsConstructCall());
+
                 MethodMan call(args);
 
                 if (args.Length() != 2)
@@ -120,16 +162,12 @@ namespace qdb
                     return;
                 }
 
-                // the first parameter is a Cluster object, let's unwrap it to get access to the underlying handle
-                auto obj = call.checkedArgObject(0);
+                ArgsEater argsEater(call);
 
-                if (!obj.second)
-                {
-                    call.throwException("Invalid parameter supplied to object");
-                    return;
-                }
+                cluster_data_ptr data = eatClusterData(call, argsEater);
+                if (!data) return;
 
-                auto str = call.checkedArgString(1);
+                auto str = argsEater.eatString();
                 if (!str.second)
                 {
                     call.throwException("Expected a string as an argument");
@@ -137,46 +175,86 @@ namespace qdb
                 }
 
                 v8::String::Utf8Value utf8str(str.first);
-
-                // get access to the underlying handle
-                Cluster * c = ObjectWrap::Unwrap<Cluster>(obj.first);
-
-                cluster_data_ptr data = c->data();
-                if (!data)
-                {
-                    call.throwException("Cluster is not connected");
-                    return;
-                }
-
-                Object * b = new Object(data, *utf8str);
+                auto b = new Object(data, *utf8str);
+                assert(b);
 
                 b->Wrap(args.This());
                 args.GetReturnValue().Set(args.This());
             }
+        };
+
+    private:
+        static cluster_data_ptr eatClusterData(MethodMan & call, ArgsEater & argsEater)
+        {
+            // the first parameter is a Cluster object, let's unwrap it to get access to the underlying handle
+            auto obj = argsEater.eatObject();
+            if (!obj.second)
+            {
+                call.throwException("Invalid parameter supplied to object");
+                return nullptr;
+            }
+
+            cluster_data_ptr data = getClusterData(obj.first);
+            if (!data)
+            {
+                call.throwException("Cluster is not connected");
+                return nullptr;
+            }
+
+            return data;
+        }
+
+        static cluster_data_ptr getClusterData(v8::Local<v8::Object> object)
+        {
+            // get access to the underlying handle
+            Cluster * c = ObjectWrap::Unwrap<Cluster>(object);
+            assert(c);
+
+            cluster_data_ptr data = c->data();
+            if (!data)
+            {
+                return nullptr;
+            }
+
+            return data;
+        }
+
+    private:
+        template <size_t ArgsLength>
+        struct ArgumentsCopier;
+
+    public:
+        template <typename Object>
+        static void newObject(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            static const size_t ArgsLength = Object::ParameterCount + 1;
+
+            if (args.IsConstructCall())
+            {
+                ObjectConstructor<Object, ArgsLength>::constructObject(args);
+            }
             else
             {
-                v8::Isolate* isolate = v8::Isolate::GetCurrent();
+                v8::Isolate * isolate = v8::Isolate::GetCurrent();
                 // Invoked as plain function `MyObject(...)`, turn into construct call.
-                const int argc = 2;
-                v8::Local<v8::Value> argv[argc] = { args[0], args[1] };
+                assert(args.Length() == ArgsLength);
+                auto argv = ArgumentsCopier<ArgsLength>::copy(args);
                 v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
-                args.GetReturnValue().Set(cons->NewInstance(argc, argv));
+                args.GetReturnValue().Set(cons->NewInstance(ArgsLength, argv.data()));
             }
         }
 
     private:
+        template <typename Object, size_t ParameterCount = Object::ParameterCount>
+        struct Factory
+        {
+            static void create(const v8::FunctionCallbackInfo<v8::Value> & args);
+        };
+
         template <typename Object>
         static void objectFactory(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
-            v8::Isolate* isolate = v8::Isolate::GetCurrent();
-            v8::HandleScope scope(isolate);
-
-            v8::Local<v8::Object> the_cluster = args.Holder();
-
-            const int argc = 2;
-            v8::Local<v8::Value> argv[argc] = { the_cluster, args[0] };
-            v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Object::constructor);
-            args.GetReturnValue().Set(cons->NewInstance(argc, argv));
+            Factory<Object>::create(args);
         }
 
     private:
@@ -249,14 +327,16 @@ namespace qdb
                 return;
             }
 
-            auto on_success = call.checkedArgCallback(0);
+            ArgsEater argsEater(call);
+
+            auto on_success = argsEater.eatCallback();
             if (!on_success.second)
             {
                 call.throwException("Expected a callback as first argument");
                 return;
             }
 
-            auto on_error = call.checkedArgCallback(1);
+            auto on_error = argsEater.eatCallback();
             if (!on_error.second)
             {
                 call.throwException("Expected a callback as second argument");
@@ -294,6 +374,11 @@ namespace qdb
         static void prefix(const v8::FunctionCallbackInfo<v8::Value> & args)
         {
             objectFactory<Prefix>(args);
+        }
+
+        static void range(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            objectFactory<Range>(args);
         }
 
         static void set(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -391,5 +476,60 @@ namespace qdb
         static v8::Persistent<v8::Function> constructor;
     };
 
-}
+    template <>
+    struct Cluster::ArgumentsCopier<1>
+    {
+        static std::array<v8::Local<v8::Value>, 1> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            return {{args[0]}};
+        }
+    };
 
+    template <>
+    struct Cluster::ArgumentsCopier<2>
+    {
+        static std::array<v8::Local<v8::Value>, 2> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            return {{args[0], args[1]}};
+        }
+    };
+
+    template <typename Object>
+    struct Cluster::Factory<Object, 0>
+    {
+        static void create(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            v8::Isolate * isolate = v8::Isolate::GetCurrent();
+            v8::HandleScope scope(isolate);
+
+            v8::Local<v8::Object> the_cluster = args.Holder();
+
+            static const size_t argc = 1;
+            v8::Local<v8::Value> argv[argc] = {the_cluster};
+            v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Object::constructor);
+            assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
+            args.GetReturnValue().Set(cons->NewInstance(argc, argv));
+        }
+    };
+
+    // TODO: use Maybe version of New, NewInstance
+    template <typename Object>
+    struct Cluster::Factory<Object, 1>
+    {
+        static void create(const v8::FunctionCallbackInfo<v8::Value> & args)
+        {
+            v8::Isolate * isolate = v8::Isolate::GetCurrent();
+            v8::HandleScope scope(isolate);
+
+            v8::Local<v8::Object> the_cluster = args.Holder();
+
+            static const size_t argc = 2;
+            assert(args.Length() == 1);
+            v8::Local<v8::Value> argv[argc] = {the_cluster, args[0]};
+            v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Object::constructor);
+            assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
+            args.GetReturnValue().Set(cons->NewInstance(argc, argv));
+        }
+    };
+
+} // namespace qdb

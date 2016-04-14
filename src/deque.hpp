@@ -22,6 +22,9 @@ namespace qdb
         friend class Entry<Deque>;
         friend class Cluster;
 
+    public:
+        static const size_t ParameterCount = 1;
+
     private:
         Deque(cluster_data_ptr cd, const char * alias) : Entry<Deque>(cd, alias) {}
         virtual ~Deque(void) {}

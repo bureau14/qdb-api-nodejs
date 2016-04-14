@@ -66,7 +66,9 @@ namespace qdb
                     return;
                 }
 
-                auto code = call.checkedArgNumber(0);
+                ArgsEater argsEater(call);
+
+                auto code = argsEater.eatNumber();
                 if (!code.second)
                 {
                     call.throwException("Expected an error code as first argument");

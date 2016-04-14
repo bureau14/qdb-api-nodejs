@@ -262,23 +262,30 @@ public:
     template <typename F>
     static void Init(v8::Local<v8::Object> exports, const char * className, F init)
     {
+        InitConstructorOnly(exports, className, [init](v8::Local<v8::FunctionTemplate> tpl) {
+            NODE_SET_PROTOTYPE_METHOD(tpl, "alias", Entry<Derivate>::alias);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "remove", Entry<Derivate>::remove);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "addTag", Entry<Derivate>::addTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "addTags", Entry<Derivate>::addTags);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "removeTag", Entry<Derivate>::removeTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "removeTags", Entry<Derivate>::removeTags);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "hasTag", Entry<Derivate>::hasTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "hasTags", Entry<Derivate>::hasTags);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "getTags", Entry<Derivate>::getTags);
+
+            init(tpl);
+        });
+    }
+
+    template <typename F>
+    static void InitConstructorOnly(v8::Local<v8::Object> exports, const char * className, F init)
+    {
         v8::Isolate * isolate = exports->GetIsolate();
 
         // Prepare constructor template
         v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Derivate::New);
         tpl->SetClassName(v8::String::NewFromUtf8(isolate, className));
         tpl->InstanceTemplate()->SetInternalFieldCount(Entry<Derivate>::FieldsCount);
-
-        // Prototype
-        NODE_SET_PROTOTYPE_METHOD(tpl, "alias", Entry<Derivate>::alias);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "remove", Entry<Derivate>::remove);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "addTag", Entry<Derivate>::addTag);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "addTags", Entry<Derivate>::addTags);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "removeTag", Entry<Derivate>::removeTag);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "removeTags", Entry<Derivate>::removeTags);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "hasTag", Entry<Derivate>::hasTag);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "hasTags", Entry<Derivate>::hasTags);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "getTags", Entry<Derivate>::getTags);
 
         init(tpl);
 

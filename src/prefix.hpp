@@ -23,6 +23,9 @@ class Prefix : public Entry<Prefix>
     friend class Entry<Prefix>;
     friend class Cluster;
 
+public:
+    static const size_t ParameterCount = 1;
+
 private:
     Prefix(cluster_data_ptr cd, const char * prefix) : Entry<Prefix>(cd, prefix)
     {
@@ -35,19 +38,10 @@ private:
 public:
     static void Init(v8::Local<v8::Object> exports)
     {
-        v8::Isolate * isolate = exports->GetIsolate();
-
-        // Prepare constructor template
-        v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Prefix::New);
-        tpl->SetClassName(v8::String::NewFromUtf8(isolate, "Prefix"));
-        tpl->InstanceTemplate()->SetInternalFieldCount(Entry<Prefix>::FieldsCount);
-
-        NODE_SET_PROTOTYPE_METHOD(tpl, "getEntries", getEntries);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "prefix", Entry<Prefix>::alias);
-
-        Prefix::constructor.Reset(isolate, tpl->GetFunction());
-
-        exports->Set(v8::String::NewFromUtf8(isolate, "Prefix"), tpl->GetFunction());
+        Entry<Prefix>::InitConstructorOnly(exports, "Prefix", [](v8::Local<v8::FunctionTemplate> tpl) {
+            NODE_SET_PROTOTYPE_METHOD(tpl, "getEntries", getEntries);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "prefix", Entry<Prefix>::alias);
+        });
     }
 
 public:

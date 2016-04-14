@@ -22,6 +22,9 @@ namespace qdb
         friend class Entry<Set>;
         friend class Cluster;
 
+    public:
+        static const size_t ParameterCount = 1;
+
     private:
         Set(cluster_data_ptr cd, const char * alias) : Entry<Set>(cd, alias) {}
         virtual ~Set(void) {}

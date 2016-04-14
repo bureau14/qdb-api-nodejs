@@ -23,6 +23,9 @@ namespace qdb
         friend class Entry<Blob>;
         friend class Cluster;
 
+    public:
+        static const size_t ParameterCount = 1;
+
     private:
         Blob(cluster_data_ptr cd, const char * alias) : ExpirableEntry<Blob>(cd, alias) {}
         virtual ~Blob(void) {}

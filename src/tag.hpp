@@ -23,6 +23,9 @@ class Tag : public Entry<Tag>
     friend class Entry<Tag>;
     friend class Cluster;
 
+public:
+    static const size_t ParameterCount = 1;
+
 private:
     Tag(cluster_data_ptr cd, const char * alias) : Entry<Tag>(cd, alias) {}
     virtual ~Tag(void) {}
