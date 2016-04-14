@@ -27,8 +27,21 @@ namespace qdb
         // this makes sure we can keep things alive in asynchronous operations
 
     public:
-        explicit Cluster(const char * uri) : _uri(uri), _timeout(60000) {}
-        virtual ~Cluster(void) {}
+        explicit Cluster(const char * uri) : _uri(uri), _timeout(60000)
+        {
+        }
+
+        virtual ~Cluster(void)
+        {
+        }
+
+    private:
+        static void AddEntryType(v8::Local<v8::Object> exports, const char * name, qdb_entry_type_t type)
+        {
+            v8::Isolate * isolate = exports->GetIsolate();
+            exports->ForceSet(v8::String::NewFromUtf8(isolate, name), v8::Int32::New(isolate, type),
+                              static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+        }
 
     public:
         static void Init(v8::Local<v8::Object> exports)
@@ -53,6 +66,14 @@ namespace qdb
             NODE_SET_PROTOTYPE_METHOD(tpl, "range", range);
 
             NODE_SET_PROTOTYPE_METHOD(tpl, "setTimeout", setTimeout);
+
+            AddEntryType(exports, "ENTRY_UNINITIALIZED", qdb_entry_uninitialized);
+            AddEntryType(exports, "ENTRY_BLOB", qdb_entry_blob);
+            AddEntryType(exports, "ENTRY_INTEGER", qdb_entry_integer);
+            AddEntryType(exports, "ENTRY_HSET", qdb_entry_hset);
+            AddEntryType(exports, "ENTRY_TAG", qdb_entry_tag);
+            AddEntryType(exports, "ENTRY_DEQUE", qdb_entry_deque);
+            AddEntryType(exports, "ENTRY_STREAM", qdb_entry_stream);
 
             constructor.Reset(isolate, tpl->GetFunction());
             exports->Set(v8::String::NewFromUtf8(isolate, "Cluster"), tpl->GetFunction());

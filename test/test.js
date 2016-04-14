@@ -7,14 +7,6 @@ var Promise = require('bluebird'); // Using default Node.js Promise is very slow
 var qdbd = null;
 var cluster = new qdb.Cluster('qdb://127.0.0.1:3030');
 
-var qdb_e_alias_not_found = 8;         // 0x08
-var qdb_e_invalid_argument = 24;       // 0x18
-var qdb_e_out_of_bounds = 25;          // 0x19
-var qdb_e_element_not_found = 37;      // 0x25
-var qdb_e_element_already_exists = 38; // 0x26
-var qdb_e_tag_already_set = 41;        // 0x29
-var qdb_e_tag_not_set = 42;            // 0x2a
-
 describe('qdb', function() {
     before('run quasardb daemon', function(done) {
         this.timeout(50000);
@@ -93,7 +85,7 @@ describe('qdb', function() {
             it('getEntries should say invalid argument when maxCount is missing', function(done) {
                 p.getEntries(function(err, aliases) {
                     test.must(err.message).not.be.empty();
-                    test.must(err.code).be.equal(qdb_e_invalid_argument);
+                    test.must(err.code).be.equal(qdb.E_INVALID_ARGUMENT);
                     test.must(err.informational).be.false();
 
                     aliases.must.be.empty();
@@ -105,7 +97,7 @@ describe('qdb', function() {
             it('getEntries should say entry not found and get an empty alias list', function(done) {
                 p.getEntries(10, function(err, aliases) {
                     test.must(err.message).not.be.empty();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.informational).be.false();
 
                     aliases.must.be.empty();
@@ -209,7 +201,7 @@ describe('qdb', function() {
             it('blobScan should say invalid argument when pattern is missing', function(done) {
                 r.blobScan(function(err, aliases) {
                     test.must(err.message).not.be.empty();
-                    test.must(err.code).be.equal(qdb_e_invalid_argument);
+                    test.must(err.code).be.equal(qdb.E_INVALID_ARGUMENT);
                     test.must(err.informational).be.false();
 
                     aliases.must.be.empty();
@@ -221,7 +213,7 @@ describe('qdb', function() {
             it.skip('blobScan should say invalid argument when maxCount is missing', function(done) {
                 r.blobScan(scan_pattern, function(err, aliases) {
                     test.must(err.message).not.be.empty();
-                    test.must(err.code).be.equal(qdb_e_invalid_argument);
+                    test.must(err.code).be.equal(qdb.E_INVALID_ARGUMENT);
                     test.must(err.informational).be.false();
 
                     aliases.must.be.empty();
@@ -233,7 +225,7 @@ describe('qdb', function() {
             it('blobScan should say entry not found and get an empty alias list', function(done) {
                 r.blobScan(scan_pattern, 10, function(err, aliases) {
                     test.must(err.message).not.be.empty();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.informational).be.false();
 
                     aliases.must.be.empty();
@@ -366,7 +358,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.false();
@@ -381,6 +373,16 @@ describe('qdb', function() {
             it('should update without error', function (done) {
                 b.update(new Buffer('bam_content'), function (err) {
                     test.must(err).be.equal(null);
+
+                    done();
+                });
+            });
+
+            it('should return correct entry type', function (done) {
+                b.getType(function (err, type) {
+                    test.must(err).be.equal(null);
+                    test.must(type).be.a.number();
+                    test.must(type).be.equal(qdb.ENTRY_BLOB);
 
                     done();
                 });
@@ -438,7 +440,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_tag_not_set);
+                    test.must(err.code).be.equal(qdb.E_TAG_NOT_SET);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.true();
@@ -462,7 +464,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_tag_already_set);
+                    test.must(err.code).be.equal(qdb.E_TAG_ALREADY_SET);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.true();
@@ -508,7 +510,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_tag_not_set);
+                    test.must(err.code).be.equal(qdb.E_TAG_NOT_SET);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.true();
@@ -523,7 +525,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_tag_not_set);
+                    test.must(err.code).be.equal(qdb.E_TAG_NOT_SET);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.true();
@@ -598,7 +600,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.false();
@@ -708,7 +710,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.false();
@@ -840,6 +842,16 @@ describe('qdb', function() {
                 s.addTag(dasTag, function(err)
                 {
                     test.must(err).be.equal(null);
+
+                    done();
+                });
+            });
+
+            it('should return correct entry type', function (done) {
+                t.getType(function (err, type) {
+                    test.must(err).be.equal(null);
+                    test.must(type).be.a.number();
+                    test.must(type).be.equal(qdb.ENTRY_TAG);
 
                     done();
                 });
@@ -1150,22 +1162,27 @@ describe('qdb', function() {
             done();
         });
 
-        describe('update/add/add/remove', function()
-        {
-            it('should set the value to 0', function(done)
-            {
-                i.update(0, function(err)
-                {
+        describe('update/add/add/remove', function() {
+            it('should set the value to 0', function(done) {
+                i.update(0, function(err) {
                     test.must(err).be.equal(null);
 
                     done();
                 });
             });
 
-            it('should after add be equal to 42', function(done)
-            {
-                i.add(42, function(err, data)
-                {
+            it('should return correct entry type', function(done) {
+                i.getType(function(err, type) {
+                    test.must(err).be.equal(null);
+                    test.must(type).be.a.number();
+                    test.must(type).be.equal(qdb.ENTRY_INTEGER);
+
+                    done();
+                });
+            });
+
+            it('should after add be equal to 42', function(done) {
+                i.add(42, function(err, data) {
                     test.must(err).be.equal(null);
 
                     test.must(data).be.a.number();
@@ -1175,10 +1192,8 @@ describe('qdb', function() {
                 });
             });
 
-            it('should after add be equal to 20', function(done)
-            {
-                i.add(-22, function(err, data)
-                {
+            it('should after add be equal to 20', function(done) {
+                i.add(-22, function(err, data) {
                     test.must(err).be.equal(null);
 
                     test.must(data).be.a.number();
@@ -1188,30 +1203,24 @@ describe('qdb', function() {
                 });
             });
 
-            it('should remove without an error', function(done)
-            {
-                i.remove(function(err)
-                {
+            it('should remove without an error', function(done) {
+                i.remove(function(err) {
                     test.must(err).be.equal(null);
 
                     done();
                 });
             });
 
-            it('should set the value to 10', function(done)
-            {
-                i.put(10, function(err)
-                {
+            it('should set the value to 10', function(done) {
+                i.put(10, function(err) {
                     test.must(err).be.equal(null);
 
                     done();
                 });
             });
 
-            it('should get the value of 10', function(done)
-            {
-                i.get(function(err, data)
-                {
+            it('should get the value of 10', function(done) {
+                i.get(function(err, data) {
                     test.must(err).be.equal(null);
 
                     test.must(data).be.a.number();
@@ -1221,10 +1230,8 @@ describe('qdb', function() {
                 });
             });
 
-            it('should remove again without an error', function(done)
-            {
-                i.remove(function(err)
-                {
+            it('should remove again without an error', function(done) {
+                i.remove(function(err) {
                     test.must(err).be.equal(null);
 
                     done();
@@ -1267,7 +1274,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.false();
@@ -1353,7 +1360,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.false();
@@ -1366,8 +1373,7 @@ describe('qdb', function() {
 
     }); // integer
 
-    describe('deque', function()
-    {
+    describe('deque', function() {
         var q;
 
         before('init', function(done) {
@@ -1399,7 +1405,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.informational).be.false();
                     done();
                 });
@@ -1412,7 +1418,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.informational).be.false();
                     done();
                 });
@@ -1425,7 +1431,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.informational).be.false();
 
                     done();
@@ -1437,6 +1443,16 @@ describe('qdb', function() {
                 q.pushBack(new Buffer('a'), function(err)
                 {
                     test.must(err).be.equal(null);
+                    done();
+                });
+            });
+
+            it('should return correct entry type', function (done) {
+                q.getType(function (err, type) {
+                    test.must(err).be.equal(null);
+                    test.must(type).be.a.number();
+                    test.must(type).be.equal(qdb.ENTRY_DEQUE);
+
                     done();
                 });
             });
@@ -1495,7 +1511,7 @@ describe('qdb', function() {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_out_of_bounds);
+                    test.must(err.code).be.equal(qdb.E_OUT_OF_BOUNDS);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.false();
@@ -1663,8 +1679,7 @@ describe('qdb', function() {
         });
     }); // deque
 
-    describe('set', function()
-    {
+    describe('set', function() {
         var s;
 
         before('init', function(done) {
@@ -1687,16 +1702,13 @@ describe('qdb', function() {
         // some back push/pop
         // note that at every moment you can have back() and front() (these functions do not pop)
 
-        describe('contains/insert/contains/erase/contains', function()
-        {
-            it('should not contain the entry', function(done)
-            {
-                s.contains(new Buffer('da'), function(err)
-                {
+        describe('contains/insert/contains/erase/contains', function() {
+            it('should not contain the entry', function(done) {
+                s.contains(new Buffer('da'), function(err) {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_alias_not_found);
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.false();
@@ -1705,24 +1717,30 @@ describe('qdb', function() {
                 });
             });
 
-            it('should insert without an error', function(done)
-            {
-                s.insert(new Buffer('da'), function(err)
-                {
+            it('should insert without an error', function(done) {
+                s.insert(new Buffer('da'), function(err) {
                     test.must(err).be.equal(null);
 
                     done();
                 });
             });
 
-            it('should insert with an error', function(done)
-            {
-                s.insert(new Buffer('da'), function(err)
-                {
+            it('should return correct entry type', function(done) {
+                s.getType(function(err, type) {
+                    test.must(err).be.equal(null);
+                    test.must(type).be.a.number();
+                    test.must(type).be.equal(qdb.ENTRY_HSET);
+
+                    done();
+                });
+            });
+
+            it('should insert with an error', function(done) {
+                s.insert(new Buffer('da'), function(err) {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_element_already_exists);
+                    test.must(err.code).be.equal(qdb.E_ELEMENT_ALREADY_EXISTS);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.true();
@@ -1731,34 +1749,28 @@ describe('qdb', function() {
                 });
             });
 
-            it('should now contain the entry', function(done)
-            {
-                s.contains(new Buffer('da'), function(err)
-                {
+            it('should now contain the entry', function(done) {
+                s.contains(new Buffer('da'), function(err) {
                     test.must(err).be.equal(null);
 
                     done();
                 });
             });
 
-            it('should erase without an error', function(done)
-            {
-                s.erase(new Buffer('da'), function(err)
-                {
+            it('should erase without an error', function(done) {
+                s.erase(new Buffer('da'), function(err) {
                     test.must(err).be.equal(null);
 
                     done();
                 });
             });
 
-            it('should no longer contain the entry', function(done)
-            {
-                s.contains(new Buffer('da'), function(err)
-                {
+            it('should no longer contain the entry', function(done) {
+                s.contains(new Buffer('da'), function(err) {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
-                    test.must(err.code).be.equal(qdb_e_element_not_found);
+                    test.must(err.code).be.equal(qdb.E_ELEMENT_NOT_FOUND);
                     test.must(err.severity).be.a.number();
                     test.must(err.origin).be.a.number();
                     test.must(err.informational).be.true();

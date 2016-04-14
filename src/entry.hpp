@@ -183,6 +183,17 @@ public:
                    processVoidResult, &ArgsEaterBinder::strings);
     }
 
+    static void getType(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       qdb_req->output.error = qdb_get_type(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                            &qdb_req->output.content.entry_type);
+                   },
+                   processEntryTypeResult);
+    }
+
     static void removeTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -267,11 +278,12 @@ public:
             NODE_SET_PROTOTYPE_METHOD(tpl, "remove", Entry<Derivate>::remove);
             NODE_SET_PROTOTYPE_METHOD(tpl, "addTag", Entry<Derivate>::addTag);
             NODE_SET_PROTOTYPE_METHOD(tpl, "addTags", Entry<Derivate>::addTags);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "removeTag", Entry<Derivate>::removeTag);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "removeTags", Entry<Derivate>::removeTags);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "getTags", Entry<Derivate>::getTags);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "getType", Entry<Derivate>::getType);
             NODE_SET_PROTOTYPE_METHOD(tpl, "hasTag", Entry<Derivate>::hasTag);
             NODE_SET_PROTOTYPE_METHOD(tpl, "hasTags", Entry<Derivate>::hasTags);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "getTags", Entry<Derivate>::getTags);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "removeTag", Entry<Derivate>::removeTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "removeTags", Entry<Derivate>::removeTags);
 
             init(tpl);
         });
@@ -447,6 +459,18 @@ public:
             auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok))
                                    ? v8::Date::New(isolate, static_cast<double>(qdb_req->output.content.value) * 1000.0)
                                    : v8::Date::New(isolate, 0.0);
+
+            return make_value_array(error_code, result_data);
+        });
+    }
+
+    static void processEntryTypeResult(uv_work_t * req, int status)
+    {
+        processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+            const auto error_code = processErrorCode(isolate, status, qdb_req);
+            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok))
+                                   ? v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.entry_type))
+                                   : v8::Number::New(isolate, qdb_entry_uninitialized);
 
             return make_value_array(error_code, result_data);
         });

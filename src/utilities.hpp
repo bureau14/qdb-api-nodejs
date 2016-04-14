@@ -94,6 +94,7 @@ namespace detail
             union {
                 slice buffer;
                 qdb_int_t value;
+                qdb_entry_type_t entry_type;
                 qdb_time_t date;
             } content;
 
