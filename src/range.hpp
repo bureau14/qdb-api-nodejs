@@ -40,6 +40,7 @@ public:
     {
         Entry<Range>::InitConstructorOnly(exports, "Range", [](v8::Local<v8::FunctionTemplate> tpl) {
             NODE_SET_PROTOTYPE_METHOD(tpl, "blobScan", blobScan);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "blobScanRegex", blobScanRegex);
         });
     }
 
@@ -52,6 +53,19 @@ public:
                 qdb_req->output.error = qdb_blob_scan(
                     qdb_req->handle(), qdb_req->input.content.str.c_str(), qdb_req->input.content.str.size(),
                     /*max_count=*/qdb_req->input.content.value,
+                    reinterpret_cast<const char ***>(const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
+                    &(qdb_req->output.content.buffer.size));
+            },
+            Entry<Range>::processArrayStringResult, &ArgsEaterBinder::string, &ArgsEaterBinder::integer);
+    }
+
+    static void blobScanRegex(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        Entry<Range>::queue_work(
+            args,
+            [](qdb_request * qdb_req) {
+                qdb_req->output.error = qdb_blob_scan_regex(
+                    qdb_req->handle(), qdb_req->input.content.str.c_str(), /*max_count=*/qdb_req->input.content.value,
                     reinterpret_cast<const char ***>(const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
                     &(qdb_req->output.content.buffer.size));
             },

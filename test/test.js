@@ -165,9 +165,7 @@ describe('qdb', function() {
             done();
         });
 
-        describe('object', function() {
-            var scan_pattern = 'unexisting_pattern';
-
+        describe('object', function () {
             it('is of correct type', function(done) {
                 test.object(r).isInstanceOf(qdb.Range);
                 done();
@@ -177,14 +175,18 @@ describe('qdb', function() {
                 test.object(r).hasNotProperty('alias');
                 done();
             });
+        });
 
-            it('has blobScan method', function(done) {
+        describe('blobScan', function() {
+            var scan_pattern = 'unexisting_pattern';
+
+            it('method exists', function(done) {
                 test.object(r).hasProperty('blobScan');
                 test.must(r.blobScan).be.a.function();
                 done();
             });
 
-            it('blobScan error', function(done) {
+            it('error type is correct', function(done) {
                 r.blobScan(function(err, aliases) {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
@@ -198,7 +200,7 @@ describe('qdb', function() {
                 });
             });
 
-            it('blobScan should say invalid argument when pattern is missing', function(done) {
+            it('should say invalid argument when pattern is missing', function(done) {
                 r.blobScan(function(err, aliases) {
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.equal(qdb.E_INVALID_ARGUMENT);
@@ -210,7 +212,7 @@ describe('qdb', function() {
                 });
             });
 
-            it.skip('blobScan should say invalid argument when maxCount is missing', function(done) {
+            it.skip('should say invalid argument when maxCount is missing', function(done) {
                 r.blobScan(scan_pattern, function(err, aliases) {
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.equal(qdb.E_INVALID_ARGUMENT);
@@ -222,7 +224,7 @@ describe('qdb', function() {
                 });
             });
 
-            it('blobScan should say entry not found and get an empty alias list', function(done) {
+            it('should say entry not found and get an empty alias list', function(done) {
                 r.blobScan(scan_pattern, 10, function(err, aliases) {
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
@@ -233,17 +235,77 @@ describe('qdb', function() {
                     done();
                 });
             });
-        }); // object
+        }); // blobScan
+
+        describe('blobScanRegex', function() {
+            var scan_pattern = 'unexisting_pattern';
+
+            it('method exists', function(done) {
+                test.object(r).hasProperty('blobScanRegex');
+                test.must(r.blobScanRegex).be.a.function();
+                done();
+            });
+
+            it('error type is correct', function(done) {
+                r.blobScanRegex(function(err, aliases) {
+                    test.must(err.message).be.a.string();
+                    test.must(err.message).not.be.empty();
+                    test.must(err.code).be.a.number();
+                    test.must(err.severity).be.a.number();
+                    test.must(err.origin).be.a.number();
+
+                    test.must(err.informational).be.boolean();
+
+                    done();
+                });
+            });
+
+            it('should say invalid argument when pattern is missing', function(done) {
+                r.blobScanRegex(function(err, aliases) {
+                    test.must(err.message).not.be.empty();
+                    test.must(err.code).be.equal(qdb.E_INVALID_ARGUMENT);
+                    test.must(err.informational).be.false();
+
+                    aliases.must.be.empty();
+
+                    done();
+                });
+            });
+
+            it.skip('should say invalid argument when maxCount is missing', function(done) {
+                r.blobScanRegex(scan_pattern, function(err, aliases) {
+                    test.must(err.message).not.be.empty();
+                    test.must(err.code).be.equal(qdb.E_INVALID_ARGUMENT);
+                    test.must(err.informational).be.false();
+
+                    aliases.must.be.empty();
+
+                    done();
+                });
+            });
+
+            it('should say entry not found and get an empty alias list', function(done) {
+                r.blobScanRegex(scan_pattern, 10, function(err, aliases) {
+                    test.must(err.message).not.be.empty();
+                    test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
+                    test.must(err.informational).be.false();
+
+                    aliases.must.be.empty();
+
+                    done();
+                });
+            });
+        }); // blobScanRegex
 
         describe('with blobs', function() {
-            var scan_pattern = 'pattern';
             var alias = 'range';
+            var content = 'pattern';
             var matchingAliases = [ alias + '1', alias + '2', alias + '3', alias + '4' ];
 
             before('put blobs', function(done) {
                 var promises = matchingAliases.map(function(a) {
                     return new Promise(function(resolve, reject) {
-                        cluster.blob(a).update(new Buffer(scan_pattern), function(err) {
+                        cluster.blob(a).update(new Buffer(content + a), function(err) {
                             test.must(err).be.equal(null);
                             if (err) reject(err);
 
@@ -259,28 +321,61 @@ describe('qdb', function() {
                     .catch(console.error);
             });
 
-            it('blobScan should return a non-empty alias list', function(done) {
-                r.blobScan(scan_pattern, /*maxCount=*/100, function(err, aliases) {
-                    test.must(err).be.equal(null);
+            describe('blobScan', function() {
+                var scan_pattern = content;
 
-                    test.array(aliases).isNotEmpty();
-                    test.value(aliases.length).isEqualTo(matchingAliases.length);
-                    test.array(aliases).contains(matchingAliases);
-                    test.array(matchingAliases).contains(aliases);
+                it('should return a non-empty alias list', function(done) {
+                    r.blobScan(scan_pattern, /*maxCount=*/100, function(err, aliases) {
+                        test.must(err).be.equal(null);
 
-                    done();
+                        test.array(aliases).isNotEmpty();
+                        test.value(aliases.length).isEqualTo(matchingAliases.length);
+                        test.array(aliases).contains(matchingAliases);
+                        test.array(matchingAliases).contains(aliases);
+
+                        done();
+                    });
+                });
+
+                it('should return a shortened alias list', function(done) {
+                    r.blobScan(scan_pattern, /*maxCount=*/2, function(err, aliases) {
+                        test.must(err).be.equal(null);
+
+                        test.array(aliases).isNotEmpty();
+                        test.value(aliases.length).isEqualTo(2);
+                        test.array(matchingAliases).contains(aliases);
+
+                        done();
+                    });
                 });
             });
 
-            it('blobScan should return a shortened alias list', function(done) {
-                r.blobScan(scan_pattern, /*maxCount=*/2, function(err, aliases) {
-                    test.must(err).be.equal(null);
+            describe('blobScanRegex', function() {
+                var scan_pattern = content + '[a-z]*[0-9]+';
 
-                    test.array(aliases).isNotEmpty();
-                    test.value(aliases.length).isEqualTo(2);
-                    test.array(matchingAliases).contains(aliases);
+                it('should return a non-empty alias list', function(done) {
+                    r.blobScanRegex(scan_pattern, /*maxCount=*/100, function(err, aliases) {
+                        test.must(err).be.equal(null);
 
-                    done();
+                        test.array(aliases).isNotEmpty();
+                        test.value(aliases.length).isEqualTo(matchingAliases.length);
+                        test.array(aliases).contains(matchingAliases);
+                        test.array(matchingAliases).contains(aliases);
+
+                        done();
+                    });
+                });
+
+                it('should return a shortened alias list', function(done) {
+                    r.blobScanRegex(scan_pattern, /*maxCount=*/2, function(err, aliases) {
+                        test.must(err).be.equal(null);
+
+                        test.array(aliases).isNotEmpty();
+                        test.value(aliases.length).isEqualTo(2);
+                        test.array(matchingAliases).contains(aliases);
+
+                        done();
+                    });
                 });
             });
         }); // with blobs
