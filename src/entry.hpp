@@ -18,7 +18,7 @@
 #include <string>
 #include <type_traits>
 
-namespace qdb
+namespace quasardb
 {
 
 template <typename... T>
@@ -514,4 +514,4 @@ private:
     std::unique_ptr<std::string> _alias;
 };
 
-} // namespace qdb
+} // namespace quasardb

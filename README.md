@@ -6,44 +6,29 @@ This is the official quasardb API, suitable for production. The full documentati
 
 ## Installation
 
-## quasardb C API
-
-To build the nodejs API, you will need the C API. It can either be installed on the machine (e.g. on unix in /usr/lib or /usr/local/lib) or you can unpack the C API archive in deps/qdb.
-
-## Building the extension
-
-You will need to have [node-gyp](https://github.com/TooTallNate/node-gyp) installed.
-
-In the directory run:
-
 ```
-    npm install
+npm install quasardb --save
 ```
-
-You will then find a qdb.node file which is the quasardb addon in `build/Release`.
 
 ## Introduction
 
 Using *quasardb* starts with a Cluster:
 
 ```javascript
-    var qdb = require('./qdb');
+var qdb = require('quasardb');
 
-    var c = new qdb.Cluster('qdb://127.0.0.1:2836');
+var c = new qdb.Cluster('qdb://127.0.0.1:2836');
 ```
 
 And creating a connection:
 
 ```javascript
-
-    c.connect(function()
-        {
-            // successfully connected to the cluster
-        },
-        function(err)
-        {
-            // error
-        });
+c.connect(function() {
+        // successfully connected to the cluster
+    },
+    function(err) {
+        // error
+    });
 ```
 
  > The error callback you provide on the connect will also be called if you later get disconnected from the cluster or a fatal error preventing normal operation occurs.
@@ -51,38 +36,38 @@ And creating a connection:
 Now that we have a connection to the cluster, let's store some binary data:
 
 ```javascript
-    var b = c.blob('bam');
+var b = c.blob('bam');
 
-    b.put(new Buffer("boom"), function(err) { /* */  });
-    b.get(function(err, data) { /* */  });
+b.put(new Buffer("boom"), function(err) { /* */  });
+b.get(function(err, data) { /* */  });
 ```
 
 Want a queue? We have distributed double-ended queues (aka deques).
 
 ```javascript
-    var q = c.deque('q2');
+var q = c.deque('q2');
 
-    q.pushBack(new Buffer("boom"), function(err) { /* */ });
-    q.popFront(function(err, data) { /* */ });
-    q.pushFront(new Buffer("bang"), function(err) { /* */ });
-    q.size(function(err, s) { /* */ });
-    q.at(2, function(err, data) { /* */ });
+q.pushBack(new Buffer("boom"), function(err) { /* */ });
+q.popFront(function(err, data) { /* */ });
+q.pushFront(new Buffer("bang"), function(err) { /* */ });
+q.size(function(err, s) { /* */ });
+q.at(2, function(err, data) { /* */ });
 ```
 
 quasardb comes out of the box with server-side atomic integers:
 
 ```javascript
-    var i = c.integer('some_int');
-    i.put(3, function(err){ /* */});
-    i.add(7, function(err, data){ /* */});
+var i = c.integer('some_int');
+i.put(3, function(err){ /* */});
+i.add(7, function(err, data){ /* */});
 ```
 
 We also provide distributed sets:
 
 ```javascript
-    var s = c.set('the_set');
+var s = c.set('the_set');
 
-    s.insert(new Buffer("boom"), function(err) { /* */ });
+s.insert(new Buffer("boom"), function(err) { /* */ });
 ```
 
 ## Tags
@@ -92,27 +77,25 @@ We also provide distributed sets:
 Any entry can be tagged, including tags.
 
 ```javascript
+var b = c.blob('bam');
 
-    var b = c.blob('bam');
+b.addTag('dasTag', function(err) { /* */ });
 
-    b.addTag('dasTag', function(err) { /* */ });
+var i = c.integer('bom');
 
-    var i = c.integer('bom');
+i.addTag('dasTag', function(err) { /* */ });
 
-    i.addTag('dasTag', function(err) { /* */ });
+var t = c.tag('dasTag');
 
-    var t = c.tag('dasTag');
-
-    t.getEntries(function(err, entries} { /* entries is the list of entries */ });
+t.getEntries(function(err, entries} { /* entries is the list of entries */ });
 ```
 
 It is also possible to list the tags of an entry or test for the existence of a tag:
 
 ```javascript
+b.hasTag('dasTag', function(err) { /* */ });
 
-    b.hasTag('dasTag', function(err) { /* */ });
-
-    b.getTags(function(err, tags) { /* tags is the list of tags */ });
+b.getTags(function(err, tags) { /* tags is the list of tags */ });
 ```
 
 ## Expiry
@@ -123,16 +106,16 @@ later be set with expiresAt and expiresFromNow.
 The expiry is second precise.
 
 ```javascript
-    var b = c.blob('bam');
+var b = c.blob('bam');
 
-    // value will be removed at the specified time
-    b.put(new Buffer("boom"), new Date("October 1st, 2016 11:13:00"), function(err) { /* */  });
+// value will be removed at the specified time
+b.put(new Buffer("boom"), new Date("October 1st, 2016 11:13:00"), function(err) { /* */  });
 
-    // value expires now!
-    b.expiresAt(new Date());
+// value expires now!
+b.expiresAt(new Date());
 
-    // entry will be removed in 20 seconds relative to the current time
-    b.expiresFromNow(20);
+// entry will be removed in 20 seconds relative to the current time
+b.expiresFromNow(20);
 ```
 
 Everytime you update a value without providing an expiry, the expiry time is set to "infinite" (i.e. never expires).
@@ -140,8 +123,8 @@ Everytime you update a value without providing an expiry, the expiry time is set
 You can query the expiry time of an entry with getExpiry:
 
 ```javascript
-    // returns a Date object
-    var expiry = b.getExpiry();
+// returns a Date object
+var expiry = b.getExpiry();
 ```
 
 What if you want to update but *do not want to change the expiry*?
@@ -149,14 +132,14 @@ What if you want to update but *do not want to change the expiry*?
 There is a special value `qdb.PRESERVE_EXPIRATION` that can be used:
 
 ```javascript
-    var b = c.blob('bam');
+var b = c.blob('bam');
 
-    // value will be removed at the specified time
-    b.put(new Buffer("boom"), new Date("October 1st, 2016 11:13:00"), function(err) { /* */  });
+// value will be removed at the specified time
+b.put(new Buffer("boom"), new Date("October 1st, 2016 11:13:00"), function(err) { /* */  });
 
-    // do stuff
+// do stuff
 
-    b.update(new Buffer("bang"), qdb.PRESERVE_EXPIRATION, function(err) { /* */ });
+b.update(new Buffer("bang"), qdb.PRESERVE_EXPIRATION, function(err) { /* */ });
 ```
 
 When using the special value `qdb.PRESERVE_EXPIRATION` updates will keep the previous expiration. If you want an entry to never expire you can either not specify an expiration or use `qdb.NEVER_EXPIRES`.
@@ -171,8 +154,8 @@ The client-side timeout is the time duration after which a client will consider 
 
 
 ```javascript
-    // sets the timeout to 10s
-    c.setTimeout(10000);
+// sets the timeout to 10s
+c.setTimeout(10000);
 ```
 
 Ideally the timeout should be set before calling connect.
@@ -182,18 +165,16 @@ Ideally the timeout should be set before calling connect.
 Quasardb callback return error objects. When the callback is successful, the error object is null. You can therefore safely write:
 
 ```javascript
-    var b = c.blob('bam');
+var b = c.blob('bam');
 
-    b.put(new Buffer("boom"), function(err)
-    {
-        if (err)
-        {
-            // error management
-            throw error.message;
-        }
+b.put(new Buffer("boom"), function(err) {
+    if (err) {
+        // error management
+        throw error.message;
+    }
 
-        // ...
-    });
+    // ...
+});
 ```
 
 You may not want to throw at every error. Some errors are *transient*. Meaning the underlying problem may (or may not) solve by itself. Transient errors are typically:
@@ -205,20 +186,17 @@ You may not want to throw at every error. Some errors are *transient*. Meaning t
 Because you may want to try again before giving up, you can check if an error is transient with the transient() method:
 
 ```javascript
-    var b = c.blob('bam');
+var b = c.blob('bam');
 
-    b.put(new Buffer("boom"), function(err)
-    {
-        if (err)
-        {
-            if (err.transient)
-            {
-                // let's try again
-            }
+b.put(new Buffer("boom"), function(err) {
+    if (err) {
+        if (err.transient) {
+            // let's try again
         }
+    }
 
-        // ...
-    });
+    // ...
+});
 ```
 
 You can also query if an error is *informational*. An informational error means that the query has been succesfully processed by the server and your parameters were valid but the result is either empty or unavailable. Typical informational errors are:
@@ -229,20 +207,17 @@ You can also query if an error is *informational*. An informational error means 
  * Integer overflow/underflow
 
 ```javascript
-    var b = c.blob('bam');
+var b = c.blob('bam');
 
-    b.put(new Buffer("boom"), function(err)
-    {
-        if (err)
-        {
-            if (err.informational)
-            {
-                // let's do something different
-            }
+b.put(new Buffer("boom"), function(err) {
+    if (err) {
+        if (err.informational) {
+            // let's do something different
         }
+    }
 
-        // ...
-    });
+    // ...
+});
 ```
 
 ## Not supported yet

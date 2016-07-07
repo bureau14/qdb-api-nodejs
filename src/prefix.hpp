@@ -13,7 +13,7 @@
 #include <memory>
 #include <string>
 
-namespace qdb
+namespace quasardb
 {
 
 class Cluster;
@@ -65,4 +65,4 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
-} // namespace qdb
+} // namespace quasardb

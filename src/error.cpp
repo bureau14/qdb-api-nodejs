@@ -1,9 +1,8 @@
 
 #include "error.hpp"
 
-namespace qdb
+namespace quasardb
 {
 
 v8::Persistent<v8::Function> Error::constructor;
-
 }

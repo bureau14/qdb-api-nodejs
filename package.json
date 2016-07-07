@@ -5,7 +5,7 @@
   "bugs": {
     "url": "https://quasardb.zendesk.com"
   },
-  "name": "qdb",
+  "name": "quasardb",
   "description": "Official quasardb nodejs library",
   "keywords": [
     "quasardb",
@@ -13,7 +13,7 @@
     "database",
     "store"
   ],
-  "main": "build/Release/qdb.node",
+  "main": "lib/binding/quasardb.node",
   "version": "2.0.0",
   "repository": {
     "type": "git",
@@ -34,7 +34,7 @@
     "package": "node-pre-gyp package"
   },
   "binary": {
-    "module_name": "qdb",
+    "module_name": "quasardb",
     "module_path": "./lib/binding/",
     "host": "https://npm.quasardb.net/"
   }

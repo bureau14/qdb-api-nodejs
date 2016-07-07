@@ -11,20 +11,20 @@ var Promise = require('bluebird'); // Using default Node.js Promise is very slow
 var qdbd = null;
 var cluster = new qdb.Cluster('qdb://127.0.0.1:3030');
 
-describe('qdb', function() {
-    before('run quasardb daemon', function(done) {
+describe('quasardb', function() {
+    before('run qdb daemon', function(done) {
         this.timeout(50000);
         qdbd = spawn(__dirname + '/../deps/qdb/bin/qdbd', [ '--address=127.0.0.1:3030' ]);
 
         // wait 2 seconds then try to connect
         setTimeout(function() {
             cluster.connect(done, function(err) {
-                throw "an error occurred in cluster launch: " + err.message;
+                throw new Error("an error occurred in cluster launch: " + err.message);
             });
         }, 2000);
     });
 
-    after('terminate quasardb daemon', function(done) {
+    after('terminate qdb daemon', function(done) {
         this.timeout(10000);
         qdbd.kill('SIGTERM');
         qdbd.on('exit', function(code) {
@@ -1880,4 +1880,4 @@ describe('qdb', function() {
         });
     }); // set
 
-}); // qdb
+}); // quasardb
