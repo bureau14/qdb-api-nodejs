@@ -1,4 +1,5 @@
 {
+  "license": "BSD-2-Clause",
   "author": "quasardb",
   "homepage": "https://www.quasardb.net",
   "bugs": {
@@ -13,18 +14,28 @@
     "store"
   ],
   "main": "build/Release/qdb.node",
-  "version": "2.0.0rc1",
+  "version": "2.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/bureau14/qdb-api-nodejs"
   },
-  "scripts": {
-    "test": "mocha"
+  "dependencies": {
+    "node-pre-gyp": "^0.6.29"
   },
   "devDependencies": {
     "bluebird": "^3.3.5",
     "mocha": "~2.4.5",
     "unit.js": "~2.0.0"
   },
-  "license": "BSD-2-Clause"
+  "scripts": {
+    "preinstall": "npm install node-pre-gyp",
+    "install": "node-pre-gyp install",
+    "test": "mocha test",
+    "package": "node-pre-gyp package"
+  },
+  "binary": {
+    "module_name": "qdb",
+    "module_path": "./lib/binding/",
+    "host": "https://npm.quasardb.net/"
+  }
 }
