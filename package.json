@@ -13,7 +13,7 @@
     "database",
     "store"
   ],
-  "main": "lib/binding/quasardb.node",
+  "main": "./index.js",
   "version": "2.0.0",
   "repository": {
     "type": "git",

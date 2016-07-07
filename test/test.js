@@ -1,7 +1,4 @@
-var binary = require('node-pre-gyp');
-var path = require('path')
-var qdb_path = binary.find(path.resolve(path.join(__dirname,'../package.json')));
-var qdb = require(qdb_path);
+var qdb = require('..');
 
 var spawn = require('child_process').spawn;
 var execSync = require('child_process').execSync;
