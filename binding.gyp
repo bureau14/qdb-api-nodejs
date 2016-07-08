@@ -56,7 +56,7 @@
             "libraries": [
               "-L<(module_root_dir)/deps/qdb/lib",
               "-lqdb_api",
-              "-Wl,-rpath,<(module_root_dir)/deps/qdb/lib"
+              "-Wl,-rpath,@loader_path"
             ],
             "xcode_settings": {
               "OTHER_CFLAGS": [
@@ -78,7 +78,8 @@
             "libraries": [
               "-L/usr/local/lib",
               "-L<(module_root_dir)/deps/qdb/lib",
-              "-lqdb_api"
+              "-lqdb_api",
+              "-Wl,-rpath=\'$$ORIGIN\'"
             ],
             "cflags": [
               "-std=c++11",
@@ -97,7 +98,8 @@
             "libraries": [
               "-L/usr/local/lib",
               "-L<(module_root_dir)/deps/qdb/lib",
-              "-lqdb_api"
+              "-lqdb_api",
+              "-Wl,-rpath=\'$$ORIGIN\'"
             ],
             "cflags": [
               "-std=c++11",
