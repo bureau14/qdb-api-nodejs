@@ -14,7 +14,7 @@
     "store"
   ],
   "main": "./index.js",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/bureau14/qdb-api-nodejs"
@@ -27,8 +27,10 @@
     "mocha": "~2.4.5",
     "unit.js": "~2.0.0"
   },
+  "bundledDependencies": [
+    "node-pre-gyp"
+  ],
   "scripts": {
-    "preinstall": "npm install node-pre-gyp",
     "install": "node-pre-gyp install",
     "test": "mocha test",
     "package": "node-pre-gyp package"
