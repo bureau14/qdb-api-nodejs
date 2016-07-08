@@ -1162,7 +1162,7 @@ describe('quasardb', function() {
 
             }); // addTags
 
-            describe.skip('hasTags', function ()
+            describe('hasTags', function ()
             {
 
                 it('should return true (tag set) for every tag', function(done)
