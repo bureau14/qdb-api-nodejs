@@ -20,6 +20,20 @@ public:
     }
 
 private:
+    static void AddErrorOrigin(v8::Local<v8::Object> exports, const char * name, qdb_error_origin_t origin)
+    {
+        v8::Isolate * isolate = exports->GetIsolate();
+        exports->ForceSet(v8::String::NewFromUtf8(isolate, name), v8::Int32::New(isolate, origin),
+                          static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+    }
+
+    static void AddErrorSeverity(v8::Local<v8::Object> exports, const char * name, qdb_error_severity_t severity)
+    {
+        v8::Isolate * isolate = exports->GetIsolate();
+        exports->ForceSet(v8::String::NewFromUtf8(isolate, name), v8::Int32::New(isolate, severity),
+                          static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+    }
+
     static void AddErrorCode(v8::Local<v8::Object> exports, const char * name, qdb_error_t err)
     {
         static const int code_mask = 0xFFFF;
@@ -59,6 +73,18 @@ public:
         proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "code"),
                                    v8::FunctionTemplate::New(isolate, Error::code, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+
+        AddErrorOrigin(exports, "E_ORIGIN_SYSTEM_REMOTE", qdb_e_origin_system_remote);
+        AddErrorOrigin(exports, "E_ORIGIN_SYSTEM_LOCAL", qdb_e_origin_system_local);
+        AddErrorOrigin(exports, "E_ORIGIN_CONNECTION", qdb_e_origin_connection);
+        AddErrorOrigin(exports, "E_ORIGIN_INPUT", qdb_e_origin_input);
+        AddErrorOrigin(exports, "E_ORIGIN_OPERATION", qdb_e_origin_operation);
+        AddErrorOrigin(exports, "E_ORIGIN_PROTOCOL", qdb_e_origin_protocol);
+
+        AddErrorSeverity(exports, "E_SEVERITY_UNRECOVERABLE", qdb_e_severity_unrecoverable);
+        AddErrorSeverity(exports, "E_SEVERITY_ERROR", qdb_e_severity_error);
+        AddErrorSeverity(exports, "E_SEVERITY_WARNING", qdb_e_severity_warning);
+        AddErrorSeverity(exports, "E_SEVERITY_INFO", qdb_e_severity_info);
 
         AddErrorCode(exports, "E_UNINITIALIZED", qdb_e_uninitialized);
         AddErrorCode(exports, "E_ALIAS_NOT_FOUND", qdb_e_alias_not_found);
