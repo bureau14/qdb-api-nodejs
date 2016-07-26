@@ -779,7 +779,7 @@ describe('quasardb', function() {
 
             it('should update with null expiry', function(done)
             {
-                b.update(new Buffer('bam_content'), null, function(err)
+                b.update(new Buffer('bam_content'), qdb.NEVER_EXPIRES, function(err)
                 {
                     test.must(err).be.equal(null);
 
