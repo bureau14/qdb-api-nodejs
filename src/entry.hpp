@@ -456,7 +456,7 @@ public:
     {
         processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
             const auto error_code = processErrorCode(isolate, status, qdb_req);
-            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok))
+            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok) && (qdb_req->output.content.value > 0))
                                    ? v8::Date::New(isolate, static_cast<double>(qdb_req->output.content.value) * 1000.0)
                                    : v8::Date::New(isolate, 0.0);
 
