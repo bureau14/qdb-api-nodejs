@@ -670,6 +670,27 @@ describe('quasardb', function() {
                 test.must(qdb.PRESERVE_EXPIRATION).be.a.number();
             });
 
+            it('should put without expiry', function(done)
+            {
+                b.put(new Buffer('bam_content'), function(err)
+                {
+                    test.must(err).be.equal(null);
+
+                    done();
+                });
+            });
+
+            it('should return undefined expiry', function(done)
+            {
+                b.getExpiry(function(err, entry_expiry)
+                {
+                    test.must(err).be.equal(null);
+                    test.must(entry_expiry).be.equal(null);
+
+                    done();
+                });
+            });
+
             it('should update with an expiry in 2s without error', function(done)
             {
                 var test_exp = new Date();
@@ -751,6 +772,27 @@ describe('quasardb', function() {
                     test.must(err).be.equal(null);
 
                     test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
+
+                    done();
+                });
+            });
+
+            it('should update with undefined expiry', function(done)
+            {
+                b.update(new Buffer('bam_content'), undefined, function(err)
+                {
+                    test.must(err).be.equal(null);
+
+                    done();
+                });
+            });
+
+            it('should return undefined expiry', function(done)
+            {
+                b.getExpiry(function(err, entry_expiry)
+                {
+                    test.must(err).be.equal(null);
+                    test.must(entry_expiry).be.equal(null);
 
                     done();
                 });
