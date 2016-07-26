@@ -461,7 +461,7 @@ public:
                 auto result_data = v8::Date::New(isolate, static_cast<double>(qdb_req->output.content.value) * 1000.0);
                 return make_value_array(error_code, result_data);
             }
-            return make_value_array(error_code, v8::Null(isolate));
+            return make_value_array(error_code, v8::Undefined(isolate));
         });
     }
 
