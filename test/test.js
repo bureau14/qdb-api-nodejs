@@ -680,7 +680,7 @@ describe('quasardb', function() {
                 });
             });
 
-            it('should return undefined expiry', function(done)
+            it('should return null expiry', function(done)
             {
                 b.getExpiry(function(err, entry_expiry)
                 {
@@ -777,9 +777,9 @@ describe('quasardb', function() {
                 });
             });
 
-            it('should update with undefined expiry', function(done)
+            it('should update with null expiry', function(done)
             {
-                b.update(new Buffer('bam_content'), undefined, function(err)
+                b.update(new Buffer('bam_content'), null, function(err)
                 {
                     test.must(err).be.equal(null);
 
@@ -787,7 +787,7 @@ describe('quasardb', function() {
                 });
             });
 
-            it('should return undefined expiry', function(done)
+            it('should return null expiry', function(done)
             {
                 b.getExpiry(function(err, entry_expiry)
                 {
