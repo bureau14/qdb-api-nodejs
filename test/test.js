@@ -777,7 +777,7 @@ describe('quasardb', function() {
                 });
             });
 
-            it('should update with null expiry', function(done)
+            it('should update without expiry', function(done)
             {
                 b.update(new Buffer('bam_content'), qdb.NEVER_EXPIRES, function(err)
                 {
