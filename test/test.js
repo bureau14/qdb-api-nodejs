@@ -680,12 +680,12 @@ describe('quasardb', function() {
                 });
             });
 
-            it('should return null expiry', function(done)
+            it('should return undefined expiry', function(done)
             {
                 b.getExpiry(function(err, entry_expiry)
                 {
                     test.must(err).be.equal(null);
-                    test.must(entry_expiry).be.equal(null);
+                    test.must(entry_expiry).be.equal(undefined);
 
                     done();
                 });
@@ -787,12 +787,12 @@ describe('quasardb', function() {
                 });
             });
 
-            it('should return null expiry', function(done)
+            it('should return undefined expiry', function(done)
             {
                 b.getExpiry(function(err, entry_expiry)
                 {
                     test.must(err).be.equal(null);
-                    test.must(entry_expiry).be.equal(null);
+                    test.must(entry_expiry).be.equal(undefined);
 
                     done();
                 });
