@@ -481,11 +481,20 @@ public:
     {
         processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
             const auto error_code = processErrorCode(isolate, status, qdb_req);
-            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok))
-                                   ? v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.entry_metadata))
-                                   : v8::Number::New(isolate, qdb_entry_uninitialized);
+            if ((status < 0) || (qdb_req->output.error != qdb_e_ok))
+            {
+                return make_value_array(error_code, v8::Number::Undefined(isolate));
+            }
 
-            return make_value_array(error_code, result_data);
+            auto meta = v8::Object::New(isolate);
+            // meta->Set(v8::String::New(isolate, "reference"), v8::Array::New(isolate, qdb_req->output.content.reference));
+            meta->Set(v8::String::New(isolate, "type"), v8::Number::New(isolate, qdb_req->output.content.entry_type));
+            meta->Set(v8::String::New(isolate, "size"), v8::Number::New(isolate, qdb_req->output.content.size));
+            meta->Set(v8::String::New(isolate, "creation_time"), v8::Number::New(isolate, qdb_req->output.content.creation_time));
+            meta->Set(v8::String::New(isolate, "modification_time"), v8::Number::New(isolate, qdb_req->output.content.modification_time));
+            meta->Set(v8::String::New(isolate, "expiry_time"), v8::Number::New(isolate, qdb_req->output.content.expiry_time));
+
+            return make_value_array(error_code, meta);
         });
     }
 
