@@ -163,7 +163,7 @@ Ideally the timeout should be set before calling connect.
 ## Metadata
 
 You may want to get some metainformation about an entry without actually acquiring the data itself. For this purpose, `getMetadata` method may be invoked on any entry.
-It returns an object that describes the type of the entry, its creation, last modification and expiry times, as well as its unique identifier.
+It returns an object that describes the type of the entry, its creation, last modification and expiry times, as well as its unique identifier (reference).
 For blob entries, the size of the content is also returned.
 
 ```javascript
@@ -194,7 +194,7 @@ var b = c.blob('bam');
 b.put(new Buffer("boom"), function(err) {
     if (err) {
         // error management
-        throw error.message;
+        throw err.message;
     }
 
     // ...
