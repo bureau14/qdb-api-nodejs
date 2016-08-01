@@ -483,7 +483,7 @@ public:
             const auto error_code = processErrorCode(isolate, status, qdb_req);
             if ((status < 0) || (qdb_req->output.error != qdb_e_ok))
             {
-                return make_value_array(error_code, v8::Undefined::New(isolate));
+                return make_value_array(error_code, v8::Undefined(isolate));
             }
 
             auto reference = v8::Array::New(isolate, 4);
