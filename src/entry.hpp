@@ -478,7 +478,7 @@ public:
     }
 
     // Convert from 100-ns to ms
-    static void convertToMillis(qdb_timestamp_t ts)
+    static double convertToMillis(qdb_timestamp_t ts)
     {
         return ts / (10 * 1000);
     }
