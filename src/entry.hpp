@@ -188,7 +188,7 @@ public:
         queue_work(args,
                    [](qdb_request * qdb_req) //
                    {
-                       qdb_req->output.error = qdb_get_type(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                       qdb_req->output.error = qdb_get_metadata(qdb_req->handle(), qdb_req->input.alias.c_str(),
                                                             &qdb_req->output.content.entry_metadata);
                    },
                    processEntryMetadataResult);
