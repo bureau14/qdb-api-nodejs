@@ -494,7 +494,7 @@ describe('quasardb', function() {
 
                     test.object(meta).hasProperty('size');
                     test.must(meta.size).be.a.number();
-                    test.must(type).be.equal('bam_content'.length);
+                    test.must(meta.size).be.equal('bam_content'.length);
 
                     test.object(meta).hasProperty('type');
                     test.must(meta.type).be.a.number();
