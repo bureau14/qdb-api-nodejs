@@ -95,6 +95,7 @@ struct qdb_request
         union {
             slice buffer;
             qdb_int_t value;
+            qdb_entry_metadata_t entry_metadata;
             qdb_entry_type_t entry_type;
             qdb_time_t date;
         } content;

@@ -484,6 +484,33 @@ describe('quasardb', function() {
                 });
             });
 
+            it('should return correct entry metadata', function (done) {
+                b.getMetadata(function (err, meta) {
+                    test.must(err).be.equal(null);
+
+                    test.object(meta).hasProperty('reference');
+                    test.object(meta.reference).isInstanceOf(Array);
+                    test.must(meta.reference.length).be.equal(4);
+
+                    test.object(meta).hasProperty('size');
+                    test.must(meta.size).be.a.number();
+                    test.must(meta.size).be.equal('bam_content'.length);
+
+                    test.object(meta).hasProperty('type');
+                    test.must(meta.type).be.a.number();
+                    test.must(meta.type).be.equal(qdb.ENTRY_BLOB);
+
+                    test.object(meta).hasProperty('creation_time');
+                    test.object(meta).hasProperty('modification_time');
+                    test.object(meta).hasProperty('expiry_time');
+                    test.object(meta.creation_time).isInstanceOf(Date);
+                    test.object(meta.modification_time).isInstanceOf(Date);
+                    test.object(meta.expiry_time).isInstanceOf(Date);
+
+                    done();
+                });
+            });
+
             it('should get the previous value', function (done) {
                 b.get(function (err, data) {
                     test.must(err).be.equal(null);

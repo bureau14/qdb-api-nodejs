@@ -183,6 +183,17 @@ public:
                    processVoidResult, &ArgsEaterBinder::strings);
     }
 
+    static void getMetadata(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       qdb_req->output.error = qdb_get_metadata(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                            &qdb_req->output.content.entry_metadata);
+                   },
+                   processEntryMetadataResult);
+    }
+
     static void getType(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -278,6 +289,7 @@ public:
             NODE_SET_PROTOTYPE_METHOD(tpl, "remove", Entry<Derivate>::remove);
             NODE_SET_PROTOTYPE_METHOD(tpl, "addTag", Entry<Derivate>::addTag);
             NODE_SET_PROTOTYPE_METHOD(tpl, "addTags", Entry<Derivate>::addTags);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "getMetadata", Entry<Derivate>::getMetadata);
             NODE_SET_PROTOTYPE_METHOD(tpl, "getTags", Entry<Derivate>::getTags);
             NODE_SET_PROTOTYPE_METHOD(tpl, "getType", Entry<Derivate>::getType);
             NODE_SET_PROTOTYPE_METHOD(tpl, "hasTag", Entry<Derivate>::hasTag);
@@ -465,12 +477,53 @@ public:
         });
     }
 
+    // Convert from 100-ns to ms
+    static double convertToMillis(qdb_timestamp_t ts)
+    {
+        return ts / (10 * 1000);
+    }
+
+    static void processEntryMetadataResult(uv_work_t * req, int status)
+    {
+        processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+            const auto error_code = processErrorCode(isolate, status, qdb_req);
+            if ((status < 0) || (qdb_req->output.error != qdb_e_ok))
+            {
+                return make_value_array(error_code, v8::Undefined(isolate));
+            }
+
+            auto reference = v8::Array::New(isolate, 4);
+            for (size_t i = 0; i < 4; ++i)
+            {
+                reference->Set(i, v8::Integer::New(isolate, qdb_req->output.content.entry_metadata.reference.data[i]));
+            }
+
+            auto meta = v8::Object::New(isolate);
+
+            meta->Set(v8::String::NewFromUtf8(isolate, "reference"), reference);
+            meta->Set(v8::String::NewFromUtf8(isolate, "type"),
+                      v8::Integer::New(isolate, qdb_req->output.content.entry_metadata.type));
+            meta->Set(v8::String::NewFromUtf8(isolate, "size"),
+                      v8::Integer::New(isolate, qdb_req->output.content.entry_metadata.size));
+
+            meta->Set(v8::String::NewFromUtf8(isolate, "creation_time"),
+                      v8::Date::New(isolate, convertToMillis(qdb_req->output.content.entry_metadata.creation_time)));
+            meta->Set(
+                v8::String::NewFromUtf8(isolate, "modification_time"),
+                v8::Date::New(isolate, convertToMillis(qdb_req->output.content.entry_metadata.modification_time)));
+            meta->Set(v8::String::NewFromUtf8(isolate, "expiry_time"),
+                      v8::Date::New(isolate, convertToMillis(qdb_req->output.content.entry_metadata.expiry_time)));
+
+            return make_value_array(error_code, meta);
+        });
+    }
+
     static void processEntryTypeResult(uv_work_t * req, int status)
     {
         processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
             const auto error_code = processErrorCode(isolate, status, qdb_req);
             auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok))
-                                   ? v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.entry_type))
+                                   ? v8::Number::New(isolate, qdb_req->output.content.entry_type)
                                    : v8::Number::New(isolate, qdb_entry_uninitialized);
 
             return make_value_array(error_code, result_data);
