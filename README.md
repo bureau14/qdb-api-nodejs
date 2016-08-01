@@ -103,7 +103,7 @@ b.getTags(function(err, tags) { /* tags is the list of tags */ });
 Integers and blob can be configured to automatically expire. The expiry can be specified with an absolute value at the entry creation or update, or can
 later be set with expiresAt and expiresFromNow.
 
-The expiry is second precise.
+The expiry is second-precise.
 
 ```javascript
 var b = c.blob('bam');
@@ -159,6 +159,30 @@ c.setTimeout(10000);
 ```
 
 Ideally the timeout should be set before calling connect.
+
+## Metadata
+
+You may want to get some metainformation about an entry without actually acquiring the data itself. For this purpose, `getMetadata` method may be invoked on any entry.
+It returns an object that describes the type of the entry, its creation, last modification and expiry times, as well as its unique identifier.
+For blob entries, the size of the content is also returned.
+
+```javascript
+var b = c.blob('bam');
+
+b.getMetadata(function(err, meta)) {
+    if (err) {
+        // ...
+    }
+
+    // There is also meta.reference.
+
+    if (meta.type == qdb.ENTRY_BLOB) {
+        var content_size = meta.size;
+    }
+
+    var times = [meta.creation_time, meta.modification_time, meta.expiry_time];
+}
+```
 
 ## Errors
 
