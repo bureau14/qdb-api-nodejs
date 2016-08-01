@@ -489,17 +489,22 @@ public:
             auto reference = v8::Array::New(isolate, 4);
             for (size_t i = 0; i < 4; ++i)
             {
-                reference->Set(i, v8::Integer::New(isolate, qdb_req->output.content.reference.data[i]));
+                reference->Set(i, v8::Integer::New(isolate, qdb_req->output.content.entry_metadata.reference.data[i]));
             }
 
             auto meta = v8::Object::New(isolate);
 
             meta->Set(v8::String::New(isolate, "reference"), reference);
-            meta->Set(v8::String::New(isolate, "type"), v8::Number::New(isolate, qdb_req->output.content.entry_type));
-            meta->Set(v8::String::New(isolate, "size"), v8::Number::New(isolate, qdb_req->output.content.size));
-            meta->Set(v8::String::New(isolate, "creation_time"), v8::Number::New(isolate, qdb_req->output.content.creation_time));
-            meta->Set(v8::String::New(isolate, "modification_time"), v8::Number::New(isolate, qdb_req->output.content.modification_time));
-            meta->Set(v8::String::New(isolate, "expiry_time"), v8::Number::New(isolate, qdb_req->output.content.expiry_time));
+            meta->Set(v8::String::New(isolate, "type"),
+                      v8::Number::New(isolate, qdb_req->output.content.entry_metadata.entry_type));
+            meta->Set(v8::String::New(isolate, "size"),
+                      v8::Number::New(isolate, qdb_req->output.content.entry_metadata.size));
+            meta->Set(v8::String::New(isolate, "creation_time"),
+                      v8::Number::New(isolate, qdb_req->output.content.entry_metadata.creation_time));
+            meta->Set(v8::String::New(isolate, "modification_time"),
+                      v8::Number::New(isolate, qdb_req->output.content.entry_metadata.modification_time));
+            meta->Set(v8::String::New(isolate, "expiry_time"),
+                      v8::Number::New(isolate, qdb_req->output.content.entry_metadata.expiry_time));
 
             return make_value_array(error_code, meta);
         });
