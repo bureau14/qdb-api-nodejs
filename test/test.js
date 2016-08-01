@@ -490,7 +490,7 @@ describe('quasardb', function() {
 
                     test.object(meta).hasProperty('reference');
                     test.object(meta.reference).isInstanceOf(Array);
-                    test.must(meta.reference).be.equal(4);
+                    test.must(meta.reference.length).be.equal(4);
 
                     test.object(meta).hasProperty('size');
                     test.must(meta.size).be.a.number();
