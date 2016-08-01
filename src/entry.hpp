@@ -515,7 +515,7 @@ public:
         processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
             const auto error_code = processErrorCode(isolate, status, qdb_req);
             auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok))
-                                   ? v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.entry_type))
+                                   ? v8::Number::New(isolate, qdb_req->output.content.entry_type)
                                    : v8::Number::New(isolate, qdb_entry_uninitialized);
 
             return make_value_array(error_code, result_data);
