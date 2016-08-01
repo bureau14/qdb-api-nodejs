@@ -502,9 +502,9 @@ public:
 
             meta->Set(v8::String::NewFromUtf8(isolate, "reference"), reference);
             meta->Set(v8::String::NewFromUtf8(isolate, "type"),
-                      v8::Number::New(isolate, qdb_req->output.content.entry_metadata.type));
+                      v8::Integer::New(isolate, qdb_req->output.content.entry_metadata.type));
             meta->Set(v8::String::NewFromUtf8(isolate, "size"),
-                      v8::Number::New(isolate, qdb_req->output.content.entry_metadata.size));
+                      v8::Integer::New(isolate, qdb_req->output.content.entry_metadata.size));
 
             meta->Set(v8::String::NewFromUtf8(isolate, "creation_time"),
                       v8::Date::New(isolate, convertToMillis(qdb_req->output.content.entry_metadata.creation_time)));
