@@ -494,16 +494,16 @@ public:
 
             auto meta = v8::Object::New(isolate);
 
-            meta->Set(v8::String::New(isolate, "reference"), reference);
-            meta->Set(v8::String::New(isolate, "type"),
+            meta->Set(v8::String::NewFromUtf8(isolate, "reference"), reference);
+            meta->Set(v8::String::NewFromUtf8(isolate, "type"),
                       v8::Number::New(isolate, qdb_req->output.content.entry_metadata.entry_type));
-            meta->Set(v8::String::New(isolate, "size"),
+            meta->Set(v8::String::NewFromUtf8(isolate, "size"),
                       v8::Number::New(isolate, qdb_req->output.content.entry_metadata.size));
-            meta->Set(v8::String::New(isolate, "creation_time"),
+            meta->Set(v8::String::NewFromUtf8(isolate, "creation_time"),
                       v8::Number::New(isolate, qdb_req->output.content.entry_metadata.creation_time));
-            meta->Set(v8::String::New(isolate, "modification_time"),
+            meta->Set(v8::String::NewFromUtf8(isolate, "modification_time"),
                       v8::Number::New(isolate, qdb_req->output.content.entry_metadata.modification_time));
-            meta->Set(v8::String::New(isolate, "expiry_time"),
+            meta->Set(v8::String::NewFromUtf8(isolate, "expiry_time"),
                       v8::Number::New(isolate, qdb_req->output.content.entry_metadata.expiry_time));
 
             return make_value_array(error_code, meta);
