@@ -477,6 +477,12 @@ public:
         });
     }
 
+    // Convert from 100-ns to ms
+    static void convertToMillis(qdb_timestamp_t ts)
+    {
+        return ts / (10 * 1000);
+    }
+
     static void processEntryMetadataResult(uv_work_t * req, int status)
     {
         processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
@@ -499,12 +505,14 @@ public:
                       v8::Number::New(isolate, qdb_req->output.content.entry_metadata.type));
             meta->Set(v8::String::NewFromUtf8(isolate, "size"),
                       v8::Number::New(isolate, qdb_req->output.content.entry_metadata.size));
+
             meta->Set(v8::String::NewFromUtf8(isolate, "creation_time"),
-                      v8::Number::New(isolate, qdb_req->output.content.entry_metadata.creation_time));
-            meta->Set(v8::String::NewFromUtf8(isolate, "modification_time"),
-                      v8::Number::New(isolate, qdb_req->output.content.entry_metadata.modification_time));
+                      v8::Date::New(isolate, convertToMillis(qdb_req->output.content.entry_metadata.creation_time)));
+            meta->Set(
+                v8::String::NewFromUtf8(isolate, "modification_time"),
+                v8::Date::New(isolate, convertToMillis(qdb_req->output.content.entry_metadata.modification_time)));
             meta->Set(v8::String::NewFromUtf8(isolate, "expiry_time"),
-                      v8::Number::New(isolate, qdb_req->output.content.entry_metadata.expiry_time));
+                      v8::Date::New(isolate, convertToMillis(qdb_req->output.content.entry_metadata.expiry_time)));
 
             return make_value_array(error_code, meta);
         });
