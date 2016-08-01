@@ -489,8 +489,13 @@ describe('quasardb', function() {
                     test.must(err).be.equal(null);
 
                     test.object(meta).hasProperty('reference');
+                    test.object(meta.reference).isInstanceOf(Array);
+                    test.must(meta.reference).be.equal(4);
+
                     test.object(meta).hasProperty('size');
                     test.must(meta.size).be.a.number();
+                    test.must(type).be.equal('bam_content'.length);
+
                     test.object(meta).hasProperty('type');
                     test.must(meta.type).be.a.number();
                     test.must(meta.type).be.equal(qdb.ENTRY_BLOB);
@@ -498,6 +503,9 @@ describe('quasardb', function() {
                     test.object(meta).hasProperty('creation_time');
                     test.object(meta).hasProperty('modification_time');
                     test.object(meta).hasProperty('expiry_time');
+                    test.object(meta.creation_time).isInstanceOf(Date);
+                    test.object(meta.modification_time).isInstanceOf(Date);
+                    test.object(meta.expiry_time).isInstanceOf(Date);
 
                     done();
                 });
