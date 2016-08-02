@@ -171,16 +171,26 @@ var b = c.blob('bam');
 
 b.getMetadata(function(err, meta)) {
     if (err) {
-        // ...
+        throw err.message;
     }
 
-    // There is also meta.reference.
+    console.log(JSON.stringify(meta, null, ' '));
+}
+```
 
-    if (meta.type == qdb.ENTRY_BLOB) {
-        var content_size = meta.size;
-    }
+The result may be something like:
 
-    var times = [meta.creation_time, meta.modification_time, meta.expiry_time];
+```json
+{
+ "reference": [
+  7876229558754302000,
+  -5412596186697675000,
+  2684719845372276000,
+  -4458640659107684400
+ ],
+ "type": 0,
+ "size": 11,
+ "modification_time": "2016-08-02T09:23:31.139Z"
 }
 ```
 

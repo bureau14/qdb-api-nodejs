@@ -470,8 +470,8 @@ public:
             const auto error_code = processErrorCode(isolate, status, qdb_req);
             if ((status >= 0) && (qdb_req->output.error == qdb_e_ok) && (qdb_req->output.content.value > 0))
             {
-                auto result_data = v8::Date::New(isolate, static_cast<double>(qdb_req->output.content.value) * 1000.0);
-                return make_value_array(error_code, result_data);
+                double millis = qdb_req->output.content.value * 1000.0;
+                return make_value_array(error_code, v8::Date::New(isolate, millis));
             }
             return make_value_array(error_code, v8::Undefined(isolate));
         });
@@ -480,7 +480,7 @@ public:
     // Convert from 100-ns to ms
     static double convertToMillis(qdb_timestamp_t ts)
     {
-        return ts / (10 * 1000);
+        return ts / 10000.0;
     }
 
     static void processEntryMetadataResult(uv_work_t * req, int status)
@@ -493,9 +493,11 @@ public:
             }
 
             auto reference = v8::Array::New(isolate, 4);
-            for (size_t i = 0; i < 4; ++i)
+            for (int32_t i = 0; i < 4; ++i)
             {
-                reference->Set(i, v8::Integer::New(isolate, qdb_req->output.content.entry_metadata.reference.data[i]));
+                reference->Set(
+                    i, v8::Number::New(isolate,
+                                       static_cast<double>(qdb_req->output.content.entry_metadata.reference.data[i])));
             }
 
             auto meta = v8::Object::New(isolate);
@@ -504,15 +506,29 @@ public:
             meta->Set(v8::String::NewFromUtf8(isolate, "type"),
                       v8::Integer::New(isolate, qdb_req->output.content.entry_metadata.type));
             meta->Set(v8::String::NewFromUtf8(isolate, "size"),
-                      v8::Integer::New(isolate, qdb_req->output.content.entry_metadata.size));
+                      v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.entry_metadata.size)));
 
-            meta->Set(v8::String::NewFromUtf8(isolate, "creation_time"),
-                      v8::Date::New(isolate, convertToMillis(qdb_req->output.content.entry_metadata.creation_time)));
-            meta->Set(
-                v8::String::NewFromUtf8(isolate, "modification_time"),
-                v8::Date::New(isolate, convertToMillis(qdb_req->output.content.entry_metadata.modification_time)));
-            meta->Set(v8::String::NewFromUtf8(isolate, "expiry_time"),
-                      v8::Date::New(isolate, convertToMillis(qdb_req->output.content.entry_metadata.expiry_time)));
+            using LocalValue = v8::Local<v8::Value>;
+            {
+                double millis = convertToMillis(qdb_req->output.content.entry_metadata.creation_time);
+                meta->Set(v8::String::NewFromUtf8(isolate, "creation_time"),
+                          (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))
+                                       : LocalValue(v8::Undefined(isolate)));
+            }
+
+            {
+                double millis = convertToMillis(qdb_req->output.content.entry_metadata.modification_time);
+                meta->Set(v8::String::NewFromUtf8(isolate, "modification_time"),
+                          (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))
+                                       : LocalValue(v8::Undefined(isolate)));
+            }
+
+            {
+                double millis = convertToMillis(qdb_req->output.content.entry_metadata.expiry_time);
+                meta->Set(v8::String::NewFromUtf8(isolate, "expiry_time"),
+                          (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))
+                                       : LocalValue(v8::Undefined(isolate)));
+            }
 
             return make_value_array(error_code, meta);
         });
@@ -523,8 +539,8 @@ public:
         processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
             const auto error_code = processErrorCode(isolate, status, qdb_req);
             auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok))
-                                   ? v8::Number::New(isolate, qdb_req->output.content.entry_type)
-                                   : v8::Number::New(isolate, qdb_entry_uninitialized);
+                                   ? v8::Integer::New(isolate, qdb_req->output.content.entry_type)
+                                   : v8::Integer::New(isolate, qdb_entry_uninitialized);
 
             return make_value_array(error_code, result_data);
         });

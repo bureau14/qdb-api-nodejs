@@ -488,24 +488,38 @@ describe('quasardb', function() {
                 b.getMetadata(function (err, meta) {
                     test.must(err).be.equal(null);
 
-                    test.object(meta).hasProperty('reference');
-                    test.object(meta.reference).isInstanceOf(Array);
-                    test.must(meta.reference.length).be.equal(4);
+                    describe('reference', function() {
+                        test.object(meta).hasProperty('reference');
+                        test.object(meta.reference).isInstanceOf(Array);
+                        test.must(meta.reference.length).be.equal(4);
+                    });
 
-                    test.object(meta).hasProperty('size');
-                    test.must(meta.size).be.a.number();
-                    test.must(meta.size).be.equal('bam_content'.length);
+                    describe('size', function() {
+                        test.object(meta).hasProperty('size');
+                        test.must(meta.size).be.a.number();
+                        test.must(meta.size).be.equal('bam_content'.length);
+                    });
 
-                    test.object(meta).hasProperty('type');
-                    test.must(meta.type).be.a.number();
-                    test.must(meta.type).be.equal(qdb.ENTRY_BLOB);
+                    describe('type', function() {
+                        test.object(meta).hasProperty('type');
+                        test.must(meta.type).be.a.number();
+                        test.must(meta.type).be.equal(qdb.ENTRY_BLOB);
+                    });
 
-                    test.object(meta).hasProperty('creation_time');
-                    test.object(meta).hasProperty('modification_time');
-                    test.object(meta).hasProperty('expiry_time');
-                    test.object(meta.creation_time).isInstanceOf(Date);
-                    test.object(meta.modification_time).isInstanceOf(Date);
-                    test.object(meta.expiry_time).isInstanceOf(Date);
+                    describe('creation_time', function() {
+                        test.object(meta).hasProperty('creation_time');
+                        if (meta.creation_time != undefined) test.object(meta.creation_time).isInstanceOf(Date);
+                    });
+
+                    describe('modification_time', function() {
+                        test.object(meta).hasProperty('modification_time');
+                        test.object(meta.modification_time).isInstanceOf(Date);
+                    });
+
+                    describe('expiry_time', function() {
+                        test.object(meta).hasProperty('expiry_time');
+                        if (meta.expiry_time != undefined) test.object(meta.expiry_time).isInstanceOf(Date);
+                    });
 
                     done();
                 });
