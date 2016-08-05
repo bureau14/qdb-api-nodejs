@@ -194,17 +194,6 @@ public:
                    processEntryMetadataResult);
     }
 
-    static void getType(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        queue_work(args,
-                   [](qdb_request * qdb_req) //
-                   {
-                       qdb_req->output.error = qdb_get_type(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                            &qdb_req->output.content.entry_type);
-                   },
-                   processEntryTypeResult);
-    }
-
     static void removeTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -291,7 +280,6 @@ public:
             NODE_SET_PROTOTYPE_METHOD(tpl, "addTags", Entry<Derivate>::addTags);
             NODE_SET_PROTOTYPE_METHOD(tpl, "getMetadata", Entry<Derivate>::getMetadata);
             NODE_SET_PROTOTYPE_METHOD(tpl, "getTags", Entry<Derivate>::getTags);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "getType", Entry<Derivate>::getType);
             NODE_SET_PROTOTYPE_METHOD(tpl, "hasTag", Entry<Derivate>::hasTag);
             NODE_SET_PROTOTYPE_METHOD(tpl, "hasTags", Entry<Derivate>::hasTags);
             NODE_SET_PROTOTYPE_METHOD(tpl, "removeTag", Entry<Derivate>::removeTag);

@@ -475,10 +475,10 @@ describe('quasardb', function() {
             });
 
             it('should return correct entry type', function (done) {
-                b.getType(function (err, type) {
+                b.getMetadata(function (err, meta) {
                     test.must(err).be.equal(null);
-                    test.must(type).be.a.number();
-                    test.must(type).be.equal(qdb.ENTRY_BLOB);
+                    test.must(meta.type).be.a.number();
+                    test.must(meta.type).be.equal(qdb.ENTRY_BLOB);
 
                     done();
                 });
@@ -1027,10 +1027,10 @@ describe('quasardb', function() {
             });
 
             it('should return correct entry type', function (done) {
-                t.getType(function (err, type) {
+                t.getMetadata(function (err, meta) {
                     test.must(err).be.equal(null);
-                    test.must(type).be.a.number();
-                    test.must(type).be.equal(qdb.ENTRY_TAG);
+                    test.must(meta.type).be.a.number();
+                    test.must(meta.type).be.equal(qdb.ENTRY_TAG);
 
                     done();
                 });
@@ -1351,10 +1351,10 @@ describe('quasardb', function() {
             });
 
             it('should return correct entry type', function(done) {
-                i.getType(function(err, type) {
+                i.getMetadata(function(err, meta) {
                     test.must(err).be.equal(null);
-                    test.must(type).be.a.number();
-                    test.must(type).be.equal(qdb.ENTRY_INTEGER);
+                    test.must(meta.type).be.a.number();
+                    test.must(meta.type).be.equal(qdb.ENTRY_INTEGER);
 
                     done();
                 });
@@ -1627,10 +1627,10 @@ describe('quasardb', function() {
             });
 
             it('should return correct entry type', function (done) {
-                q.getType(function (err, type) {
+                q.getMetadata(function (err, meta) {
                     test.must(err).be.equal(null);
-                    test.must(type).be.a.number();
-                    test.must(type).be.equal(qdb.ENTRY_DEQUE);
+                    test.must(meta.type).be.a.number();
+                    test.must(meta.type).be.equal(qdb.ENTRY_DEQUE);
 
                     done();
                 });
@@ -1905,10 +1905,10 @@ describe('quasardb', function() {
             });
 
             it('should return correct entry type', function(done) {
-                s.getType(function(err, type) {
+                s.getMetadata(function(err, meta) {
                     test.must(err).be.equal(null);
-                    test.must(type).be.a.number();
-                    test.must(type).be.equal(qdb.ENTRY_HSET);
+                    test.must(meta.type).be.a.number();
+                    test.must(meta.type).be.equal(qdb.ENTRY_HSET);
 
                     done();
                 });
