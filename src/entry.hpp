@@ -359,7 +359,7 @@ private:
 
         // only when the error is strictly ok, we avoid to create an error object
         // in other cases, even if it is informational we want to create it
-        if (req->output.error == qdb_e_ok)
+        if ((req->output.error == qdb_e_ok) || (req->output.error == qdb_e_ok_created))
         {
             // nullptr for success
             return v8::Null(isolate);

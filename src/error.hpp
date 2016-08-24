@@ -119,9 +119,7 @@ public:
         AddErrorCode(exports, "E_INVALID_PROTOCOL", qdb_e_invalid_protocol);
         AddErrorCode(exports, "E_HOST_NOT_FOUND", qdb_e_host_not_found);
         AddErrorCode(exports, "E_BUFFER_TOO_SMALL", qdb_e_buffer_too_small);
-        AddErrorCode(exports, "E_UNEXPECTED_REPLY", qdb_e_unexpected_reply);
         AddErrorCode(exports, "E_NOT_IMPLEMENTED", qdb_e_not_implemented);
-        AddErrorCode(exports, "E_PROTOCOL_ERROR", qdb_e_protocol_error);
         AddErrorCode(exports, "E_INVALID_VERSION", qdb_e_invalid_version);
         AddErrorCode(exports, "E_INVALID_ARGUMENT", qdb_e_invalid_argument);
         AddErrorCode(exports, "E_INVALID_HANDLE", qdb_e_invalid_handle);
@@ -133,6 +131,8 @@ public:
         AddErrorCode(exports, "E_OPERATION_DISABLED", qdb_e_operation_disabled);
         AddErrorCode(exports, "E_OPERATION_NOT_PERMITTED", qdb_e_operation_not_permitted);
         AddErrorCode(exports, "E_ITERATOR_END", qdb_e_iterator_end);
+        AddErrorCode(exports, "E_INVALID_REPLY", qdb_e_invalid_reply);
+        AddErrorCode(exports, "E_OK_CREATED", qdb_e_ok_created);
 
         constructor.Reset(isolate, tpl->GetFunction());
         exports->Set(v8::String::NewFromUtf8(isolate, "Error"), tpl->GetFunction());
