@@ -10,6 +10,21 @@ This is the official quasardb API, suitable for production. The full documentati
 npm install quasardb --save
 ```
 
+## Compilation
+
+Alternatively if you want to compile from source:
+
+1. Clone git repository
+2. [Download quasardb server and C api](https://download.quasardb.net/quasardb/)
+3. Extract both tarballs into `qdb-api-nodejs\deps\qdb`
+
+Then:
+
+```
+npm install --build-from-source
+npm test
+```
+
 ## Introduction
 
 Using *quasardb* starts with a Cluster:

@@ -23,9 +23,9 @@
     "node-pre-gyp": "^0.6.29"
   },
   "devDependencies": {
-    "bluebird": "^3.3.5",
-    "mocha": "~2.4.5",
-    "unit.js": "~2.0.0"
+    "bluebird": "^3.4.3",
+    "mocha": "^3.0.2",
+    "unit.js": "^2.0.0"
   },
   "bundledDependencies": [
     "node-pre-gyp"
