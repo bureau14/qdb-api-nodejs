@@ -159,18 +159,18 @@ private:
 
 public:
     // tag management function
-    static void addTag(const v8::FunctionCallbackInfo<v8::Value> & args)
+    static void attachTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
                    [](qdb_request * qdb_req) //
                    {
-                       qdb_req->output.error = qdb_add_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                       qdb_req->output.error = qdb_attach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
                                                            qdb_req->input.content.str.c_str());
                    },
                    processVoidResult, &ArgsEaterBinder::string);
     }
 
-    static void addTags(const v8::FunctionCallbackInfo<v8::Value> & args)
+    static void attachTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
                    [](qdb_request * qdb_req) //
@@ -178,7 +178,7 @@ public:
                        std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
 
                        qdb_req->output.error =
-                           qdb_add_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
+                           qdb_attach_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
                    },
                    processVoidResult, &ArgsEaterBinder::strings);
     }
@@ -194,18 +194,18 @@ public:
                    processEntryMetadataResult);
     }
 
-    static void removeTag(const v8::FunctionCallbackInfo<v8::Value> & args)
+    static void detachTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
                    [](qdb_request * qdb_req) //
                    {
-                       qdb_req->output.error = qdb_remove_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                       qdb_req->output.error = qdb_detach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
                                                               qdb_req->input.content.str.c_str());
                    },
                    processVoidResult, &ArgsEaterBinder::string);
     }
 
-    static void removeTags(const v8::FunctionCallbackInfo<v8::Value> & args)
+    static void detachTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
                    [](qdb_request * qdb_req) //
@@ -213,7 +213,7 @@ public:
                        std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
 
                        qdb_req->output.error =
-                           qdb_remove_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
+                           qdb_detach_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
                    },
                    processVoidResult, &ArgsEaterBinder::strings);
     }
@@ -276,14 +276,14 @@ public:
         InitConstructorOnly(exports, className, [init](v8::Local<v8::FunctionTemplate> tpl) {
             NODE_SET_PROTOTYPE_METHOD(tpl, "alias", Entry<Derivate>::alias);
             NODE_SET_PROTOTYPE_METHOD(tpl, "remove", Entry<Derivate>::remove);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "addTag", Entry<Derivate>::addTag);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "addTags", Entry<Derivate>::addTags);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "attachTag", Entry<Derivate>::attachTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "attachTags", Entry<Derivate>::attachTags);
             NODE_SET_PROTOTYPE_METHOD(tpl, "getMetadata", Entry<Derivate>::getMetadata);
             NODE_SET_PROTOTYPE_METHOD(tpl, "getTags", Entry<Derivate>::getTags);
             NODE_SET_PROTOTYPE_METHOD(tpl, "hasTag", Entry<Derivate>::hasTag);
             NODE_SET_PROTOTYPE_METHOD(tpl, "hasTags", Entry<Derivate>::hasTags);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "removeTag", Entry<Derivate>::removeTag);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "removeTags", Entry<Derivate>::removeTags);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "detachTag", Entry<Derivate>::detachTag);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "detachTags", Entry<Derivate>::detachTags);
 
             init(tpl);
         });

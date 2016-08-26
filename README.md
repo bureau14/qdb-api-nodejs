@@ -79,11 +79,11 @@ Any entry can be tagged, including tags.
 ```javascript
 var b = c.blob('bam');
 
-b.addTag('dasTag', function(err) { /* */ });
+b.attachTag('dasTag', function(err) { /* */ });
 
 var i = c.integer('bom');
 
-i.addTag('dasTag', function(err) { /* */ });
+i.attachTag('dasTag', function(err) { /* */ });
 
 var t = c.tag('dasTag');
 

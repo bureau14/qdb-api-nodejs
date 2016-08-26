@@ -588,7 +588,7 @@ describe('quasardb', function() {
             });
 
             it('should tag without an error', function (done) {
-                b.addTag(tagName, function (err) {
+                b.attachTag(tagName, function (err) {
                     test.must(err).be.equal(null);
 
                     done();
@@ -597,7 +597,7 @@ describe('quasardb', function() {
             });
 
             it('should tag again with an error', function (done) {
-                b.addTag(tagName, function (err) {
+                b.attachTag(tagName, function (err) {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
@@ -634,7 +634,7 @@ describe('quasardb', function() {
 
 
             it('should remove the tag without an error', function (done) {
-                b.removeTag(tagName, function (err) {
+                b.detachTag(tagName, function (err) {
                     test.must(err).be.equal(null);
 
                     done();
@@ -643,7 +643,7 @@ describe('quasardb', function() {
             });
 
             it('should remove the tag again with an error', function (done) {
-                b.removeTag(tagName, function (err) {
+                b.detachTag(tagName, function (err) {
                     test.must(err.message).be.a.string();
                     test.must(err.message).not.be.empty();
                     test.must(err.code).be.a.number();
@@ -988,7 +988,7 @@ describe('quasardb', function() {
 
             it('should tag the blob successfully', function(done)
             {
-                b.addTag(dasTag, function(err)
+                b.attachTag(dasTag, function(err)
                 {
                     test.must(err).be.equal(null);
 
@@ -998,7 +998,7 @@ describe('quasardb', function() {
 
             it('should tag the integer successfully', function(done)
             {
-                i.addTag(dasTag, function(err)
+                i.attachTag(dasTag, function(err)
                 {
                     test.must(err).be.equal(null);
 
@@ -1008,7 +1008,7 @@ describe('quasardb', function() {
 
             it('should tag the deque successfully', function(done)
             {
-                q.addTag(dasTag, function(err)
+                q.attachTag(dasTag, function(err)
                 {
                     test.must(err).be.equal(null);
 
@@ -1018,7 +1018,7 @@ describe('quasardb', function() {
 
             it('should tag the set successfully', function(done)
             {
-                s.addTag(dasTag, function(err)
+                s.attachTag(dasTag, function(err)
                 {
                     test.must(err).be.equal(null);
 
@@ -1055,7 +1055,7 @@ describe('quasardb', function() {
 
             it('should untag the blob successfully', function(done)
             {
-                b.removeTag(dasTag, function(err)
+                b.detachTag(dasTag, function(err)
                 {
                     test.must(err).be.equal(null);
 
@@ -1065,7 +1065,7 @@ describe('quasardb', function() {
 
             it('should untag the integer successfully', function(done)
             {
-                i.removeTag(dasTag, function(err)
+                i.detachTag(dasTag, function(err)
                 {
                     test.must(err).be.equal(null);
 
@@ -1075,7 +1075,7 @@ describe('quasardb', function() {
 
             it('should untag the deque successfully', function(done)
             {
-                q.removeTag(dasTag, function(err)
+                q.detachTag(dasTag, function(err)
                 {
                     test.must(err).be.equal(null);
 
@@ -1085,7 +1085,7 @@ describe('quasardb', function() {
 
             it('should untag the set successfully', function(done)
             {
-                s.removeTag(dasTag, function(err)
+                s.detachTag(dasTag, function(err)
                 {
                     test.must(err).be.equal(null);
 
@@ -1200,12 +1200,12 @@ describe('quasardb', function() {
                 });
             });
 
-            describe('addTags', function ()
+            describe('attachTags', function ()
             {
 
                 it('should add multiple tags successfully', function(done)
                 {
-                    b.addTags(tags, function(err)
+                    b.attachTags(tags, function(err)
                     {
                         test.must(err).be.equal(null);
 
@@ -1243,7 +1243,7 @@ describe('quasardb', function() {
                     done();
                 });
 
-            }); // addTags
+            }); // attachTags
 
             describe('hasTags', function ()
             {
@@ -1266,12 +1266,12 @@ describe('quasardb', function() {
 
             }); // hasTags
 
-            describe('removeTags', function ()
+            describe('detachTags', function ()
             {
 
                 it('should remove multiple tags successfully', function(done)
                 {
-                    b.removeTags(tags, function(err)
+                    b.detachTags(tags, function(err)
                     {
                         test.must(err).be.equal(null);
 
@@ -1294,7 +1294,7 @@ describe('quasardb', function() {
                     done();
                 });
 
-            }); // removeTags
+            }); // detachTags
 
             describe('hasTags', function ()
             {
