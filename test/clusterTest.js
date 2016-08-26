@@ -23,11 +23,11 @@ describe('Cluster', function() {
                         {
                             test.must(err).not.be.equal(null);
 
-                            test.must(err.message).not.be.empty;
-                            test.must(err.code).be.a.number();
-                            test.must(err.severity).be.a.number();
-                            test.must(err.origin).be.a.number();
-                            test.must(err.informational).be.false();
+                            err.message.must.not.be.empty;
+                            err.code.must.be.a.number();
+                            err.severity.must.be.a.number();
+                            err.origin.must.be.a.number();
+                            err.informational.must.be.false();
 
                             done();
                         });

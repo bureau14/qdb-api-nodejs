@@ -133,13 +133,13 @@ describe('Integer', function () {
         {
             i.get(function(err, data)
             {
-                test.must(err.message).be.a.string();
-                test.must(err.message).not.be.empty();
-                test.must(err.code).be.a.number();
-                test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
-                test.must(err.severity).be.a.number();
-                test.must(err.origin).be.a.number();
-                test.must(err.informational).be.false();
+                err.message.must.be.a.string();
+                err.message.must.not.be.empty();
+                err.code.must.be.equal(qdb.E_ALIAS_NOT_FOUND);
+                err.severity.must.be.equal(qdb.E_SEVERITY_WARNING);
+                err.origin.must.be.a.equal(qdb.E_ORIGIN_OPERATION);
+                err.origin.must.be.a.number();
+                err.informational.must.be.false();
 
                 done();
             });
@@ -219,13 +219,13 @@ describe('Integer', function () {
         {
             i.get(function(err, data)
             {
-                test.must(err.message).be.a.string();
-                test.must(err.message).not.be.empty();
-                test.must(err.code).be.a.number();
-                test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
-                test.must(err.severity).be.a.number();
-                test.must(err.origin).be.a.number();
-                test.must(err.informational).be.false();
+                err.message.must.be.a.string();
+                err.message.must.not.be.empty();
+                err.code.must.be.equal(qdb.E_ALIAS_NOT_FOUND);
+                                err.origin.must.be.equal(qdb.E_ORIGIN_OPERATION);
+
+                err.origin.must.be.a.number();
+                err.informational.must.be.false();
 
                 done();
             });

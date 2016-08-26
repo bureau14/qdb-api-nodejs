@@ -30,13 +30,12 @@ describe('Blob', function () {
 
         it('should say entry not found and get an empty tag list', function (done) {
             b.getTags(function (err, tags) {
-                test.must(err.message).be.a.string();
-                test.must(err.message).not.be.empty();
-                test.must(err.code).be.a.number();
-                test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
-                test.must(err.severity).be.a.number();
-                test.must(err.origin).be.a.number();
-                test.must(err.informational).be.false();
+                err.message.must.be.a.string();
+                err.message.must.not.be.empty();
+                err.code.must.be.equal(qdb.E_ALIAS_NOT_FOUND);
+                err.severity.must.be.equal(qdb.E_SEVERITY_WARNING);
+                err.origin.must.be.equal(qdb.E_ORIGIN_OPERATION);
+                err.informational.must.be.false();
 
                 tags.must.be.empty();
 
@@ -153,13 +152,12 @@ describe('Blob', function () {
 
         it('should not find the tag', function (done) {
             b.hasTag(tagName, function (err) {
-                test.must(err.message).be.a.string();
-                test.must(err.message).not.be.empty();
-                test.must(err.code).be.a.number();
-                test.must(err.code).be.equal(qdb.E_TAG_NOT_SET);
-                test.must(err.severity).be.a.number();
-                test.must(err.origin).be.a.number();
-                test.must(err.informational).be.true();
+                err.message.must.be.a.string();
+                err.message.must.not.be.empty();
+                err.code.must.be.equal(qdb.E_TAG_NOT_SET);
+                err.severity.must.be.a.equal(qdb.E_SEVERITY_INFO);
+                err.origin.must.be.a.equal(qdb.E_ORIGIN_OPERATION);
+                err.informational.must.be.true();
 
                 done();
             });
@@ -177,13 +175,12 @@ describe('Blob', function () {
 
         it('should tag again with an error', function (done) {
             b.attachTag(tagName, function (err) {
-                test.must(err.message).be.a.string();
-                test.must(err.message).not.be.empty();
-                test.must(err.code).be.a.number();
-                test.must(err.code).be.equal(qdb.E_TAG_ALREADY_SET);
-                test.must(err.severity).be.a.number();
-                test.must(err.origin).be.a.number();
-                test.must(err.informational).be.true();
+                err.message.must.be.a.string();
+                err.message.must.not.be.empty();
+                err.code.must.be.equal(qdb.E_TAG_ALREADY_SET);
+                err.severity.must.be.a.equal(qdb.E_SEVERITY_INFO);
+                err.origin.must.be.a.equal(qdb.E_ORIGIN_OPERATION);
+                err.informational.must.be.true();
 
                 done();
             });
@@ -223,13 +220,12 @@ describe('Blob', function () {
 
         it('should remove the tag again with an error', function (done) {
             b.detachTag(tagName, function (err) {
-                test.must(err.message).be.a.string();
-                test.must(err.message).not.be.empty();
-                test.must(err.code).be.a.number();
-                test.must(err.code).be.equal(qdb.E_TAG_NOT_SET);
-                test.must(err.severity).be.a.number();
-                test.must(err.origin).be.a.number();
-                test.must(err.informational).be.true();
+                err.message.must.be.a.string();
+                err.message.must.not.be.empty();
+                err.code.must.be.equal(qdb.E_TAG_NOT_SET);
+                err.severity.must.be.a.equal(qdb.E_SEVERITY_INFO);
+                err.origin.must.be.a.equal(qdb.E_ORIGIN_OPERATION);
+                err.informational.must.be.true();
 
                 done();
             });
@@ -238,13 +234,12 @@ describe('Blob', function () {
 
         it('should not find the tag', function (done) {
             b.hasTag(tagName, function (err) {
-                test.must(err.message).be.a.string();
-                test.must(err.message).not.be.empty();
-                test.must(err.code).be.a.number();
-                test.must(err.code).be.equal(qdb.E_TAG_NOT_SET);
-                test.must(err.severity).be.a.number();
-                test.must(err.origin).be.a.number();
-                test.must(err.informational).be.true();
+                err.message.must.be.a.string();
+                err.message.must.not.be.empty();
+                err.code.must.be.equal(qdb.E_TAG_NOT_SET);
+                err.severity.must.be.a.equal(qdb.E_SEVERITY_INFO);
+                err.origin.must.be.a.equal(qdb.E_ORIGIN_OPERATION);
+                err.informational.must.be.true();
 
                 done();
             });
@@ -337,13 +332,12 @@ describe('blob', function() {
         {
             b.get(function(err, data)
             {
-                test.must(err.message).be.a.string();
-                test.must(err.message).not.be.empty();
-                test.must(err.code).be.a.number();
-                test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
-                test.must(err.severity).be.a.number();
-                test.must(err.origin).be.a.number();
-                test.must(err.informational).be.false();
+                err.message.must.be.a.string();
+                err.message.must.not.be.empty();
+                err.code.must.be.equal(qdb.E_ALIAS_NOT_FOUND);
+                err.severity.must.be.a.equal(qdb.E_SEVERITY_WARNING);
+                err.origin.must.be.a.equal(qdb.E_ORIGIN_OPERATION);
+                err.informational.must.be.false();
 
                 done();
             });
@@ -468,13 +462,12 @@ describe('blob', function() {
         {
             b.get(function(err, data)
             {
-                test.must(err.message).be.a.string();
-                test.must(err.message).not.be.empty();
-                test.must(err.code).be.a.number();
-                test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
-                test.must(err.severity).be.a.number();
-                test.must(err.origin).be.a.number();
-                test.must(err.informational).be.false();
+                err.message.must.be.a.string();
+                err.message.must.not.be.empty();
+                err.code.must.be.equal(qdb.E_ALIAS_NOT_FOUND);
+                err.severity.must.be.a.equal(qdb.E_SEVERITY_WARNING);
+                err.origin.must.be.a.equal(qdb.E_ORIGIN_OPERATION);
+                err.informational.must.be.false();
 
                 done();
             });
