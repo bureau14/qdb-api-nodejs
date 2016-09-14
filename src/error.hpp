@@ -133,6 +133,8 @@ public:
         AddErrorCode(exports, "E_ITERATOR_END", qdb_e_iterator_end);
         AddErrorCode(exports, "E_INVALID_REPLY", qdb_e_invalid_reply);
         AddErrorCode(exports, "E_OK_CREATED", qdb_e_ok_created);
+        AddErrorCode(exports, "E_NO_SPACE_LEFT", qdb_e_no_space_left);
+        AddErrorCode(exports, "E_QUOTA_EXCEEDED", qdb_e_quota_exceeded);
 
         constructor.Reset(isolate, tpl->GetFunction());
         exports->Set(v8::String::NewFromUtf8(isolate, "Error"), tpl->GetFunction());
