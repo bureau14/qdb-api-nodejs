@@ -407,7 +407,7 @@ public:
         if (date.second)
         {
             ++_pos;
-            return static_cast<qdb_time_t>(date.first->ValueOf() / 1000.0);
+            return static_cast<qdb_time_t>(date.first->ValueOf());
         }
 
         // it might be a "special date"
