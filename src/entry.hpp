@@ -458,7 +458,7 @@ public:
             const auto error_code = processErrorCode(isolate, status, qdb_req);
             if ((status >= 0) && (qdb_req->output.error == qdb_e_ok) && (qdb_req->output.content.value > 0))
             {
-                double millis = qdb_req->output.content.value;
+                double millis = static_cast<double>(qdb_req->output.content.value);
                 return make_value_array(error_code, v8::Date::New(isolate, millis));
             }
             return make_value_array(error_code, v8::Undefined(isolate));
@@ -468,7 +468,7 @@ public:
     // No-op.
     static double convertToMillis(qdb_time_t ts)
     {
-        return ts;
+        return static_cast<double>(ts);
     }
 
     static void processEntryMetadataResult(uv_work_t * req, int status)

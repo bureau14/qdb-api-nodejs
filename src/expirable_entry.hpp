@@ -9,7 +9,6 @@ namespace quasardb
 template <typename Derivate>
 class ExpirableEntry : public Entry<Derivate>
 {
-
 public:
     ExpirableEntry(cluster_data_ptr cd, const char * alias) : Entry<Derivate>(cd, alias)
     {
@@ -59,9 +58,10 @@ public:
     {
         Entry<Derivate>::queue_work(args,
                                     [](qdb_request * qdb_req) {
+                                        qdb_entry_metadata_t meta;
                                         qdb_req->output.error =
-                                            qdb_get_expiry_time(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                                &(qdb_req->output.content.date));
+                                            qdb_get_metadata(qdb_req->handle(), qdb_req->input.alias.c_str(), &meta);
+                                        qdb_req->output.content.date = meta.expiry_time;
                                     },
                                     Entry<Derivate>::processDateResult, &ArgsEaterBinder::integer);
     }
