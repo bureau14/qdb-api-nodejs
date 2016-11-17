@@ -466,9 +466,9 @@ public:
     }
 
     // No-op.
-    static double convertToMillis(qdb_time_t ts)
+    static double convertToMillis(const timespec ts)
     {
-        return static_cast<double>(ts);
+        return static_cast<double>(ts.tv_sec) * 1000.0 + static_cast<double>(ts.tv_nsec / 1000000ull);
     }
 
     static void processEntryMetadataResult(uv_work_t * req, int status)

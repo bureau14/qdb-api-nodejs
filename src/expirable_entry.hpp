@@ -61,7 +61,8 @@ public:
                                         qdb_entry_metadata_t meta;
                                         qdb_req->output.error =
                                             qdb_get_metadata(qdb_req->handle(), qdb_req->input.alias.c_str(), &meta);
-                                        qdb_req->output.content.date = meta.expiry_time;
+                                        qdb_req->output.content.date = static_cast<qdb_time_t>(meta.expiry_time.tv_sec) * 1000 +
+                                            static_cast<qdb_time_t>(meta.expiry_time.tv_nsec / 1000000ull);
                                     },
                                     Entry<Derivate>::processDateResult, &ArgsEaterBinder::integer);
     }
