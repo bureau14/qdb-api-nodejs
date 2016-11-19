@@ -104,8 +104,6 @@ public:
         AddErrorCode(exports, "E_CONNECTION_REFUSED", qdb_e_connection_refused);
         AddErrorCode(exports, "E_CONNECTION_RESET", qdb_e_connection_reset);
         AddErrorCode(exports, "E_UNSTABLE_CLUSTER", qdb_e_unstable_cluster);
-        AddErrorCode(exports, "E_OUTDATED_TOPOLOGY", qdb_e_outdated_topology);
-        AddErrorCode(exports, "E_WRONG_PEER", qdb_e_wrong_peer);
         AddErrorCode(exports, "E_TRY_AGAIN", qdb_e_try_again);
         AddErrorCode(exports, "E_CONFLICT", qdb_e_conflict);
         AddErrorCode(exports, "E_NOT_CONNECTED", qdb_e_not_connected);
