@@ -466,7 +466,7 @@ public:
     }
 
     // No-op.
-    static double convertToMillis(const timespec ts)
+    static double convertToMillis(const qdb_timespec_t & ts)
     {
         return static_cast<double>(ts.tv_sec) * 1000.0 + static_cast<double>(ts.tv_nsec / 1000000ull);
     }
