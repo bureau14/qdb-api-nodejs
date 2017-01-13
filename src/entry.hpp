@@ -498,13 +498,6 @@ public:
 
             using LocalValue = v8::Local<v8::Value>;
             {
-                double millis = convertToMillis(qdb_req->output.content.entry_metadata.creation_time);
-                meta->Set(v8::String::NewFromUtf8(isolate, "creation_time"),
-                          (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))
-                                       : LocalValue(v8::Undefined(isolate)));
-            }
-
-            {
                 double millis = convertToMillis(qdb_req->output.content.entry_metadata.modification_time);
                 meta->Set(v8::String::NewFromUtf8(isolate, "modification_time"),
                           (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))

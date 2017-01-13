@@ -84,11 +84,6 @@ describe('Blob', function () {
                     test.must(meta.type).be.equal(qdb.ENTRY_BLOB);
                 });
 
-                describe('creation_time', function() {
-                    test.object(meta).hasProperty('creation_time');
-                    if (meta.creation_time != undefined) test.object(meta.creation_time).isInstanceOf(Date);
-                });
-
                 describe('modification_time', function() {
                     test.object(meta).hasProperty('modification_time');
                     test.object(meta.modification_time).isInstanceOf(Date);
