@@ -45,7 +45,7 @@ inline void release_node_buffer(char * data, void * hint)
 {
     if (data && hint)
     {
-        qdb_free_buffer(static_cast<qdb_handle_t>(hint), data);
+        qdb_release(static_cast<qdb_handle_t>(hint), data);
     }
 }
 

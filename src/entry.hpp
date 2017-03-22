@@ -428,7 +428,7 @@ public:
                 }
 
                 // safe to call even on null/invalid buffers
-                qdb_free_results(qdb_req->handle(), entries, entries_count);
+                qdb_release(qdb_req->handle(), entries);
             }
             else
             {
