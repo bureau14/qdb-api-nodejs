@@ -1,21 +1,4 @@
 {
-  "conditions": [
-    [
-      "OS=='freebsd'",
-      {
-        "make_global_settings": [
-          [
-            "CC",
-            "/usr/bin/clang"
-          ],
-          [
-            "CXX",
-            "/usr/bin/clang++"
-          ]
-        ]
-      }
-    ]
-  ],
   "targets": [
     {
       "target_name": "<(module_name)",
@@ -84,7 +67,9 @@
             "cflags": [
               "-std=c++11",
               "-stdlib=libc++",
-              "-Wno-strict-aliasing"
+              "-Wno-strict-aliasing",
+              "-Wno-deprecated-declarations",
+              "-U_LIBCPP_TRIVIAL_PAIR_COPY_CTOR"
             ]
           }
         ],
