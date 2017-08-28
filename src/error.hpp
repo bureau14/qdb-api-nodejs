@@ -21,15 +21,13 @@ private:
     static void AddErrorOrigin(v8::Local<v8::Object> exports, const char * name, qdb_error_origin_t origin)
     {
         v8::Isolate * isolate = exports->GetIsolate();
-        exports->ForceSet(v8::String::NewFromUtf8(isolate, name), v8::Int32::New(isolate, origin),
-                          static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+        detail::AddConstantProperty(isolate, exports, name, v8::Int32::New(isolate, origin));
     }
 
     static void AddErrorSeverity(v8::Local<v8::Object> exports, const char * name, qdb_error_severity_t severity)
     {
         v8::Isolate * isolate = exports->GetIsolate();
-        exports->ForceSet(v8::String::NewFromUtf8(isolate, name), v8::Int32::New(isolate, severity),
-                          static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+        detail::AddConstantProperty(isolate, exports, name, v8::Int32::New(isolate, severity));
     }
 
     static void AddErrorCode(v8::Local<v8::Object> exports, const char * name, qdb_error_t err)
@@ -37,8 +35,7 @@ private:
         static const int code_mask = 0xFFFF;
 
         v8::Isolate * isolate = exports->GetIsolate();
-        exports->ForceSet(v8::String::NewFromUtf8(isolate, name), v8::Int32::New(isolate, err & code_mask),
-                          static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+        detail::AddConstantProperty(isolate, exports, name, v8::Int32::New(isolate, err & code_mask));
     }
 
 public:
@@ -179,8 +176,8 @@ public:
         static const int argc = 1;
         v8::Local<v8::Value> argv[argc] = {args[0]};
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
-        v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
-        args.GetReturnValue().Set(instance);
+        v8::MaybeLocal<v8::Object> instance = cons->NewInstance(isolate->GetCurrentContext(), argc, argv);
+        args.GetReturnValue().Set(instance.ToLocalChecked());
     }
 
 public:
@@ -189,7 +186,7 @@ public:
         static const int argc = 1;
         v8::Local<v8::Value> argv[argc] = {v8::Number::New(isolate, err)};
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
-        return cons->NewInstance(1, argv);
+        return cons->NewInstance(isolate->GetCurrentContext(), 1, argv).ToLocalChecked();
     }
 
 private:
@@ -260,4 +257,5 @@ private:
 
     static v8::Persistent<v8::Function> constructor;
 };
-}
+
+} // namespace quasardb

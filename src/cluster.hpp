@@ -37,8 +37,7 @@ private:
     static void AddEntryType(v8::Local<v8::Object> exports, const char * name, qdb_entry_type_t type)
     {
         v8::Isolate * isolate = exports->GetIsolate();
-        exports->ForceSet(v8::String::NewFromUtf8(isolate, name), v8::Int32::New(isolate, type),
-                          static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+        detail::AddConstantProperty(isolate, exports, name, v8::Int32::New(isolate, type));
     }
 
 public:
@@ -126,7 +125,7 @@ public:
         assert(args.Length() == argc);
         v8::Local<v8::Value> argv[argc] = {args[0]};
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
-        v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+        v8::Local<v8::Object> instance = cons->NewInstance(isolate->GetCurrentContext(), argc, argv).ToLocalChecked();
         args.GetReturnValue().Set(instance);
     }
 
@@ -259,7 +258,8 @@ public:
             assert(args.Length() == ArgsLength);
             auto argv = ArgumentsCopier<ArgsLength>::copy(args);
             v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
-            args.GetReturnValue().Set(cons->NewInstance(ArgsLength, argv.data()));
+            args.GetReturnValue().Set(
+                cons->NewInstance(isolate->GetCurrentContext(), ArgsLength, argv.data()).ToLocalChecked());
         }
     }
 
@@ -299,7 +299,7 @@ private:
         v8::Isolate * isolate = v8::Isolate::GetCurrent();
         v8::HandleScope scope(isolate);
 
-        v8::TryCatch try_catch;
+        v8::TryCatch try_catch(isolate);
 
         connection_request * conn_req = static_cast<connection_request *>(req->data);
         assert(conn_req);
@@ -524,11 +524,10 @@ struct Cluster::Factory<Object, 0>
         v8::Local<v8::Value> argv[argc] = {the_cluster};
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Object::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
-        args.GetReturnValue().Set(cons->NewInstance(argc, argv));
+        args.GetReturnValue().Set(cons->NewInstance(isolate->GetCurrentContext(), argc, argv).ToLocalChecked());
     }
 };
 
-// TODO: use Maybe version of New, NewInstance
 template <typename Object>
 struct Cluster::Factory<Object, 1>
 {
@@ -544,7 +543,7 @@ struct Cluster::Factory<Object, 1>
         v8::Local<v8::Value> argv[argc] = {the_cluster, args[0]};
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Object::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
-        args.GetReturnValue().Set(cons->NewInstance(argc, argv));
+        args.GetReturnValue().Set(cons->NewInstance(isolate->GetCurrentContext(), argc, argv).ToLocalChecked());
     }
 };
 

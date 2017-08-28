@@ -1,23 +1,32 @@
 #pragma once
 
 #include "cluster_data.hpp"
-
 #include <qdb/batch.h>
 #include <qdb/client.h>
 #include <qdb/integer.h>
-
 #include <node.h>
 #include <node_buffer.h>
-
 #include <functional>
 #include <utility>
 #include <vector>
 
 namespace quasardb
 {
-
 namespace detail
 {
+
+static void
+AddConstantProperty(v8::Isolate * isolate, v8::Local<v8::Object> object, const char * key, v8::Local<v8::Value> value)
+{
+    // object->ForceSet(v8::String::NewFromUtf8(isolate, key), value,
+    //                 static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+
+    v8::Maybe<bool> maybe =
+        object->DefineOwnProperty(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, key), value,
+                                  static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+    (void)maybe; // unused
+    assert(maybe.IsJust() && maybe.FromJust());
+}
 
 template <typename T>
 struct NewObject

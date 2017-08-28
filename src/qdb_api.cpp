@@ -6,17 +6,14 @@ void InitConstants(v8::Local<v8::Object> exports)
 {
     v8::Isolate * isolate = exports->GetIsolate();
 
-    exports->ForceSet(v8::String::NewFromUtf8(isolate, "NEVER_EXPIRES"), v8::Int32::New(isolate, qdb_never_expires),
-                      v8::ReadOnly);
-    exports->ForceSet(v8::String::NewFromUtf8(isolate, "PRESERVE_EXPIRATION"),
-                      v8::Int32::New(isolate, qdb_preserve_expiration), v8::ReadOnly);
-
-    exports->ForceSet(v8::String::NewFromUtf8(isolate, "COMPRESSION_NONE"), v8::Int32::New(isolate, qdb_comp_none),
-                      v8::ReadOnly);
-    exports->ForceSet(v8::String::NewFromUtf8(isolate, "COMPRESSION_FAST"), v8::Int32::New(isolate, qdb_comp_fast),
-                      v8::ReadOnly);
-    exports->ForceSet(v8::String::NewFromUtf8(isolate, "COMPRESSION_BEST"), v8::Int32::New(isolate, qdb_comp_best),
-                      v8::ReadOnly);
+    // We forgot DontDelete before?
+    quasardb::detail::AddConstantProperty(isolate, exports, "NEVER_EXPIRES",
+                                          v8::Int32::New(isolate, qdb_never_expires));
+    quasardb::detail::AddConstantProperty(isolate, exports, "PRESERVE_EXPIRATION",
+                                          v8::Int32::New(isolate, qdb_preserve_expiration));
+    quasardb::detail::AddConstantProperty(isolate, exports, "COMPRESSION_NONE", v8::Int32::New(isolate, qdb_comp_none));
+    quasardb::detail::AddConstantProperty(isolate, exports, "COMPRESSION_FAST", v8::Int32::New(isolate, qdb_comp_fast));
+    quasardb::detail::AddConstantProperty(isolate, exports, "COMPRESSION_BEST", v8::Int32::New(isolate, qdb_comp_best));
 }
 
 void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)

@@ -39,7 +39,8 @@ static void queue_work(const v8::FunctionCallbackInfo<v8::Value> & args,
                        uv_after_work_cb after_work_cb,
                        Params... p)
 {
-    v8::TryCatch try_catch;
+    v8::Isolate * isolate = v8::Isolate::GetCurrent();
+    v8::TryCatch try_catch(isolate);
 
     MethodMan call(args);
 
@@ -47,7 +48,6 @@ static void queue_work(const v8::FunctionCallbackInfo<v8::Value> & args,
 
     if (try_catch.HasCaught())
     {
-        v8::Isolate * isolate = v8::Isolate::GetCurrent();
         v8::HandleScope scope(isolate);
         node::FatalException(isolate, try_catch);
     }
@@ -95,7 +95,8 @@ public:
 public:
     static void remove(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(args, [](qdb_request * qdb_req) //
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
                    { qdb_req->output.error = qdb_remove(qdb_req->handle(), qdb_req->input.alias.c_str()); },
                    processVoidResult, &ArgsEaterBinder::none);
     }
@@ -162,7 +163,7 @@ public:
                    [](qdb_request * qdb_req) //
                    {
                        qdb_req->output.error = qdb_attach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                           qdb_req->input.content.str.c_str());
+                                                              qdb_req->input.content.str.c_str());
                    },
                    processVoidResult, &ArgsEaterBinder::string);
     }
@@ -186,7 +187,7 @@ public:
                    [](qdb_request * qdb_req) //
                    {
                        qdb_req->output.error = qdb_get_metadata(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                            &qdb_req->output.content.entry_metadata);
+                                                                &qdb_req->output.content.entry_metadata);
                    },
                    processEntryMetadataResult);
     }
@@ -310,7 +311,7 @@ public:
         const unsigned argc = 2;
         v8::Local<v8::Value> argv[argc] = {args[0], args[1]};
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
-        v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+        v8::Local<v8::Object> instance = cons->NewInstance(isolate->GetCurrentContext(), argc, argv).ToLocalChecked();
 
         args.GetReturnValue().Set(instance);
     }
@@ -371,7 +372,7 @@ private:
         v8::Isolate * isolate = v8::Isolate::GetCurrent();
         v8::HandleScope scope(isolate);
 
-        v8::TryCatch try_catch;
+        v8::TryCatch try_catch(isolate);
 
         qdb_request * qdb_req = static_cast<qdb_request *>(req->data);
         assert(qdb_req);
