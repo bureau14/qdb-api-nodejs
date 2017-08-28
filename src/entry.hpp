@@ -3,15 +3,12 @@
 #include "cluster_data.hpp"
 #include "error.hpp"
 #include "utilities.hpp"
-
 #include <qdb/client.h>
 #include <qdb/tag.h>
-
 #include <node.h>
 #include <node_buffer.h>
 #include <node_object_wrap.h>
 #include <uv.h>
-
 #include <algorithm>
 #include <array>
 #include <memory>

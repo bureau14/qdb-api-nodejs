@@ -14,3 +14,15 @@ IndentWidth: 4
 PointerAlignment: Middle
 TabWidth: 4
 UseTab: Never
+
+IncludeCategories:
+  - Regex:      '^<[-a-zA-Z0-9_]+\.(h|hh|hpp|hxx)'
+    Priority:   7
+  - Regex:      '^<experimental/'
+    Priority:   8
+  - Regex:      '^(<|")[-a-zA-Z0-9_]+/'
+    Priority:   5
+  - Regex:      '^<'
+    Priority:   9
+  - Regex:      '^"[^/]*'
+    Priority:   1

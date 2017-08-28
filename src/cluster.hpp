@@ -9,10 +9,8 @@
 #include "prefix.hpp"
 #include "range.hpp"
 #include "tag.hpp"
-
 #include <node.h>
 #include <node_object_wrap.h>
-
 #include <mutex>
 
 namespace quasardb

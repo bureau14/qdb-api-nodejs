@@ -1,9 +1,7 @@
-
 #pragma once
 
-#include <qdb/client.h>
-
 #include "utilities.hpp"
+#include <qdb/client.h>
 
 namespace quasardb
 {

@@ -1,9 +1,6 @@
-
-#include <node.h>
-
-#include <clocale>
-
 #include "cluster.hpp"
+#include <node.h>
+#include <clocale>
 
 void InitConstants(v8::Local<v8::Object> exports)
 {
