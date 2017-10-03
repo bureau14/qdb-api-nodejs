@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <string>
-#include <iostream>
 
 #include <node.h>
 #include <node_buffer.h>
@@ -40,6 +39,8 @@ public:
         Entry<TimeSeries>::Init(exports, "TimeSeries", [exports](v8::Local<v8::FunctionTemplate> tpl) {
             NODE_SET_PROTOTYPE_METHOD(tpl, "create", create);
             NODE_SET_PROTOTYPE_METHOD(tpl, "insert", insert);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "columns", columns);
+
             NODE_SET_METHOD(exports, "DoubleColumnInfo", doubleColumnInfo);
             NODE_SET_METHOD(exports, "BlobColumnInfo", blobColumnInfo);
 
@@ -68,11 +69,25 @@ public:
         createOrInsert(args, qdb_ts_insert_columns);
     }
 
+    static void columns(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        Entry<TimeSeries>::queue_work(args,
+                                      [](qdb_request * qdb_req) {
+                                          qdb_req->output.error = qdb_ts_list_columns(
+                                              qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                              reinterpret_cast<qdb_ts_column_info_t **>(
+                                                  const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
+                                              &(qdb_req->output.content.buffer.size));
+                                      },
+                                      Entry<TimeSeries>::processArrayColumnsInfoResult);
+    }
+
 private:
     static void New(const v8::FunctionCallbackInfo<v8::Value> & args);
 
     static void columnInfo(const v8::FunctionCallbackInfo<v8::Value> & args, qdb_ts_column_type_t type)
     {
+        // TODO: Make uniform with processArrayColumnsInfoResult
         v8::Isolate * isolate = args.GetIsolate();
         v8::Local<v8::Object> info = v8::Object::New(isolate);
 
@@ -89,17 +104,17 @@ private:
         args.GetReturnValue().Set(info);
     }
 
-    template <typename F>
-    static void createOrInsert(const v8::FunctionCallbackInfo<v8::Value> & args, F f)
+    template <typename Func>
+    static void createOrInsert(const v8::FunctionCallbackInfo<v8::Value> & args, Func f)
     {
         Entry<TimeSeries>::queue_work(
             args,
             [f](qdb_request * qdb_req) {
-                auto & infos = qdb_req->input.content.columnsInfo;
+                auto & info = qdb_req->input.content.columnsInfo;
                 std::vector<qdb_ts_column_info_t> columns;
-                columns.resize(infos.size());
+                columns.resize(info.size());
 
-                std::transform(infos.cbegin(), infos.cend(), columns.begin(), [qdb_req](const column_info & ci) {
+                std::transform(info.cbegin(), info.cend(), columns.begin(), [qdb_req](const column_info & ci) {
                     qdb_ts_column_info_t info;
                     info.name = ci.name.c_str();
                     info.type = ci.type;

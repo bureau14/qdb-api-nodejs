@@ -295,6 +295,23 @@ ts.insert([qdb.DoubleColumnInfo('Temp'), qdb.BlobColumnInfo("Data")], function(e
 });
 ```
 
+Retrieving columns:
+
+
+```javascript
+var ts = c.ts('temperature');
+
+// Populating ts ...
+
+
+ts.columns(function(err, columns) {
+    if (err) {
+        // ...
+    }
+
+    // ...
+});
+```
 
 ## Not supported yet
 

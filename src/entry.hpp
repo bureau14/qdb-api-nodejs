@@ -550,6 +550,50 @@ public:
         });
     }
 
+    static void processArrayColumnsInfoResult(uv_work_t * req, int status)
+    {
+        processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+            v8::Handle<v8::Array> array;
+
+            auto error_code = processErrorCode(isolate, status, qdb_req);
+            if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+            {
+                qdb_ts_column_info_t * entries =
+                    reinterpret_cast<qdb_ts_column_info_t *>(const_cast<void *>(qdb_req->output.content.buffer.begin));
+                const size_t entries_count = qdb_req->output.content.buffer.size;
+
+                array = v8::Array::New(isolate, static_cast<int>(entries_count));
+                if (array.IsEmpty())
+                {
+                    error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
+                }
+                else
+                {
+                    for (size_t i = 0; i < entries_count; ++i)
+                    {
+                        // TODO: Uniform construction along with TimeSeries
+                        v8::Local<v8::Object> obj = v8::Object::New(isolate);
+
+                        obj->Set(v8::String::NewFromUtf8(isolate, "name"), v8::String::NewFromUtf8(isolate, entries[i].name));
+                        obj->Set(v8::String::NewFromUtf8(isolate, "type"), v8::Integer::New(isolate, entries[i].type));
+
+                        array->Set(static_cast<uint32_t>(i), obj);
+                    }
+                }
+
+                // safe to call even on null/invalid buffers
+                qdb_release(qdb_req->handle(), entries);
+            }
+            else
+            {
+                // provide an empty array
+                array = v8::Array::New(isolate, 0);
+            }
+
+            return make_value_array(error_code, array);
+        });
+    }
+
 protected:
     template <typename F, typename... Params>
     static void

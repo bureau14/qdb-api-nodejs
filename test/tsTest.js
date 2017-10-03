@@ -123,7 +123,7 @@ describe('TimeSeries', function() {
 			});
 		});
 
-		it('should not insert epmty columns', function(done) {
+		it('should not insert empty columns', function(done) {
 			ts.insert([], function(err) {
 				test.must(err).not.be.equal(null);
                 test.must(err.message).be.a.string();
@@ -147,5 +147,53 @@ describe('TimeSeries', function() {
 
 
 	}); // create test
+
+	describe('columns', function() {
+		var columnInfo
+		var ts
+
+		before('init', function(done) {
+			columnInfo = [qdb.DoubleColumnInfo('Col1'), qdb.DoubleColumnInfo("Col2"), qdb.BlobColumnInfo("Col3")]
+			ts = cluster.ts("list")
+
+			ts.create([], function(err) {
+				test.must(err).be.equal(null);
+				done();
+			});
+		});
+
+		it('should return empty', function(done) {
+			ts.columns(function(err, columns) {
+				test.must(err).be.equal(null);
+				test.must(columns.length).be.equal(0);
+				done();
+			});
+		});
+
+		it('should insert columns', function(done) {
+			ts.insert(columnInfo, function(err) {
+				test.must(err).be.equal(null);
+
+				done();
+			});
+		});
+
+		it('should show columns', function(done) {
+			ts.columns(function(err, columns) {
+				test.must(err).be.equal(null);
+				test.must(columns.length).be.equal(columnInfo.length);
+
+				// FIXME: So far qdb returns columns in the same order as we
+				// created them, but would be better if test compares using `indexof` or somthing like that
+				for (var i = 0; i < columns.length; i++) {
+					test.must(columns[i].name).be.equal(columnInfo[i].name);
+					test.must(columns[i].type).be.equal(columnInfo[i].type);
+				}
+
+				done();
+			});
+		});
+
+	}); // list
 
 }); // time series
