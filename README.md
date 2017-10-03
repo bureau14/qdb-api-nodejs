@@ -269,6 +269,33 @@ b.put(new Buffer("boom"), function(err) {
 });
 ```
 
+## Time series
+
+Creating time series:
+
+```javascript
+var ts = c.ts('temperature');
+
+ts.create([qdb.DoubleColumnInfo('Temp')], function(err) {
+    if (err) {
+        // ...
+    }
+
+    // ...
+});
+
+// Or using `insert` function
+
+ts.insert([qdb.DoubleColumnInfo('Temp'), qdb.BlobColumnInfo("Data")], function(err) {
+    if (err) {
+        // ...
+    }
+
+    // ...
+});
+```
+
+
 ## Not supported yet
 
 The quasardb nodejs addon is still a work in progress, the following quasardb features are not supported:

@@ -4,6 +4,7 @@
 #include <qdb/batch.h>
 #include <qdb/client.h>
 #include <qdb/integer.h>
+#include <qdb/ts.h>
 #include <node.h>
 #include <node_buffer.h>
 #include <functional>
@@ -60,6 +61,18 @@ inline void release_node_buffer(char * data, void * hint)
 
 } // namespace detail
 
+// POD for storing info about columns from js calls
+struct column_info
+{
+    column_info(std::string name = std::string(), qdb_ts_column_type_t type = qdb_ts_column_uninitialized)
+        : name(name), type(type)
+    {
+    }
+
+    std::string name;
+    qdb_ts_column_type_t type;
+};
+
 struct qdb_request
 {
     struct slice
@@ -86,6 +99,7 @@ struct qdb_request
 
             std::string str;
             std::vector<std::string> strs;
+            std::vector<column_info> columnsInfo;
             slice buffer;
             qdb_int_t value;
         };
@@ -480,6 +494,43 @@ public:
         return res;
     }
 
+    // Expected array of JS objects which has two properties:
+    //	name - string, column name
+    //	type - integer, column type
+    std::vector<column_info> eatAndConvertColumnsInfoArray(void)
+    {
+        using column_vector = std::vector<column_info>;
+        column_vector res;
+
+        auto arr = eatArray();
+
+        if (arr.second)
+        {
+            auto len = arr.first->Length();
+            res.reserve(len);
+
+            auto nameProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "name");
+            auto typeProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "type");
+
+            for (auto i = 0u; i < len; ++i)
+            {
+                auto vi = arr.first->Get(i);
+                if (!vi->IsObject()) return column_vector();
+
+                auto obj = vi->ToObject();
+                auto name = obj->Get(nameProp);
+                auto type = obj->Get(typeProp);
+
+                if (!name->IsString() || !type->IsNumber()) return column_vector();
+
+                v8::String::Utf8Value sval(name->ToString());
+                res.emplace_back(std::string(*sval, sval.length()), qdb_ts_column_type_t(type->Int32Value()));
+            }
+        }
+
+        return res;
+    }
+
     qdb_request::slice eatAndConvertBuffer(void)
     {
         auto buf = eatObject();
@@ -533,6 +584,12 @@ public:
     qdb_request & strings(qdb_request & req)
     {
         req.input.content.strs = _eater.eatAndConvertStringArray();
+        return req;
+    }
+
+    qdb_request & columnsInfo(qdb_request & req)
+    {
+        req.input.content.columnsInfo = _eater.eatAndConvertColumnsInfoArray();
         return req;
     }
 

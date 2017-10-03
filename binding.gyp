@@ -24,6 +24,8 @@
         "src/range.hpp",
         "src/tag.cpp",
         "src/tag.hpp",
+        "src/time_series.cpp",
+        "src/time_series.hpp",
         "src/cluster_data.hpp",
         "src/utilities.hpp",
         "test/test.js"

@@ -31,6 +31,7 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::Range::Init(exports);
     quasardb::Set::Init(exports);
     quasardb::Tag::Init(exports);
+    quasardb::TimeSeries::Init(exports);
 
     InitConstants(exports);
 }

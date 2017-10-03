@@ -9,6 +9,7 @@
 #include "prefix.hpp"
 #include "range.hpp"
 #include "tag.hpp"
+#include "time_series.hpp"
 #include <node.h>
 #include <node_object_wrap.h>
 #include <mutex>
@@ -58,6 +59,7 @@ public:
         NODE_SET_PROTOTYPE_METHOD(tpl, "integer", integer);
         NODE_SET_PROTOTYPE_METHOD(tpl, "set", set);
         NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "ts", ts);
 
         NODE_SET_PROTOTYPE_METHOD(tpl, "prefix", prefix);
         NODE_SET_PROTOTYPE_METHOD(tpl, "range", range);
@@ -71,6 +73,7 @@ public:
         AddEntryType(exports, "ENTRY_TAG", qdb_entry_tag);
         AddEntryType(exports, "ENTRY_DEQUE", qdb_entry_deque);
         AddEntryType(exports, "ENTRY_STREAM", qdb_entry_stream);
+        AddEntryType(exports, "ENTRY_TS", qdb_entry_ts);
 
         constructor.Reset(isolate, tpl->GetFunction());
         exports->Set(v8::String::NewFromUtf8(isolate, "Cluster"), tpl->GetFunction());
@@ -405,6 +408,11 @@ public:
     static void tag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Tag>(args);
+    }
+
+    static void ts(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        objectFactory<TimeSeries>(args);
     }
 
 public:
