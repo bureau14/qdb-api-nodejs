@@ -9,58 +9,14 @@
 
 #include <qdb/client.h>
 
-namespace quasardb
-{
-
-namespace util
-{
-
-// FIXME:
-// Shamelessly stolen from cluster.hpp
-// Better to put it in common place, like utilities.hpp
-template <size_t ArgsLength>
-struct ArgumentsCopier;
-
-template <>
-struct ArgumentsCopier<1>
-{
-    static std::array<v8::Local<v8::Value>, 1> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        return {{args[0]}};
-    }
-};
-
-template <>
-struct ArgumentsCopier<2>
-{
-    static std::array<v8::Local<v8::Value>, 2> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        return {{args[0], args[1]}};
-    }
-};
-
-static qdb_timespec_t ms_to_qdb_timespec_t(double ms)
-{
-    auto ns = ms * 1000000ull;
-
-    qdb_timespec_t ts;
-    ts.tv_sec = static_cast<qdb_time_t>(ns / 1000000000ull);
-    ts.tv_nsec = static_cast<qdb_time_t>(ns - ts.tv_sec * 1000000000ull);
-
-    return ts;
-}
-
-static double qdb_timespec_t_to_ms(const qdb_timespec_t & ts)
-{
-    return static_cast<double>(ts.tv_sec) * 1000.0 + static_cast<double>(ts.tv_nsec / 1000000ull);
-}
-}
-
 // The reason why this points classes is out of Cluster factory object
 // is that we don't need cluster shared state inside these points.
 // These points could be created on different scopes and could have nothing to do
 // with lifetime of the cluster. They are fully passive and use to pass data
 // to and from JS and qdb API.
+
+namespace quasardb
+{
 
 template <typename Derivate>
 class Point : public node::ObjectWrap
@@ -108,7 +64,7 @@ public:
         static const size_t argc = Derivate::ParameterCount + 1;
         v8::Isolate * isolate = args.GetIsolate();
 
-        auto argv = util::ArgumentsCopier<argc>::copy(args);
+        auto argv = ArgumentsCopier<argc>::copy(args);
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
         v8::Local<v8::Object> instance =
@@ -125,7 +81,7 @@ public:
 
         assert(pthis);
 
-        auto ms = util::qdb_timespec_t_to_ms(pthis->timestamp);
+        auto ms = qdb_timespec_to_ms(pthis->timestamp);
         auto date = v8::Date::New(args.GetIsolate(), ms);
         args.GetReturnValue().Set(date);
     }
@@ -193,7 +149,7 @@ private:
 
             auto ms = args[0]->NumberValue();
             auto value = args[1]->NumberValue();
-            auto obj = new DoublePoint(util::ms_to_qdb_timespec_t(ms), value);
+            auto obj = new DoublePoint(ms_to_qdb_timespec(ms), value);
 
             obj->Wrap(args.This());
             args.GetReturnValue().Set(args.This());
@@ -270,7 +226,7 @@ private:
             }
 
             auto ms = args[0]->NumberValue();
-            auto obj = new BlobPoint(util::ms_to_qdb_timespec_t(ms), args.GetIsolate(), args[1]->ToObject());
+            auto obj = new BlobPoint(ms_to_qdb_timespec(ms), args.GetIsolate(), args[1]->ToObject());
 
             obj->Wrap(args.This());
             args.GetReturnValue().Set(args.This());

@@ -240,10 +240,6 @@ private:
         return data;
     }
 
-private:
-    template <size_t ArgsLength>
-    struct ArgumentsCopier;
-
 public:
     template <typename Object>
     static void newObject(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -500,23 +496,6 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
-template <>
-struct Cluster::ArgumentsCopier<1>
-{
-    static std::array<v8::Local<v8::Value>, 1> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        return {{args[0]}};
-    }
-};
-
-template <>
-struct Cluster::ArgumentsCopier<2>
-{
-    static std::array<v8::Local<v8::Value>, 2> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        return {{args[0], args[1]}};
-    }
-};
 
 template <typename Object>
 struct Cluster::Factory<Object, 0>

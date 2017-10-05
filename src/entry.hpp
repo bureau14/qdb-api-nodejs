@@ -463,12 +463,6 @@ public:
         });
     }
 
-    // No-op.
-    static double convertToMillis(const qdb_timespec_t & ts)
-    {
-        return static_cast<double>(ts.tv_sec) * 1000.0 + static_cast<double>(ts.tv_nsec / 1000000ull);
-    }
-
     static void processEntryMetadataResult(uv_work_t * req, int status)
     {
         processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
@@ -496,14 +490,14 @@ public:
 
             using LocalValue = v8::Local<v8::Value>;
             {
-                double millis = convertToMillis(qdb_req->output.content.entry_metadata.modification_time);
+                double millis = qdb_timespec_to_ms(qdb_req->output.content.entry_metadata.modification_time);
                 meta->Set(v8::String::NewFromUtf8(isolate, "modification_time"),
                           (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))
                                        : LocalValue(v8::Undefined(isolate)));
             }
 
             {
-                double millis = convertToMillis(qdb_req->output.content.entry_metadata.expiry_time);
+                double millis = qdb_timespec_to_ms(qdb_req->output.content.entry_metadata.expiry_time);
                 meta->Set(v8::String::NewFromUtf8(isolate, "expiry_time"),
                           (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))
                                        : LocalValue(v8::Undefined(isolate)));
@@ -574,7 +568,8 @@ public:
                         // TODO: Uniform construction along with TimeSeries
                         v8::Local<v8::Object> obj = v8::Object::New(isolate);
 
-                        obj->Set(v8::String::NewFromUtf8(isolate, "name"), v8::String::NewFromUtf8(isolate, entries[i].name));
+                        obj->Set(v8::String::NewFromUtf8(isolate, "name"),
+                                 v8::String::NewFromUtf8(isolate, entries[i].name));
                         obj->Set(v8::String::NewFromUtf8(isolate, "type"), v8::Integer::New(isolate, entries[i].type));
 
                         array->Set(static_cast<uint32_t>(i), obj);
