@@ -26,6 +26,8 @@
         "src/tag.hpp",
         "src/time_series.cpp",
         "src/time_series.hpp",
+        "src/points.cpp",
+        "src/points.hpp",
         "src/cluster_data.hpp",
         "src/utilities.hpp",
         "test/test.js"
