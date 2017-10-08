@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <memory>
@@ -79,7 +78,7 @@ public:
                                                   const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
                                               &(qdb_req->output.content.buffer.size));
                                       },
-                                      Entry<TimeSeries>::processArrayColumnsInfoResult);
+                                      Entry<TimeSeries>::processArrayColumnsInfoResult, &ArgsEaterBinder::holder);
     }
 
 private:
@@ -87,7 +86,6 @@ private:
 
     static void columnInfo(const v8::FunctionCallbackInfo<v8::Value> & args, qdb_ts_column_type_t type)
     {
-        // TODO: Make uniform with processArrayColumnsInfoResult
         v8::Isolate * isolate = args.GetIsolate();
         v8::Local<v8::Object> info = v8::Object::New(isolate);
 
@@ -124,7 +122,7 @@ private:
                 qdb_req->output.error =
                     f(qdb_req->handle(), qdb_req->input.alias.c_str(), columns.data(), columns.size());
             },
-            Entry<TimeSeries>::processVoidResult, &ArgsEaterBinder::columnsInfo);
+            Entry<TimeSeries>::processVoidResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
     }
 
     static void AddTsColumnType(v8::Local<v8::Object> exports, const char * name, qdb_ts_column_type_t type)
@@ -136,4 +134,4 @@ private:
 private:
     static v8::Persistent<v8::Function> constructor;
 };
-}
+} // quasardb namespace

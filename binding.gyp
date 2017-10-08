@@ -28,6 +28,8 @@
         "src/time_series.hpp",
         "src/points.cpp",
         "src/points.hpp",
+        "src/column.cpp",
+        "src/column.hpp",
         "src/cluster_data.hpp",
         "src/utilities.hpp",
         "test/test.js"

@@ -1,4 +1,5 @@
 #include "cluster.hpp"
+#include "column.hpp"
 #include "points.hpp"
 #include <node.h>
 #include <clocale>
@@ -35,6 +36,7 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::TimeSeries::Init(exports);
     quasardb::DoublePoint::Init(exports);
     quasardb::BlobPoint::Init(exports);
+    quasardb::Column::Init(exports);
 
     InitConstants(exports);
 }

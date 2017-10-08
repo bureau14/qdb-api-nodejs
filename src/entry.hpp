@@ -15,6 +15,8 @@
 #include <string>
 #include <type_traits>
 
+#include "column.hpp"
+
 namespace quasardb
 {
 
@@ -563,16 +565,13 @@ public:
                 }
                 else
                 {
+                    assert(!qdb_req->holder.IsEmpty() && "Verify that appropriate argument eater has been used");
+
+                    auto owner = v8::Local<v8::Object>::New(isolate, qdb_req->holder);
                     for (size_t i = 0; i < entries_count; ++i)
                     {
-                        // TODO: Uniform construction along with TimeSeries
-                        v8::Local<v8::Object> obj = v8::Object::New(isolate);
-
-                        obj->Set(v8::String::NewFromUtf8(isolate, "name"),
-                                 v8::String::NewFromUtf8(isolate, entries[i].name));
-                        obj->Set(v8::String::NewFromUtf8(isolate, "type"), v8::Integer::New(isolate, entries[i].type));
-
-                        array->Set(static_cast<uint32_t>(i), obj);
+                        auto obj = Column::MakeColumn(isolate, owner, entries[i].name, entries[i].type);
+                        if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
                     }
                 }
 

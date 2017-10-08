@@ -144,6 +144,7 @@ struct qdb_request
     ~qdb_request(void)
     {
         callback.Reset();
+        holder.Reset();
     }
 
 private:
@@ -185,6 +186,7 @@ public:
 
 public:
     v8::Persistent<v8::Function> callback;
+    v8::Persistent<v8::Object> holder;
 
     v8::Local<v8::Function> callbackAsLocal(void)
     {
@@ -531,6 +533,11 @@ public:
         return res;
     }
 
+    v8::Local<v8::Object> eatHolder(void)
+    {
+        return _method.holder();
+    }
+
     qdb_request::slice eatAndConvertBuffer(void)
     {
         auto buf = eatObject();
@@ -602,6 +609,12 @@ public:
     qdb_request & expiry(qdb_request & req)
     {
         req.input.expiry = _eater.eatAndConvertDate();
+        return req;
+    }
+
+    qdb_request & holder(qdb_request & req)
+    {
+        req.holder.Reset(v8::Isolate::GetCurrent(), _eater.eatHolder());
         return req;
     }
 
