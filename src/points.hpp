@@ -36,7 +36,19 @@ public:
     static void Init(v8::Local<v8::Object> exports, const char * className, F init)
     {
         InitConstructorOnly(exports, className, [init](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "timestamp", Point<Derivate>::getTimestamp);
+
+            auto isolate = v8::Isolate::GetCurrent();
+            auto s = v8::Signature::New(isolate, tpl);
+            auto proto = tpl->PrototypeTemplate();
+
+            proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "timestamp"),
+                                       v8::FunctionTemplate::New(isolate, getTimestamp, v8::Local<v8::Value>(), s),
+                                       v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+
+            proto->SetAccessorProperty(
+                v8::String::NewFromUtf8(isolate, "value"),
+                v8::FunctionTemplate::New(isolate, Derivate::getValue, v8::Local<v8::Value>(), s),
+                v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
             init(tpl);
         });
@@ -109,9 +121,7 @@ public:
     // static void Init(v8::Isolate * isolate)
     static void Init(v8::Local<v8::Object> exports)
     {
-        Point<DoublePoint>::Init(exports, "DoublePoint", [](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "value", DoublePoint::getValue);
-        });
+        Point<DoublePoint>::Init(exports, "DoublePoint", [](v8::Local<v8::FunctionTemplate> tpl) {});
     }
 
     static void getValue(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -185,9 +195,7 @@ public:
 
     static void Init(v8::Local<v8::Object> exports)
     {
-        Point<BlobPoint>::Init(exports, "BlobPoint", [](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "value", BlobPoint::getValue);
-        });
+        Point<BlobPoint>::Init(exports, "BlobPoint", [](v8::Local<v8::FunctionTemplate> tpl) {});
     }
 
     static void getValue(const v8::FunctionCallbackInfo<v8::Value> & args)

@@ -12,10 +12,9 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <type_traits>
-
-#include "column.hpp"
 
 namespace quasardb
 {
@@ -350,6 +349,7 @@ private:
         }
     }
 
+protected:
     static auto processErrorCode(v8::Isolate * isolate, int status, const qdb_request * req) -> v8::Local<v8::Value>
     {
         if (status < 0)
@@ -546,48 +546,6 @@ public:
         });
     }
 
-    static void processArrayColumnsInfoResult(uv_work_t * req, int status)
-    {
-        processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
-            v8::Handle<v8::Array> array;
-
-            auto error_code = processErrorCode(isolate, status, qdb_req);
-            if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
-            {
-                qdb_ts_column_info_t * entries =
-                    reinterpret_cast<qdb_ts_column_info_t *>(const_cast<void *>(qdb_req->output.content.buffer.begin));
-                const size_t entries_count = qdb_req->output.content.buffer.size;
-
-                array = v8::Array::New(isolate, static_cast<int>(entries_count));
-                if (array.IsEmpty())
-                {
-                    error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
-                }
-                else
-                {
-                    assert(!qdb_req->holder.IsEmpty() && "Verify that appropriate argument eater has been used");
-
-                    auto owner = v8::Local<v8::Object>::New(isolate, qdb_req->holder);
-                    for (size_t i = 0; i < entries_count; ++i)
-                    {
-                        auto obj = Column::MakeColumn(isolate, owner, entries[i].name, entries[i].type);
-                        if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
-                    }
-                }
-
-                // safe to call even on null/invalid buffers
-                qdb_release(qdb_req->handle(), entries);
-            }
-            else
-            {
-                // provide an empty array
-                array = v8::Array::New(isolate, 0);
-            }
-
-            return make_value_array(error_code, array);
-        });
-    }
-
 protected:
     template <typename F, typename... Params>
     static void
@@ -596,7 +554,20 @@ protected:
         detail::queue_work(args, spawnRequest<F, Params...>, f, after_work_cb, p...);
     }
 
+public:
+    cluster_data_ptr cluster_data(void)
+    {
+        cluster_data_ptr res;
+        {
+            std::lock_guard<std::mutex> lock(_data_mutex);
+            res = _cluster_data;
+        }
+
+        return res;
+    }
+
 private:
+    std::mutex _data_mutex;
     cluster_data_ptr _cluster_data;
     std::unique_ptr<std::string> _alias;
 };

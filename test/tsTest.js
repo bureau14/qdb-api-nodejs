@@ -1,6 +1,7 @@
 var test = require('unit.js');
 var qdb = require('..');
 var config = require('./config')
+const util = require('util');
 
 var cluster = new qdb.Cluster(config.cluster_uri);
 
@@ -73,14 +74,14 @@ describe('TimeSeries', function() {
 
 		it('should create with empty columns', function(done) {
 			emptyTs = cluster.ts("empty-ts")
-			emptyTs.create([], function(err) {
+			emptyTs.create([], function(err, columns) {
 				test.must(err).be.equal(null);
 				done();
 			});
 		});
 
 		it('should create column', function(done) {
-			ts.create([columnInfo], function(err) {
+			ts.create([columnInfo], function(err, columns) {
 				test.must(err).be.equal(null);
 
 				done();
@@ -88,7 +89,7 @@ describe('TimeSeries', function() {
 		});
 
 		it('should not create existing column', function(done) {
-			ts.create([columnInfo], function(err) {
+			ts.create([columnInfo], function(err, columns) {
 				test.must(err).not.be.equal(null);
                 test.must(err.message).be.a.string();
                 test.must(err.message).not.be.empty();
@@ -102,7 +103,7 @@ describe('TimeSeries', function() {
 		});
 
 		it('should insert new columns', function(done) {
-			ts.insert([qdb.DoubleColumnInfo("Colx"), qdb.BlobColumnInfo("Coly")], function(err) {
+			ts.insert([qdb.DoubleColumnInfo("Colx"), qdb.BlobColumnInfo("Coly")], function(err, columns) {
 				test.must(err).be.equal(null);
 
 				done();
@@ -110,7 +111,7 @@ describe('TimeSeries', function() {
 		});
 
 		it('should not insert existing columns', function(done) {
-			ts.insert([qdb.DoubleColumnInfo("Colx"), qdb.BlobColumnInfo("ColZ")], function(err) {
+			ts.insert([qdb.DoubleColumnInfo("Colx"), qdb.BlobColumnInfo("ColZ")], function(err, columns) {
 				test.must(err).not.be.equal(null);
                 test.must(err.message).be.a.string();
                 test.must(err.message).not.be.empty();
@@ -124,7 +125,7 @@ describe('TimeSeries', function() {
 		});
 
 		it('should not insert empty columns', function(done) {
-			ts.insert([], function(err) {
+			ts.insert([], function(err, columns) {
 				test.must(err).not.be.equal(null);
                 test.must(err.message).be.a.string();
                 test.must(err.message).not.be.empty();
@@ -156,7 +157,7 @@ describe('TimeSeries', function() {
 			columnInfo = [qdb.DoubleColumnInfo('Col1'), qdb.DoubleColumnInfo("Col2"), qdb.BlobColumnInfo("Col3")]
 			ts = cluster.ts("list")
 
-			ts.create([], function(err) {
+			ts.create([], function(err, columns) {
 				test.must(err).be.equal(null);
 				done();
 			});
@@ -171,7 +172,7 @@ describe('TimeSeries', function() {
 		});
 
 		it('should insert columns', function(done) {
-			ts.insert(columnInfo, function(err) {
+			ts.insert(columnInfo, function(err, columns) {
 				test.must(err).be.equal(null);
 
 				done();
@@ -219,17 +220,18 @@ describe('TimeSeries', function() {
 	}); // list
 
 	describe('points insert', function() {
-		var ts
-		var columns
+		var ts = null
+		var columns = null
 
 		before('init', function(done) {
 			var columnInfo = [qdb.DoubleColumnInfo('Col1'), qdb.BlobColumnInfo("Col2")]
 			ts = cluster.ts("points")
 
-			ts.create([columnInfo], function(err, cols) {
+			ts.create(columnInfo, function(err, cols) {
 				test.must(err).be.equal(null);
+				test.must(cols.Length).be.equal(columnInfo.Length);
 
-				columns = cols
+				columns = cols;
 				done();
 			});
 		});
@@ -247,14 +249,14 @@ describe('TimeSeries', function() {
 			test.object(p1).hasProperty('timestamp');
 			test.object(p2).hasProperty('timestamp');
 
-			test.must(p1.timestamp().getTime()).be.equal(d1.getTime());
-			test.must(p2.timestamp().getTime()).be.equal(d2.getTime());
+			test.must(p1.timestamp.getTime()).be.equal(d1.getTime());
+			test.must(p2.timestamp.getTime()).be.equal(d2.getTime());
 
 			test.object(p1).hasProperty('value')
 			test.object(p2).hasProperty('value')
 
-			test.must(p1.value()).be.equal(v1);
-			test.must(p2.value().compare(v2)).be.equal(0);
+			test.must(p1.value).be.equal(v1);
+			test.must(p2.value.compare(v2)).be.equal(0);
 
 		});
 
@@ -277,7 +279,7 @@ describe('TimeSeries', function() {
 
 			test.wait(2000, function() {
 				var vc = new Buffer("Hello there")
-				test.must(p.value().compare(vc)).be.equal(0)
+				test.must(p.value.compare(vc)).be.equal(0)
 
 				done();
 			});
@@ -338,7 +340,7 @@ describe('TimeSeries', function() {
 		it('should not insert blob point into double column', function(done) {
 			var p = qdb.DoublePoint(new Date(2049, 10, 7, 4), 13.37);
 			columns[1].insert([p], function(err) {
-				test.must(err).be.equal(null);
+				test.must(err).not.be.equal(null);
 
 				done();
 			});

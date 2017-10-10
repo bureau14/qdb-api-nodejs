@@ -78,7 +78,7 @@ public:
                                                   const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
                                               &(qdb_req->output.content.buffer.size));
                                       },
-                                      Entry<TimeSeries>::processArrayColumnsInfoResult, &ArgsEaterBinder::holder);
+                                      TimeSeries::processArrayColumnsInfoResult, &ArgsEaterBinder::holder);
     }
 
 private:
@@ -122,8 +122,11 @@ private:
                 qdb_req->output.error =
                     f(qdb_req->handle(), qdb_req->input.alias.c_str(), columns.data(), columns.size());
             },
-            Entry<TimeSeries>::processVoidResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
+            TimeSeries::processColumnsCreateResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
     }
+
+    static void processArrayColumnsInfoResult(uv_work_t * req, int status);
+    static void processColumnsCreateResult(uv_work_t * req, int status);
 
     static void AddTsColumnType(v8::Local<v8::Object> exports, const char * name, qdb_ts_column_type_t type)
     {

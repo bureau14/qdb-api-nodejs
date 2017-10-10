@@ -61,6 +61,22 @@ inline void release_node_buffer(char * data, void * hint)
 
 } // namespace detail
 
+inline qdb_timespec_t ms_to_qdb_timespec(double ms)
+{
+    auto ns = ms * 1000000ull;
+
+    qdb_timespec_t ts;
+    ts.tv_sec = static_cast<qdb_time_t>(ns / 1000000000ull);
+    ts.tv_nsec = static_cast<qdb_time_t>(ns - ts.tv_sec * 1000000000ull);
+
+    return ts;
+}
+
+inline double qdb_timespec_to_ms(const qdb_timespec_t & ts)
+{
+    return static_cast<double>(ts.tv_sec) * 1000.0 + static_cast<double>(ts.tv_nsec / 1000000ull);
+}
+
 // POD for storing info about columns from js calls
 struct column_info
 {
@@ -100,6 +116,8 @@ struct qdb_request
             std::string str;
             std::vector<std::string> strs;
             std::vector<column_info> columnsInfo;
+            std::vector<qdb_ts_double_point> doublePoints;
+            std::vector<qdb_ts_blob_point> blobPoints;
             slice buffer;
             qdb_int_t value;
         };
@@ -533,6 +551,83 @@ public:
         return res;
     }
 
+    std::vector<qdb_ts_double_point> eatAndConvertDoublePointArray(void)
+    {
+        using point_vector = std::vector<qdb_ts_double_point>;
+        point_vector res;
+
+        auto arr = eatArray();
+        if (arr.second)
+        {
+            auto len = arr.first->Length();
+            res.reserve(len);
+
+            auto tsProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "timestamp");
+            auto valueProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "value");
+
+            for (auto i = 0u; i < len; ++i)
+            {
+                auto vi = arr.first->Get(i);
+                if (!vi->IsObject()) return point_vector();
+
+                auto obj = vi->ToObject();
+                auto date = obj->Get(tsProp);
+                auto value = obj->Get(valueProp);
+
+                if (!date->IsDate() || !value->IsNumber()) return point_vector();
+
+                auto ms = v8::Local<v8::Date>::Cast(date)->ValueOf();
+
+                qdb_ts_double_point p;
+                p.timestamp = ms_to_qdb_timespec(ms);
+                p.value = value->NumberValue();
+
+                res.push_back(p);
+            }
+        }
+
+        return res;
+    }
+
+    std::vector<qdb_ts_blob_point> eatAndConvertBlobPointArray(void)
+    {
+        using point_vector = std::vector<qdb_ts_blob_point>;
+        point_vector res;
+
+        auto arr = eatArray();
+        if (arr.second)
+        {
+            auto len = arr.first->Length();
+            res.reserve(len);
+
+            auto tsProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "timestamp");
+            auto valueProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "value");
+
+            for (auto i = 0u; i < len; ++i)
+            {
+                auto vi = arr.first->Get(i);
+                if (!vi->IsObject()) return point_vector();
+
+                auto obj = vi->ToObject();
+                auto date = obj->Get(tsProp);
+                auto value = obj->Get(valueProp);
+
+                if (!date->IsDate() || !value->IsObject()) return point_vector();
+
+                auto ms = v8::Local<v8::Date>::Cast(date)->ValueOf();
+
+                qdb_ts_blob_point p;
+                p.timestamp = ms_to_qdb_timespec(ms);
+                p.content = node::Buffer::Data(value);
+                p.content_length = node::Buffer::Length(value);
+
+                res.push_back(p);
+            }
+        }
+
+        return res;
+    }
+
     v8::Local<v8::Object> eatHolder(void)
     {
         return _method.holder();
@@ -618,6 +713,18 @@ public:
         return req;
     }
 
+    qdb_request & doublePoints(qdb_request & req)
+    {
+        req.input.content.doublePoints = _eater.eatAndConvertDoublePointArray();
+        return req;
+    }
+
+    qdb_request & blobPoints(qdb_request & req)
+    {
+        req.input.content.blobPoints = _eater.eatAndConvertBlobPointArray();
+        return req;
+    }
+
 public:
     bool bindCallback(qdb_request & req)
     {
@@ -674,19 +781,4 @@ struct ArgumentsCopier<2>
     }
 };
 
-inline qdb_timespec_t ms_to_qdb_timespec(double ms)
-{
-    auto ns = ms * 1000000ull;
-
-    qdb_timespec_t ts;
-    ts.tv_sec = static_cast<qdb_time_t>(ns / 1000000000ull);
-    ts.tv_nsec = static_cast<qdb_time_t>(ns - ts.tv_sec * 1000000000ull);
-
-    return ts;
-}
-
-inline double qdb_timespec_to_ms(const qdb_timespec_t & ts)
-{
-    return static_cast<double>(ts.tv_sec) * 1000.0 + static_cast<double>(ts.tv_nsec / 1000000ull);
-}
 } // namespace quasardb
