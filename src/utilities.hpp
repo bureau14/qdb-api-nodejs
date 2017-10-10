@@ -116,10 +116,11 @@ struct qdb_request
             std::string str;
             std::vector<std::string> strs;
             std::vector<column_info> columnsInfo;
-            std::vector<qdb_ts_double_point> doublePoints;
-            std::vector<qdb_ts_blob_point> blobPoints;
             slice buffer;
             qdb_int_t value;
+
+            std::vector<qdb_ts_double_point> doublePoints;
+            std::vector<qdb_ts_blob_point> blobPoints;
         };
 
         query_content content;
@@ -551,9 +552,10 @@ public:
         return res;
     }
 
-    std::vector<qdb_ts_double_point> eatAndConvertDoublePointArray(void)
+    template <typename Type, typename Func>
+    std::vector<Type> eatAndConvertPointsArray(Func f)
     {
-        using point_vector = std::vector<qdb_ts_double_point>;
+        using point_vector = std::vector<Type>;
         point_vector res;
 
         auto arr = eatArray();
@@ -574,58 +576,41 @@ public:
                 auto date = obj->Get(tsProp);
                 auto value = obj->Get(valueProp);
 
-                if (!date->IsDate() || !value->IsNumber()) return point_vector();
+                if (!date->IsDate()) return point_vector();
 
                 auto ms = v8::Local<v8::Date>::Cast(date)->ValueOf();
+                auto point = f(ms_to_qdb_timespec(ms), value);
 
-                qdb_ts_double_point p;
-                p.timestamp = ms_to_qdb_timespec(ms);
-                p.value = value->NumberValue();
-
-                res.push_back(p);
+                if (!point.second) return point_vector();
             }
         }
 
         return res;
     }
 
-    std::vector<qdb_ts_blob_point> eatAndConvertBlobPointArray(void)
+    std::vector<qdb_ts_double_point> eatAndConvertDoublePointsArray(void)
     {
-        using point_vector = std::vector<qdb_ts_blob_point>;
-        point_vector res;
+        return eatAndConvertPointsArray<qdb_ts_double_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
+            qdb_ts_double_point p;
+            if (!value->IsNumber()) return std::make_pair(p, false);
 
-        auto arr = eatArray();
-        if (arr.second)
-        {
-            auto len = arr.first->Length();
-            res.reserve(len);
+            p.timestamp = ts;
+            p.value = value->NumberValue();
+            return std::make_pair(p, true);
+        });
+    }
 
-            auto tsProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "timestamp");
-            auto valueProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "value");
+    std::vector<qdb_ts_blob_point> eatAndConvertBlobPointsArray(void)
+    {
+        return eatAndConvertPointsArray<qdb_ts_blob_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
+            qdb_ts_blob_point p;
+            if (!value->IsObject()) return std::make_pair(p, false);
 
-            for (auto i = 0u; i < len; ++i)
-            {
-                auto vi = arr.first->Get(i);
-                if (!vi->IsObject()) return point_vector();
-
-                auto obj = vi->ToObject();
-                auto date = obj->Get(tsProp);
-                auto value = obj->Get(valueProp);
-
-                if (!date->IsDate() || !value->IsObject()) return point_vector();
-
-                auto ms = v8::Local<v8::Date>::Cast(date)->ValueOf();
-
-                qdb_ts_blob_point p;
-                p.timestamp = ms_to_qdb_timespec(ms);
-                p.content = node::Buffer::Data(value);
-                p.content_length = node::Buffer::Length(value);
-
-                res.push_back(p);
-            }
-        }
-
-        return res;
+            p.timestamp = ts;
+            p.content = node::Buffer::Data(value);
+            p.content_length = node::Buffer::Length(value);
+            return std::make_pair(p, true);
+        });
     }
 
     v8::Local<v8::Object> eatHolder(void)
@@ -715,13 +700,13 @@ public:
 
     qdb_request & doublePoints(qdb_request & req)
     {
-        req.input.content.doublePoints = _eater.eatAndConvertDoublePointArray();
+        req.input.content.doublePoints = _eater.eatAndConvertDoublePointsArray();
         return req;
     }
 
     qdb_request & blobPoints(qdb_request & req)
     {
-        req.input.content.blobPoints = _eater.eatAndConvertBlobPointArray();
+        req.input.content.blobPoints = _eater.eatAndConvertBlobPointsArray();
         return req;
     }
 

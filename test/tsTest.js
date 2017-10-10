@@ -1,7 +1,6 @@
 var test = require('unit.js');
 var qdb = require('..');
 var config = require('./config')
-const util = require('util');
 
 var cluster = new qdb.Cluster(config.cluster_uri);
 
@@ -260,30 +259,12 @@ describe('TimeSeries', function() {
 
 		});
 
-		it('should hold blob Buffer', function(done){
+		it('should hold blob Buffer', function(){
 			var d = new Date(2049, 10, 5, 4);
 			var v = new Buffer("Hello there");
 			var p = qdb.BlobPoint(d, v);
 
-			if (!global.gc) {
-				console.log('Garbage collection unavailable.  Pass --expose-gc '
-					+ 'when launching node to enable forced garbage collection.');
-				done();
-				return;
-			}
-
-			// Force GC
-			v = null
-			global.gc();
-			this.timeout(3000);
-
-			test.wait(2000, function() {
-				var vc = new Buffer("Hello there")
-				test.must(p.value.compare(vc)).be.equal(0)
-
-				done();
-			});
-
+			test.must(p.value.compare(v)).be.equal(0)
 		});
 
 		it('should insert double point', function(done) {
