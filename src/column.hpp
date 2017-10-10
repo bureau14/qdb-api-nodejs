@@ -16,16 +16,16 @@
 
 namespace quasardb
 {
-class Column : public Entry<Column>
+template <typename Derivate>
+class Column : public Entry<Derivate>
 {
-    friend class Entry<Column>;
-    friend class Cluster;
+    friend class Entry<Derivate>;
 
-    static const size_t ParametersCount = 3;
+    static const size_t ParametersCount = 2;
 
 public:
     Column(cluster_data_ptr cd, const char * name, const char * ts, qdb_ts_column_type_t type)
-        : Entry<Column>(cd, name), ts(ts), type(type)
+        : Entry<Derivate>(cd, name), ts(ts), type(type)
 
     {
     }
@@ -34,9 +34,13 @@ public:
     }
 
 public:
-    static void Init(v8::Local<v8::Object> exports)
+    template <typename F>
+    static void Init(v8::Handle<v8::Object> exports, const char * className, F init)
     {
-        Entry<Column>::Init(exports, "Column", [exports](v8::Local<v8::FunctionTemplate> tpl) {
+        Entry<Derivate>::Init(exports, className, [exports, init](v8::Local<v8::FunctionTemplate> tpl) {
+            // call init function of derivate
+            init(tpl);
+
             v8::Isolate * isolate = exports->GetIsolate();
 
             auto s = v8::Signature::New(isolate, tpl);
@@ -50,23 +54,24 @@ public:
                                        v8::FunctionTemplate::New(isolate, Column::getType, v8::Local<v8::Value>(), s),
                                        v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
-            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", Column::insert);
-
-            // constructor.Reset(isolate, tpl->GetFunction());
-            // exports->Set(v8::String::NewFromUtf8(isolate, "Column"), tpl->GetFunction());
         });
     }
 
-    static v8::Local<v8::Object>
-    MakeColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type)
+    static v8::Local<v8::Object> MakeColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name)
     {
-        static const size_t argc = ParametersCount;
+        static const size_t argc = Derivate::ParametersCount;
 
-        v8::Local<v8::Value> argv[argc] = {owner, v8::String::NewFromUtf8(isolate, name),
-                                           v8::Integer::New(isolate, type)};
-        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
+        v8::Local<v8::Value> argv[argc] = {
+            owner, v8::String::NewFromUtf8(isolate, name),
+        };
+        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
         return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+    }
+
+    std::string timeSeries(void) const
+    {
+        return ts;
     }
 
 private:
@@ -76,7 +81,7 @@ private:
 
         static const int argc = ParametersCount;
         v8::Local<v8::Value> argv[argc] = {args[0], args[1]};
-        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
+        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
         v8::MaybeLocal<v8::Object> instance = cons->NewInstance(isolate->GetCurrentContext(), argc, argv);
         args.GetReturnValue().Set(instance.ToLocalChecked());
@@ -113,14 +118,7 @@ private:
             }
             v8::String::Utf8Value colname(str.first);
 
-            auto type = argsEater.eatInteger<qdb_ts_column_type_t>();
-            if (!type.second)
-            {
-                call.throwException("Invalid parameter supplied to object");
-                return;
-            }
-
-            auto obj = new Column(ts->cluster_data(), *colname, ts->native_alias().c_str(), type.first);
+            auto obj = new Derivate(ts->cluster_data(), *colname, ts->native_alias().c_str());
             obj->Wrap(args.This());
             args.GetReturnValue().Set(args.This());
         }
@@ -157,14 +155,67 @@ private:
         });
     }
 
-    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
-    static void insertBlobs(const std::string & ts, const v8::FunctionCallbackInfo<v8::Value> & args);
-    static void insertDoubles(const std::string & ts, const v8::FunctionCallbackInfo<v8::Value> & args);
-
     std::string ts;
     qdb_ts_column_type_t type;
+};
+
+class DoubleColumn : public Column<DoubleColumn>
+{
+    friend class Column<DoubleColumn>;
+    friend class Entry<DoubleColumn>;
+
+    DoubleColumn(cluster_data_ptr cd, const char * name, const char * ts)
+        : Column<DoubleColumn>(cd, name, ts, qdb_ts_column_double)
+
+    {
+    }
+    virtual ~DoubleColumn(void)
+    {
+    }
+
+public:
+    static void Init(v8::Local<v8::Object> exports)
+    {
+        Column<DoubleColumn>::Init(exports, "DoubleColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
+            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", DoubleColumn::insert);
+        });
+    }
+
+    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
+
+private:
+    static v8::Persistent<v8::Function> constructor;
+};
+
+class BlobColumn : public Column<BlobColumn>
+{
+    friend class Column<BlobColumn>;
+    friend class Entry<BlobColumn>;
+
+    BlobColumn(cluster_data_ptr cd, const char * name, const char * ts)
+        : Column<BlobColumn>(cd, name, ts, qdb_ts_column_blob)
+
+    {
+    }
+    virtual ~BlobColumn(void)
+    {
+    }
+
+public:
+    static void Init(v8::Local<v8::Object> exports)
+    {
+        Column<BlobColumn>::Init(exports, "BlobColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
+            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", BlobColumn::insert);
+        });
+    }
+
+private:
+    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
 
     static v8::Persistent<v8::Function> constructor;
 };
+
+v8::Local<v8::Object>
+CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type);
 
 } // quasardb namespace

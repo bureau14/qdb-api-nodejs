@@ -313,6 +313,33 @@ ts.columns(function(err, columns) {
 });
 ```
 
+Creating and populating columns:
+
+
+```javascript
+var ts = c.ts('temperature');
+
+ts.Create([ts.DoubleColumnInfo("ColDouble"), ts.BlobColumnInfo("ColBlob")], function(err, columns){
+	if (err) {
+		// ...
+	}
+
+	// columns is a array of `active column` instances
+	var p1 = qdb.DublePoint(new Date(2049, 10, 5), 100.0);
+	var p2 = qdb.DublePoint(new Date(2049, 10, 5, 4, 3), 110.0);
+
+	columns[0].insert([p1, p2], function(err) {
+		// ...
+	});
+
+	var p3 = qdb.BlobPoint(new Date(2049, 10, 5), new Buffer("Water must be hot now"));
+	columns[1].insert([p3], function(err) {
+		// ...
+	});
+});
+
+```
+
 ## Not supported yet
 
 The quasardb nodejs addon is still a work in progress, the following quasardb features are not supported:

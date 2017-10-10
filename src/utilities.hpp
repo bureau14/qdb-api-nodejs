@@ -16,7 +16,7 @@ namespace quasardb
 namespace detail
 {
 
-static void
+static inline void
 AddConstantProperty(v8::Isolate * isolate, v8::Local<v8::Object> object, const char * key, v8::Local<v8::Value> value)
 {
     // object->ForceSet(v8::String::NewFromUtf8(isolate, key), value,

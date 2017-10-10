@@ -7,52 +7,60 @@
 namespace quasardb
 {
 
-v8::Persistent<v8::Function> Column::constructor;
+v8::Persistent<v8::Function> BlobColumn::constructor;
+v8::Persistent<v8::Function> DoubleColumn::constructor;
 
-void Column::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
+v8::Local<v8::Object>
+CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type)
 {
-    MethodMan call(args);
-
-    Column * c = call.nativeHolder<Column>();
-    assert(c);
-
-    // TODO: Change to static polymorphis ?
-    switch (c->type)
+    switch (type)
     {
     case qdb_ts_column_blob:
-        Column::insertBlobs(c->ts, args);
+        return BlobColumn::MakeColumn(isolate, owner, name);
         break;
     case qdb_ts_column_double:
-        Column::insertDoubles(c->ts, args);
+        return DoubleColumn::MakeColumn(isolate, owner, name);
         break;
     default:
-        return;
+        return v8::Object::New(isolate);
     }
 }
 
-void Column::insertDoubles(const std::string & ts, const v8::FunctionCallbackInfo<v8::Value> & args)
+void DoubleColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    Entry<Column>::queue_work(args,
-                              [ts](qdb_request * qdb_req) {
-                                  auto & points = qdb_req->input.content.doublePoints;
-                                  qdb_req->output.error =
-                                      qdb_ts_double_insert(qdb_req->handle(), ts.c_str(), qdb_req->input.alias.c_str(),
-                                                           points.data(), points.size());
-                              },
-                              Entry<Column>::processVoidResult, &ArgsEaterBinder::doublePoints);
+    MethodMan call(args);
+
+    DoubleColumn * c = call.nativeHolder<DoubleColumn>();
+    assert(c);
+
+    auto ts = c->timeSeries();
+    Column<DoubleColumn>::queue_work(args,
+                                     [ts](qdb_request * qdb_req) {
+                                         auto & points = qdb_req->input.content.doublePoints;
+                                         qdb_req->output.error = qdb_ts_double_insert(qdb_req->handle(), ts.c_str(),
+                                                                                      qdb_req->input.alias.c_str(),
+                                                                                      points.data(), points.size());
+                                     },
+                                     Entry<Column>::processVoidResult, &ArgsEaterBinder::doublePoints);
 }
 
-void Column::insertBlobs(const std::string & ts, const v8::FunctionCallbackInfo<v8::Value> & args)
+void BlobColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    Entry<Column>::queue_work(args,
-                              [ts](qdb_request * qdb_req) {
-                                  auto & points = qdb_req->input.content.blobPoints;
+    MethodMan call(args);
 
-                                  qdb_req->output.error =
-                                      qdb_ts_blob_insert(qdb_req->handle(), ts.c_str(), qdb_req->input.alias.c_str(),
-                                                         points.data(), points.size());
-                              },
-                              Entry<Column>::processVoidResult, &ArgsEaterBinder::blobPoints);
+    BlobColumn * c = call.nativeHolder<BlobColumn>();
+    assert(c);
+
+    auto ts = c->timeSeries();
+    Column<BlobColumn>::queue_work(args,
+                                   [ts](qdb_request * qdb_req) {
+                                       auto & points = qdb_req->input.content.blobPoints;
+
+                                       qdb_req->output.error = qdb_ts_blob_insert(qdb_req->handle(), ts.c_str(),
+                                                                                  qdb_req->input.alias.c_str(),
+                                                                                  points.data(), points.size());
+                                   },
+                                   Entry<Column>::processVoidResult, &ArgsEaterBinder::blobPoints);
 }
 
 } // quasardb namespace

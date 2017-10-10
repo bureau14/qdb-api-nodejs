@@ -38,7 +38,7 @@ void TimeSeries::processArrayColumnsInfoResult(uv_work_t * req, int status)
                 for (size_t i = 0; i < entries_count; ++i)
                 {
 
-                    auto obj = Column::MakeColumn(isolate, owner, entries[i].name, entries[i].type);
+                    auto obj = CreateColumn(isolate, owner, entries[i].name, entries[i].type);
                     if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
                 }
             }
@@ -77,7 +77,7 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
                 auto owner = v8::Local<v8::Object>::New(isolate, qdb_req->holder);
                 for (size_t i = 0; i < columns.size(); ++i)
                 {
-                    auto obj = Column::MakeColumn(isolate, owner, columns[i].name.c_str(), columns[i].type);
+                    auto obj = CreateColumn(isolate, owner, columns[i].name.c_str(), columns[i].type);
                     if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
                 }
             }

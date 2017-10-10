@@ -36,7 +36,8 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::TimeSeries::Init(exports);
     quasardb::DoublePoint::Init(exports);
     quasardb::BlobPoint::Init(exports);
-    quasardb::Column::Init(exports);
+    quasardb::DoubleColumn::Init(exports);
+    quasardb::BlobColumn::Init(exports);
 
     InitConstants(exports);
 }
