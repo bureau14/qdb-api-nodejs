@@ -1,6 +1,7 @@
 var test = require('unit.js');
 var qdb = require('..');
 var config = require('./config')
+var util = require('util');
 
 var cluster = new qdb.Cluster(config.cluster_uri);
 
@@ -328,5 +329,186 @@ describe('TimeSeries', function() {
 		});
 
 	}); // points insert
+
+	describe('ranges', function() {
+		var ts = null
+		var columns = null
+		var doublePoints = null
+		var blobPoints = null
+
+		before('init', function(done) {
+			var columnInfo = [qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")]
+			ts = cluster.ts("ranges")
+
+			ts.create(columnInfo, function(err, cols) {
+				test.must(err).be.equal(null);
+				test.must(cols.Length).be.equal(columnInfo.Length);
+
+				columns = cols;
+				done();
+			});
+		});
+
+		it('should insert double points', function(done) {
+			doublePoints = [
+				qdb.DoublePoint(new Date(2030, 10, 5, 6), 0.1 ),
+				qdb.DoublePoint(new Date(2030, 10, 5, 7), 0.2 ),
+				qdb.DoublePoint(new Date(2030, 10, 5, 8), 0.3 ),
+
+				qdb.DoublePoint(new Date(2049, 10, 5, 1), 0.4 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 2), 0.5 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 3), 0.6 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 4), 0.7 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 5), 0.8 ),
+			];
+
+			columns[0].insert(doublePoints, function(err) {
+				test.must(err).be.equal(null);
+				done();
+			});
+		});
+
+		it('should insert blob points', function(done) {
+			blobPoints = [
+				qdb.BlobPoint(new Date(2030, 10, 5, 6), new Buffer("#6")),
+				qdb.BlobPoint(new Date(2030, 10, 5, 7), new Buffer("#7")),
+				qdb.BlobPoint(new Date(2030, 10, 5, 8), new Buffer("#8")),
+
+				qdb.BlobPoint(new Date(2049, 10, 5, 1), new Buffer("#1")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 2), new Buffer("#2")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 3), new Buffer("#3")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 4), new Buffer("#4")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 5), new Buffer("#5")),
+			];
+
+			columns[1].insert(blobPoints, function(err) {
+				test.must(err).be.equal(null);
+				done();
+			});
+		});
+
+		it('should create valid range', function() {
+			var begin = new Date(2049, 10, 5, 1);
+			var end = new Date(2049, 10, 5, 3);
+			var range = ts.Range(begin, end);
+
+			test.object(range).hasProperty('begin');
+			test.object(range).hasProperty('end');
+
+			test.must(range.begin.getTime()).be.equal(begin.getTime());
+			test.must(range.end.getTime()).be.equal(end.getTime());
+		});
+
+		it('should retrieve nothing', function(done) {
+			var begin = new Date(2000, 10, 5, 2);
+			var end = new Date(2020, 10, 5, 4);
+			var range = ts.Range(begin, end);
+
+			columns[0].ranges([range], function(err, points) {
+				test.must(err).be.equal(null);
+				test.must(points.length).be.equal(0);
+
+				done();
+			});
+		});
+
+		it('should retrieve double points in range', function(done) {
+			var begin = new Date(2049, 10, 5, 2);
+			var end = new Date(2049, 10, 5, 4);
+			var range = ts.Range(begin, end);
+
+			columns[0].ranges([range], function(err, points) {
+				test.must(err).be.equal(null);
+
+				exp = doublePoints.slice(4, 6);
+				test.array(exp).is(points);
+				done();
+			});
+		});
+
+		it('should retrieve double points in all ranges', function(done) {
+			var b1 = new Date(2049, 10, 5, 2);
+			var e1 = new Date(2049, 10, 5, 4);
+			var b2 = new Date(2030, 10, 5, 7);
+			var e2 = new Date(2030, 10, 5, 8);
+			var ranges = [ts.Range(b1, e1), ts.Range(b2, e2)];
+
+			columns[0].ranges(ranges, function(err, points) {
+				test.must(err).be.equal(null);
+
+				exp = doublePoints.slice(1, 2).concat(doublePoints.slice(4, 6));
+				test.array(exp).is(points);
+				done();
+			});
+		});
+
+		it('should retrieve all double points', function(done) {
+			var begin = new Date(2000, 10, 5, 2);
+			var end = new Date(2049, 10, 5, 10);
+			var range = ts.Range(begin, end);
+
+			columns[0].ranges([range], function(err, points) {
+				test.must(err).be.equal(null);
+				test.array(doublePoints).is(points);
+
+				done();
+			});
+		});
+
+		var blobsCheck = function(exp, act) {
+			test.must(exp.length).be.equal(act.length);
+
+			for (var i = 0; i < act.length; i++) {
+				e = exp[i];
+				a = act[i];
+				test.must(e.timestamp.getTime()).be.equal(a.timestamp.getTime());
+				test.must(e.value.compare(a.value)).be.equal(0);
+			}
+		}
+
+		it('should retrieve blob points in range', function(done) {
+			var begin = new Date(2049, 10, 5, 2);
+			var end = new Date(2049, 10, 5, 4);
+			var range = ts.Range(begin, end);
+
+			columns[1].ranges([range], function(err, points) {
+				test.must(err).be.equal(null);
+
+				exp = blobPoints.slice(4, 6);
+				blobsCheck(exp, points);
+				done();
+			});
+		});
+
+		it('should retrieve blob points in all ranges', function(done) {
+			var b1 = new Date(2049, 10, 5, 2);
+			var e1 = new Date(2049, 10, 5, 4);
+			var b2 = new Date(2030, 10, 5, 7);
+			var e2 = new Date(2030, 10, 5, 8);
+			var ranges = [ts.Range(b1, e1), ts.Range(b2, e2)];
+
+			columns[1].ranges(ranges, function(err, points) {
+				test.must(err).be.equal(null);
+
+				exp = blobPoints.slice(1, 2).concat(blobPoints.slice(4, 6));
+				blobsCheck(exp, points);
+				done();
+			});
+		});
+
+
+		it('should retrieve all blob points', function(done) {
+			var begin = new Date(2000, 10, 5, 2);
+			var end = new Date(2049, 10, 5, 10);
+			var range = ts.Range(begin, end);
+
+			columns[1].ranges([range], function(err, points) {
+				test.must(err).be.equal(null);
+
+				blobsCheck(blobPoints, points);
+				done();
+			});
+		});
+	}); // Ranges
 
 }); // time series

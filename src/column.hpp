@@ -178,12 +178,16 @@ public:
     {
         Column<DoubleColumn>::Init(exports, "DoubleColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
             NODE_SET_PROTOTYPE_METHOD(tpl, "insert", DoubleColumn::insert);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", DoubleColumn::ranges);
         });
     }
 
-    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
-
 private:
+    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void ranges(const v8::FunctionCallbackInfo<v8::Value> & args);
+
+    static void processDoublePointArrayResult(uv_work_t * req, int status);
+
     static v8::Persistent<v8::Function> constructor;
 };
 
@@ -206,11 +210,15 @@ public:
     {
         Column<BlobColumn>::Init(exports, "BlobColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
             NODE_SET_PROTOTYPE_METHOD(tpl, "insert", BlobColumn::insert);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", BlobColumn::ranges);
         });
     }
 
 private:
     static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void ranges(const v8::FunctionCallbackInfo<v8::Value> & args);
+
+    static void processBlobPointArrayResult(uv_work_t * req, int status);
 
     static v8::Persistent<v8::Function> constructor;
 };

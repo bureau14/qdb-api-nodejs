@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cassert>
-
 #include "utilities.hpp"
 #include <node.h>
 #include <node_buffer.h>
@@ -21,9 +19,9 @@ namespace quasardb
 template <typename Derivate>
 class Point : public node::ObjectWrap
 {
-private:
-public:
     static const size_t FieldsCount = 1;
+
+public:
     Point(qdb_timespec_t ts) : timestamp(ts)
     {
     }
@@ -54,26 +52,9 @@ public:
         });
     }
 
-    template <typename F>
-    static void InitConstructorOnly(v8::Local<v8::Object> exports, const char * className, F init)
-    {
-        v8::Isolate * isolate = exports->GetIsolate();
-
-        // Prepare constructor template
-        v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Derivate::New);
-        tpl->SetClassName(v8::String::NewFromUtf8(isolate, className));
-        tpl->InstanceTemplate()->SetInternalFieldCount(Point<Derivate>::FieldsCount);
-
-        init(tpl);
-
-        Derivate::constructor.Reset(isolate, tpl->GetFunction());
-
-        exports->Set(v8::String::NewFromUtf8(isolate, className), tpl->GetFunction());
-    }
-
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        static const size_t argc = Derivate::ParameterCount + 1;
+        static const size_t argc = Derivate::ParametersCount;
         v8::Isolate * isolate = args.GetIsolate();
 
         auto argv = ArgumentsCopier<argc>::copy(args);
@@ -83,6 +64,24 @@ public:
             cons->NewInstance(isolate->GetCurrentContext(), argc, argv.data()).ToLocalChecked();
 
         args.GetReturnValue().Set(instance);
+    }
+
+private:
+    template <typename F>
+    static void InitConstructorOnly(v8::Local<v8::Object> exports, const char * className, F init)
+    {
+        v8::Isolate * isolate = exports->GetIsolate();
+
+        // Prepare constructor template
+        v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Derivate::New);
+        tpl->SetClassName(v8::String::NewFromUtf8(isolate, className));
+        tpl->InstanceTemplate()->SetInternalFieldCount(Derivate::FieldsCount);
+
+        init(tpl);
+
+        Derivate::constructor.Reset(isolate, tpl->GetFunction());
+
+        exports->Set(v8::String::NewFromUtf8(isolate, className), tpl->GetFunction());
     }
 
     static void getTimestamp(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -108,20 +107,64 @@ class DoublePoint : public Point<DoublePoint>
 {
     friend class Point<DoublePoint>;
 
-public:
-    static const size_t ParameterCount = 1;
+    static const size_t ParametersCount = 2;
 
     DoublePoint(qdb_timespec_t ts, double v) : Point<DoublePoint>(ts), value(v)
     {
     }
-    ~DoublePoint()
+
+    virtual ~DoublePoint()
     {
     }
 
-    // static void Init(v8::Isolate * isolate)
+public:
     static void Init(v8::Local<v8::Object> exports)
     {
         Point<DoublePoint>::Init(exports, "DoublePoint", [](v8::Local<v8::FunctionTemplate> tpl) {});
+    }
+
+    static v8::Local<v8::Object> MakePoint(v8::Isolate * isolate, qdb_timespec_t ts, double value)
+    {
+        static const size_t argc = ParametersCount;
+
+        v8::Local<v8::Value> argv[argc] = {
+            v8::Date::New(isolate, qdb_timespec_to_ms(ts)), v8::Number::New(isolate, value),
+        };
+
+        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
+        assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
+        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+    }
+
+private:
+    static void New(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        if (args.IsConstructCall())
+        {
+            MethodMan call(args);
+            if (args.Length() != ParametersCount)
+            {
+                call.throwException("Wrong number of arguments");
+                return;
+            }
+
+            if (!args[0]->IsDate() || !args[1]->IsNumber())
+            {
+                call.throwException("Invalid parameter supplied to object");
+                return;
+            }
+
+            auto ms = args[0]->NumberValue();
+            auto value = args[1]->NumberValue();
+            auto obj = new DoublePoint(ms_to_qdb_timespec(ms), value);
+
+            obj->Wrap(args.This());
+            args.GetReturnValue().Set(args.This());
+        }
+        else
+        {
+            NewInstance(args);
+        }
     }
 
     static void getValue(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -136,42 +179,6 @@ public:
     }
 
 private:
-    static void New(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        if (args.IsConstructCall())
-        {
-            assert(args.Length() == 2);
-            // Invoked as constructor: `new xPoint(...)`
-
-            MethodMan call(args);
-
-            if (!args[0]->IsDate())
-            {
-                call.throwException("Expected Date as first argument");
-                return;
-            }
-
-            if (!args[1]->IsNumber())
-            {
-                call.throwException("Expected Number as second argument");
-                return;
-            }
-
-            auto ms = args[0]->NumberValue();
-            auto value = args[1]->NumberValue();
-            auto obj = new DoublePoint(ms_to_qdb_timespec(ms), value);
-
-            obj->Wrap(args.This());
-            args.GetReturnValue().Set(args.This());
-        }
-        else
-        {
-            // Invoked as plain function `xPoint(...)`, turn into construct call.
-            NewInstance(args);
-        }
-    }
-
-private:
     double value;
 
     static v8::Persistent<v8::Function> constructor;
@@ -181,23 +188,40 @@ class BlobPoint : public Point<BlobPoint>
 {
     friend class Point<BlobPoint>;
 
-public:
-    static const size_t ParameterCount = 1;
+    static const size_t ParametersCount = 2;
 
     BlobPoint(qdb_timespec_t ts, v8::Isolate * isolate, v8::Local<v8::Object> obj)
         : Point<BlobPoint>(ts), buffer(isolate, obj)
     {
     }
-    ~BlobPoint()
+
+    virtual ~BlobPoint()
     {
         this->buffer.Reset();
     }
 
+public:
     static void Init(v8::Local<v8::Object> exports)
     {
         Point<BlobPoint>::Init(exports, "BlobPoint", [](v8::Local<v8::FunctionTemplate> tpl) {});
     }
 
+    static v8::Local<v8::Object> MakePoint(v8::Isolate * isolate, qdb_timespec_t ts, const void * content, size_t size)
+    {
+        static const size_t argc = ParametersCount;
+
+        auto bufp = static_cast<const char *>(content);
+        v8::Local<v8::Value> argv[argc] = {
+            // TODO: See the caller site for the reason of COPY
+            v8::Date::New(isolate, qdb_timespec_to_ms(ts)), node::Buffer::Copy(isolate, bufp, size).ToLocalChecked(),
+        };
+
+        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
+        assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
+        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+    }
+
+private:
     static void getValue(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         MethodMan call(args);
@@ -211,25 +235,20 @@ public:
         args.GetReturnValue().Set(local);
     }
 
-private:
     static void New(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         if (args.IsConstructCall())
         {
-            assert(args.Length() == 2);
-            // Invoked as constructor: `new xPoint(...)`
-
             MethodMan call(args);
-
-            if (!args[0]->IsDate())
+            if (args.Length() != ParametersCount)
             {
-                call.throwException("Expected Date as first argument");
+                call.throwException("Wrong number of arguments");
                 return;
             }
 
-            if (!args[1]->IsObject())
+            if (!args[0]->IsDate() || !args[1]->IsObject())
             {
-                call.throwException("Expected Buffer as second argument");
+                call.throwException("Invalid parameter supplied to object");
                 return;
             }
 
@@ -241,7 +260,6 @@ private:
         }
         else
         {
-            // Invoked as plain function `xPoint(...)`, turn into construct call.
             NewInstance(args);
         }
     }

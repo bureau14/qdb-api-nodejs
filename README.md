@@ -340,6 +340,27 @@ ts.Create([ts.DoubleColumnInfo("ColDouble"), ts.BlobColumnInfo("ColBlob")], func
 
 ```
 
+Getting values from time series columns:
+
+
+```javascript
+var ts = c.ts('temperature');
+
+ts.Create([ts.DoubleColumnInfo("ColDouble"), ts.BlobColumnInfo("ColBlob")], function(err, columns){
+	if (err) {
+		// ...
+	}
+
+	// ... populating with values
+
+	var range = ts.Range(new Date(2021, 10, 10), new Date(2021, 11, 11));
+	column[0].ranges([range], function(err, points){
+		// ...
+	});
+});
+
+```
+
 ## Not supported yet
 
 The quasardb nodejs addon is still a work in progress, the following quasardb features are not supported:

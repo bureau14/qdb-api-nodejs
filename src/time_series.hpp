@@ -40,6 +40,9 @@ public:
             NODE_SET_PROTOTYPE_METHOD(tpl, "insert", insert);
             NODE_SET_PROTOTYPE_METHOD(tpl, "columns", columns);
 
+            NODE_SET_PROTOTYPE_METHOD(tpl, "Range", range);
+
+            // Export to global namespace
             NODE_SET_METHOD(exports, "DoubleColumnInfo", doubleColumnInfo);
             NODE_SET_METHOD(exports, "BlobColumnInfo", blobColumnInfo);
 
@@ -89,10 +92,10 @@ private:
         v8::Isolate * isolate = args.GetIsolate();
         v8::Local<v8::Object> info = v8::Object::New(isolate);
 
+        MethodMan call(args);
         if (args.Length() != 1)
         {
-            const char * msg = "Expected one argument - column name";
-            isolate->ThrowException(v8::Exception::SyntaxError(v8::String::NewFromUtf8(isolate, msg)));
+            call.throwException("Wrong number of arguments");
             return;
         }
 
@@ -100,6 +103,30 @@ private:
         info->Set(v8::String::NewFromUtf8(isolate, "type"), v8::Integer::New(isolate, type));
 
         args.GetReturnValue().Set(info);
+    }
+
+    static void range(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        v8::Isolate * isolate = args.GetIsolate();
+        v8::Local<v8::Object> obj = v8::Object::New(isolate);
+
+        MethodMan call(args);
+        if (args.Length() != 2)
+        {
+            call.throwException("Wrong number of arguments");
+            return;
+        }
+
+        if (!args[0]->IsDate() || !args[1]->IsDate())
+        {
+            call.throwException("Wrong type of arguments");
+            return;
+        }
+
+        obj->Set(v8::String::NewFromUtf8(isolate, "begin"), args[0]);
+        obj->Set(v8::String::NewFromUtf8(isolate, "end"), args[1]);
+
+        args.GetReturnValue().Set(obj);
     }
 
     template <typename Func>

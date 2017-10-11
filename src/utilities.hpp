@@ -115,12 +115,14 @@ struct qdb_request
 
             std::string str;
             std::vector<std::string> strs;
-            std::vector<column_info> columnsInfo;
             slice buffer;
             qdb_int_t value;
 
+            // Time series
+            std::vector<column_info> columnsInfo;
             std::vector<qdb_ts_double_point> doublePoints;
             std::vector<qdb_ts_blob_point> blobPoints;
+            std::vector<qdb_ts_filtered_range_t> ranges;
         };
 
         query_content content;
@@ -582,6 +584,7 @@ public:
                 auto point = f(ms_to_qdb_timespec(ms), value);
 
                 if (!point.second) return point_vector();
+                res.push_back(point.first);
             }
         }
 
@@ -611,6 +614,46 @@ public:
             p.content_length = node::Buffer::Length(value);
             return std::make_pair(p, true);
         });
+    }
+
+    std::vector<qdb_ts_filtered_range_t> eatAndConvertRangeArray(void)
+    {
+        using range_vector = std::vector<qdb_ts_filtered_range_t>;
+        range_vector res;
+
+        auto arr = eatArray();
+        if (arr.second)
+        {
+            auto len = arr.first->Length();
+            res.reserve(len);
+
+            auto beginProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "begin");
+            auto endProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "end");
+
+            for (auto i = 0u; i < len; ++i)
+            {
+                auto vi = arr.first->Get(i);
+                if (!vi->IsObject()) return range_vector();
+
+                auto obj = vi->ToObject();
+                auto begin = obj->Get(beginProp);
+                auto end = obj->Get(endProp);
+
+                if (!begin->IsDate() || !end->IsDate()) return range_vector();
+
+                auto beginMs = v8::Local<v8::Date>::Cast(begin)->ValueOf();
+                auto endMs = v8::Local<v8::Date>::Cast(end)->ValueOf();
+
+                qdb_ts_filtered_range_t r;
+                r.range.begin = ms_to_qdb_timespec(beginMs);
+                r.range.end = ms_to_qdb_timespec(endMs);
+                r.filter.type = qdb_ts_filter_none;
+
+                res.push_back(r);
+            }
+        }
+
+        return res;
     }
 
     v8::Local<v8::Object> eatHolder(void)
@@ -707,6 +750,12 @@ public:
     qdb_request & blobPoints(qdb_request & req)
     {
         req.input.content.blobPoints = _eater.eatAndConvertBlobPointsArray();
+        return req;
+    }
+
+    qdb_request & ranges(qdb_request & req)
+    {
+        req.input.content.ranges = _eater.eatAndConvertRangeArray();
         return req;
     }
 
