@@ -57,7 +57,7 @@ public:
         static const size_t argc = Derivate::ParametersCount;
         v8::Isolate * isolate = args.GetIsolate();
 
-        auto argv = CopyArguments<argc>(args);
+        auto argv = ArgumentsCopier<argc>::copy(args);
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
         v8::Local<v8::Object> instance =

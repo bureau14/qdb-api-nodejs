@@ -796,11 +796,24 @@ private:
 };
 
 template <size_t ArgsLength>
-std::array<v8::Local<v8::Value>, ArgsLength> CopyArguments(const v8::FunctionCallbackInfo<v8::Value> & args);
+struct ArgumentsCopier;
 
 template <>
-std::array<v8::Local<v8::Value>, 1> CopyArguments<1>(const v8::FunctionCallbackInfo<v8::Value> & args);
+struct ArgumentsCopier<1>
+{
+    static inline std::array<v8::Local<v8::Value>, 1> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        return {{args[0]}};
+    }
+};
+
 template <>
-std::array<v8::Local<v8::Value>, 2> CopyArguments<2>(const v8::FunctionCallbackInfo<v8::Value> & args);
+struct ArgumentsCopier<2>
+{
+    static inline std::array<v8::Local<v8::Value>, 2> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        return {{args[0], args[1]}};
+    }
+};
 
 } // namespace quasardb

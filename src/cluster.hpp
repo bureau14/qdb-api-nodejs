@@ -255,7 +255,7 @@ public:
             v8::Isolate * isolate = v8::Isolate::GetCurrent();
             // Invoked as plain function `MyObject(...)`, turn into construct call.
             assert(args.Length() == ArgsLength);
-            auto argv = CopyArguments<ArgsLength>(args);
+            auto argv = ArgumentsCopier<ArgsLength>::copy(args);
             v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
             args.GetReturnValue().Set(
                 cons->NewInstance(isolate->GetCurrentContext(), ArgsLength, argv.data()).ToLocalChecked());
@@ -495,6 +495,7 @@ private:
 
     static v8::Persistent<v8::Function> constructor;
 };
+
 
 template <typename Object>
 struct Cluster::Factory<Object, 0>
