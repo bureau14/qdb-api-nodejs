@@ -48,13 +48,15 @@ public:
             auto s = v8::Signature::New(isolate, tpl);
             auto proto = tpl->PrototypeTemplate();
 
-            proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "name"),
-                                       v8::FunctionTemplate::New(isolate, Column::getName, v8::Local<v8::Value>(), s),
-                                       v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+            proto->SetAccessorProperty(
+                v8::String::NewFromUtf8(isolate, "name"),
+                v8::FunctionTemplate::New(isolate, Column<Derivate>::getName, v8::Local<v8::Value>(), s),
+                v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
-            proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "type"),
-                                       v8::FunctionTemplate::New(isolate, Column::getType, v8::Local<v8::Value>(), s),
-                                       v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+            proto->SetAccessorProperty(
+                v8::String::NewFromUtf8(isolate, "type"),
+                v8::FunctionTemplate::New(isolate, Column<Derivate>::getType, v8::Local<v8::Value>(), s),
+                v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
         });
     }
@@ -178,6 +180,7 @@ private:
         });
     }
 
+private:
     std::string ts;
     qdb_ts_column_type_t type;
 };

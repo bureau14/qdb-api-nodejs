@@ -206,13 +206,13 @@ public:
         Point<BlobPoint>::Init(exports, "BlobPoint", [](v8::Local<v8::FunctionTemplate> tpl) {});
     }
 
-    static v8::Local<v8::Object> MakePoint(v8::Isolate * isolate, qdb_timespec_t ts, const void * content, size_t size)
+    static v8::Local<v8::Object>
+    MakePointWithCopy(v8::Isolate * isolate, qdb_timespec_t ts, const void * content, size_t size)
     {
         static const size_t argc = ParametersCount;
 
         auto bufp = static_cast<const char *>(content);
         v8::Local<v8::Value> argv[argc] = {
-            // TODO: See the caller site for the reason of COPY
             v8::Date::New(isolate, qdb_timespec_to_ms(ts)), node::Buffer::Copy(isolate, bufp, size).ToLocalChecked(),
         };
 

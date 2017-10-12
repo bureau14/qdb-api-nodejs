@@ -36,73 +36,37 @@ public:
     static void Init(v8::Local<v8::Object> exports)
     {
         Entry<TimeSeries>::Init(exports, "TimeSeries", [exports](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "create", create);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", insert);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "create", newColumnTpl<qdb_ts_create>);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", newColumnTpl<qdb_ts_insert_columns>);
             NODE_SET_PROTOTYPE_METHOD(tpl, "columns", columns);
 
             NODE_SET_PROTOTYPE_METHOD(tpl, "Range", range);
 
             // Export to global namespace
-            NODE_SET_METHOD(exports, "DoubleColumnInfo", doubleColumnInfo);
-            NODE_SET_METHOD(exports, "BlobColumnInfo", blobColumnInfo);
+            NODE_SET_METHOD(exports, "DoubleColumnInfo", columnInfoTpl<qdb_ts_column_double>);
+            NODE_SET_METHOD(exports, "BlobColumnInfo", columnInfoTpl<qdb_ts_column_blob>);
 
             AddTsColumnType(exports, "TS_COLUMN_BLOB", qdb_ts_column_blob);
             AddTsColumnType(exports, "TS_COLUMN_DOUBLE", qdb_ts_column_double);
         });
     }
 
-    static void blobColumnInfo(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        columnInfo(args, qdb_ts_column_blob);
-    }
-
-    static void doubleColumnInfo(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        columnInfo(args, qdb_ts_column_double);
-    }
-
-    static void create(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        createOrInsert(args, qdb_ts_create);
-    }
-
-    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        createOrInsert(args, qdb_ts_insert_columns);
-    }
+private:
+    static void New(const v8::FunctionCallbackInfo<v8::Value> & args);
 
     static void columns(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<TimeSeries>::queue_work(args,
                                       [](qdb_request * qdb_req) {
-                                          qdb_req->output.error = qdb_ts_list_columns(
-                                              qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                              reinterpret_cast<qdb_ts_column_info_t **>(
-                                                  const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
-                                              &(qdb_req->output.content.buffer.size));
+                                          auto alias = qdb_req->input.alias.c_str();
+                                          auto info = reinterpret_cast<qdb_ts_column_info_t **>(
+                                              const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+                                          auto count = &(qdb_req->output.content.buffer.size);
+
+                                          qdb_req->output.error =
+                                              qdb_ts_list_columns(qdb_req->handle(), alias, info, count);
                                       },
                                       TimeSeries::processArrayColumnsInfoResult, &ArgsEaterBinder::holder);
-    }
-
-private:
-    static void New(const v8::FunctionCallbackInfo<v8::Value> & args);
-
-    static void columnInfo(const v8::FunctionCallbackInfo<v8::Value> & args, qdb_ts_column_type_t type)
-    {
-        v8::Isolate * isolate = args.GetIsolate();
-        v8::Local<v8::Object> info = v8::Object::New(isolate);
-
-        MethodMan call(args);
-        if (args.Length() != 1)
-        {
-            call.throwException("Wrong number of arguments");
-            return;
-        }
-
-        info->Set(v8::String::NewFromUtf8(isolate, "name"), args[0]);
-        info->Set(v8::String::NewFromUtf8(isolate, "type"), v8::Integer::New(isolate, type));
-
-        args.GetReturnValue().Set(info);
     }
 
     static void range(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -129,25 +93,44 @@ private:
         args.GetReturnValue().Set(obj);
     }
 
-    template <typename Func>
-    static void createOrInsert(const v8::FunctionCallbackInfo<v8::Value> & args, Func f)
+    template <qdb_ts_column_type_t type>
+    static void columnInfoTpl(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        v8::Isolate * isolate = args.GetIsolate();
+        v8::Local<v8::Object> info = v8::Object::New(isolate);
+
+        MethodMan call(args);
+        if (args.Length() != 1)
+        {
+            call.throwException("Wrong number of arguments");
+            return;
+        }
+
+        info->Set(v8::String::NewFromUtf8(isolate, "name"), args[0]);
+        info->Set(v8::String::NewFromUtf8(isolate, "type"), v8::Integer::New(isolate, type));
+
+        args.GetReturnValue().Set(info);
+    }
+
+    template <qdb_error_t func(qdb_handle_t, const char *, const qdb_ts_column_info_t *, qdb_size_t)>
+    static void newColumnTpl(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<TimeSeries>::queue_work(
             args,
-            [f](qdb_request * qdb_req) {
+            [](qdb_request * qdb_req) {
                 auto & info = qdb_req->input.content.columnsInfo;
-                std::vector<qdb_ts_column_info_t> columns;
-                columns.resize(info.size());
+                std::vector<qdb_ts_column_info_t> cols;
+                cols.resize(info.size());
 
-                std::transform(info.cbegin(), info.cend(), columns.begin(), [qdb_req](const column_info & ci) {
+                std::transform(info.cbegin(), info.cend(), cols.begin(), [qdb_req](const column_info & ci) {
                     qdb_ts_column_info_t info;
                     info.name = ci.name.c_str();
                     info.type = ci.type;
                     return info;
                 });
 
-                qdb_req->output.error =
-                    f(qdb_req->handle(), qdb_req->input.alias.c_str(), columns.data(), columns.size());
+                auto alias = qdb_req->input.alias.c_str();
+                qdb_req->output.error = func(qdb_req->handle(), alias, cols.data(), cols.size());
             },
             TimeSeries::processColumnsCreateResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
     }

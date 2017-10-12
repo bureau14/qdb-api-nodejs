@@ -22,9 +22,9 @@ void BlobColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
     auto ts = c->timeSeries();
     Column<BlobColumn>::queue_work(args,
                                    [ts](qdb_request * qdb_req) {
+                                       auto alias = qdb_req->input.alias.c_str();
                                        auto & points = qdb_req->input.content.blobPoints;
-                                       qdb_req->output.error = qdb_ts_blob_insert(qdb_req->handle(), ts.c_str(),
-                                                                                  qdb_req->input.alias.c_str(),
+                                       qdb_req->output.error = qdb_ts_blob_insert(qdb_req->handle(), ts.c_str(), alias,
                                                                                   points.data(), points.size());
                                    },
                                    Entry<Column>::processVoidResult, &ArgsEaterBinder::blobPoints);
@@ -38,16 +38,18 @@ void BlobColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
     assert(c);
 
     auto ts = c->timeSeries();
-    BlobColumn::queue_work(
-        args,
-        [ts](qdb_request * qdb_req) {
-            auto & ranges = qdb_req->input.content.ranges;
-            qdb_req->output.error = qdb_ts_blob_get_ranges(
-                qdb_req->handle(), ts.c_str(), qdb_req->input.alias.c_str(), ranges.data(), ranges.size(),
-                reinterpret_cast<qdb_ts_blob_point **>(const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
-                &(qdb_req->output.content.buffer.size));
-        },
-        BlobColumn::processBlobPointArrayResult, &ArgsEaterBinder::ranges);
+    BlobColumn::queue_work(args,
+                           [ts](qdb_request * qdb_req) {
+                               auto alias = qdb_req->input.alias.c_str();
+                               auto & ranges = qdb_req->input.content.ranges;
+                               auto bufp = reinterpret_cast<qdb_ts_blob_point **>(
+                                   const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+                               auto count = &(qdb_req->output.content.buffer.size);
+
+                               qdb_req->output.error = qdb_ts_blob_get_ranges(
+                                   qdb_req->handle(), ts.c_str(), alias, ranges.data(), ranges.size(), bufp, count);
+                           },
+                           BlobColumn::processBlobPointArrayResult, &ArgsEaterBinder::ranges);
 }
 
 void DoubleColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -60,10 +62,11 @@ void DoubleColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
     auto ts = c->timeSeries();
     Column<DoubleColumn>::queue_work(args,
                                      [ts](qdb_request * qdb_req) {
+                                         auto alias = qdb_req->input.alias.c_str();
                                          auto & points = qdb_req->input.content.doublePoints;
-                                         qdb_req->output.error = qdb_ts_double_insert(qdb_req->handle(), ts.c_str(),
-                                                                                      qdb_req->input.alias.c_str(),
-                                                                                      points.data(), points.size());
+
+                                         qdb_req->output.error = qdb_ts_double_insert(
+                                             qdb_req->handle(), ts.c_str(), alias, points.data(), points.size());
                                      },
                                      Entry<Column>::processVoidResult, &ArgsEaterBinder::doublePoints);
 }
@@ -76,16 +79,18 @@ void DoubleColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
     assert(c);
 
     auto ts = c->timeSeries();
-    DoubleColumn::queue_work(
-        args,
-        [ts](qdb_request * qdb_req) {
-            auto & ranges = qdb_req->input.content.ranges;
-            qdb_req->output.error = qdb_ts_double_get_ranges(
-                qdb_req->handle(), ts.c_str(), qdb_req->input.alias.c_str(), ranges.data(), ranges.size(),
-                reinterpret_cast<qdb_ts_double_point **>(const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
-                &(qdb_req->output.content.buffer.size));
-        },
-        DoubleColumn::processDoublePointArrayResult, &ArgsEaterBinder::ranges);
+    DoubleColumn::queue_work(args,
+                             [ts](qdb_request * qdb_req) {
+                                 auto alias = qdb_req->input.alias.c_str();
+                                 auto & ranges = qdb_req->input.content.ranges;
+                                 auto bufp = reinterpret_cast<qdb_ts_double_point **>(
+                                     const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+                                 auto count = &(qdb_req->output.content.buffer.size);
+
+                                 qdb_req->output.error = qdb_ts_double_get_ranges(
+                                     qdb_req->handle(), ts.c_str(), alias, ranges.data(), ranges.size(), bufp, count);
+                             },
+                             DoubleColumn::processDoublePointArrayResult, &ArgsEaterBinder::ranges);
 }
 
 void BlobColumn::processBlobPointArrayResult(uv_work_t * req, int status)
@@ -109,11 +114,8 @@ void BlobColumn::processBlobPointArrayResult(uv_work_t * req, int status)
             {
                 for (size_t i = 0; i < entries_count; ++i)
                 {
-                    // TODO: It makes COPY of buffer, because we have one big chunk
-                    // which then splitted by blob_points
-                    // Need to add some custom deleter that could keep account of chunks
-                    auto obj = BlobPoint::MakePoint(isolate, entries[i].timestamp, entries[i].content,
-                                                    entries[i].content_length);
+                    auto obj = BlobPoint::MakePointWithCopy(isolate, entries[i].timestamp, entries[i].content,
+                                                            entries[i].content_length);
 
                     if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
                 }
