@@ -32,6 +32,7 @@
         "src/column.hpp",
         "src/cluster_data.hpp",
         "src/utilities.hpp",
+        "src/utilities.cpp",
         "test/test.js"
       ],
       "conditions": [
