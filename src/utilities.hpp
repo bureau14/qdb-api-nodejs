@@ -7,6 +7,7 @@
 #include <qdb/ts.h>
 #include <node.h>
 #include <node_buffer.h>
+#include <array>
 #include <functional>
 #include <utility>
 #include <vector>
