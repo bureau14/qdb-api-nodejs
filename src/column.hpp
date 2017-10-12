@@ -246,7 +246,7 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
-v8::Local<v8::Object>
+std::pair<v8::Local<v8::Object>, bool>
 CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type);
 
 } // quasardb namespace

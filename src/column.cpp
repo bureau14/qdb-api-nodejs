@@ -171,23 +171,22 @@ void DoubleColumn::processDoublePointArrayResult(uv_work_t * req, int status)
     });
 }
 
-// TODO(denisb): Caller should know that in case of error return value is error
-v8::Local<v8::Object>
+std::pair<v8::Local<v8::Object>, bool>
 CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type)
 {
     switch (type)
     {
     case qdb_ts_column_blob:
-        return BlobColumn::MakeColumn(isolate, owner, name);
+        return std::make_pair(BlobColumn::MakeColumn(isolate, owner, name), true);
         break;
     case qdb_ts_column_double:
-        return DoubleColumn::MakeColumn(isolate, owner, name);
+        return std::make_pair(DoubleColumn::MakeColumn(isolate, owner, name), true);
         break;
     case qdb_ts_column_uninitialized:
-        return Error::MakeError(isolate, qdb_e_uninitialized);
+        return std::make_pair(Error::MakeError(isolate, qdb_e_uninitialized), false);
     }
 
-    return Error::MakeError(isolate, qdb_e_not_implemented);
+    return std::make_pair(Error::MakeError(isolate, qdb_e_not_implemented), false);
 }
 
 } // quasardb namespace
