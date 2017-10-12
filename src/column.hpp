@@ -41,6 +41,8 @@ public:
             // call init function of derivate
             init(tpl);
 
+            NODE_SET_PROTOTYPE_METHOD(tpl, "erase", Column<Derivate>::erase);
+
             v8::Isolate * isolate = exports->GetIsolate();
 
             auto s = v8::Signature::New(isolate, tpl);
@@ -75,6 +77,27 @@ public:
     }
 
 private:
+    static void erase(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        MethodMan call(args);
+
+        Derivate * c = call.nativeHolder<Derivate>();
+        assert(c);
+
+        auto ts = c->timeSeries();
+        Column<Derivate>::queue_work(args,
+                                     [ts](qdb_request * qdb_req) {
+                                         auto & ranges = qdb_req->input.content.ranges;
+                                         auto erased = &qdb_req->output.content.uvalue;
+                                         auto alias = qdb_req->input.alias.c_str();
+
+                                         qdb_req->output.error =
+                                             qdb_ts_erase_ranges(qdb_req->handle(), ts.c_str(), alias, ranges.data(),
+                                                                 ranges.size(), erased);
+                                     },
+                                     Column<Derivate>::processUintegerResult, &ArgsEaterBinder::ranges);
+    }
+
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         v8::Isolate * isolate = args.GetIsolate();

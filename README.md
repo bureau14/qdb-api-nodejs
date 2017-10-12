@@ -361,6 +361,31 @@ ts.Create([ts.DoubleColumnInfo("ColDouble"), ts.BlobColumnInfo("ColBlob")], func
 
 ```
 
+Erasing values from time series columns:
+
+
+```javascript
+var ts = c.ts('temperature');
+
+ts.Create([ts.DoubleColumnInfo("ColDouble"), ts.BlobColumnInfo("ColBlob")], function(err, columns) {
+	if (err) {
+		// ...
+	}
+
+	// ... populating with values
+
+	var ranges = [
+					ts.Range(new Date(2021, 10, 10, 8, 0), new Date(2021, 10, 10, 12, 0)),
+					ts.Range(new Date(2021, 11, 11, 0, 0), new Date(2021, 11, 11, 10, 0))
+	];
+
+	column[0].erase(ranges, function(err, erased) {
+		// ...
+	});
+});
+
+```
+
 ## Not supported yet
 
 The quasardb nodejs addon is still a work in progress, the following quasardb features are not supported:

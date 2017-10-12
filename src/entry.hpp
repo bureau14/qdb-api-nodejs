@@ -452,6 +452,18 @@ public:
         });
     }
 
+    static void processUintegerResult(uv_work_t * req, int status)
+    {
+        processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+            const auto error_code = processErrorCode(isolate, status, qdb_req);
+            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok))
+                                   ? v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.uvalue))
+                                   : v8::Number::New(isolate, 0.0);
+
+            return make_value_array(error_code, result_data);
+        });
+    }
+
     static void processDateResult(uv_work_t * req, int status)
     {
         processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {

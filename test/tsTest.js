@@ -1,7 +1,6 @@
 var test = require('unit.js');
 var qdb = require('..');
 var config = require('./config')
-var util = require('util');
 
 var cluster = new qdb.Cluster(config.cluster_uri);
 
@@ -421,7 +420,7 @@ describe('TimeSeries', function() {
 				test.must(err).be.equal(null);
 
 				exp = doublePoints.slice(4, 6);
-				test.array(exp).is(points);
+				test.array(points).is(exp);
 				done();
 			});
 		});
@@ -437,7 +436,7 @@ describe('TimeSeries', function() {
 				test.must(err).be.equal(null);
 
 				exp = doublePoints.slice(1, 2).concat(doublePoints.slice(4, 6));
-				test.array(exp).is(points);
+				test.array(points).is(exp);
 				done();
 			});
 		});
@@ -449,7 +448,7 @@ describe('TimeSeries', function() {
 
 			columns[0].ranges([range], function(err, points) {
 				test.must(err).be.equal(null);
-				test.array(doublePoints).is(points);
+				test.array(points).is(doublePoints);
 
 				done();
 			});
@@ -496,7 +495,6 @@ describe('TimeSeries', function() {
 			});
 		});
 
-
 		it('should retrieve all blob points', function(done) {
 			var begin = new Date(2000, 10, 5, 2);
 			var end = new Date(2049, 10, 5, 10);
@@ -506,6 +504,66 @@ describe('TimeSeries', function() {
 				test.must(err).be.equal(null);
 
 				blobsCheck(blobPoints, points);
+				done();
+			});
+		});
+
+		it('should erase ranges of double points', function(done) {
+			var b1 = new Date(2030, 10, 5, 6);
+			var e1 = new Date(2030, 10, 5, 10);
+			var b2 = new Date(2049, 10, 5, 5);
+			var e2 = new Date(2049, 10, 5, 6);
+			var ranges = [ts.Range(b1, e1), ts.Range(b2, e2)];
+
+			columns[0].erase(ranges, function(err, erased) {
+				test.must(err).be.equal(null);
+				test.must(erased).be.equal(4);
+
+				done();
+			});
+		});
+
+		it('should erase ranges of blob points', function(done) {
+			var b1 = new Date(2030, 10, 5, 6);
+			var e1 = new Date(2030, 10, 5, 10);
+			var b2 = new Date(2049, 10, 5, 5);
+			var e2 = new Date(2049, 10, 5, 6);
+			var ranges = [ts.Range(b1, e1), ts.Range(b2, e2)];
+
+			columns[1].erase(ranges, function(err, erased) {
+				test.must(err).be.equal(null);
+				test.must(erased).be.equal(4);
+
+				done();
+			});
+		});
+
+		it('should retrieve all remaining double points', function(done) {
+			var begin = new Date(2000, 10, 5, 2);
+			var end = new Date(2049, 10, 5, 10);
+			var range = ts.Range(begin, end);
+
+			columns[0].ranges([range], function(err, points) {
+				test.must(err).be.equal(null);
+
+				exp = doublePoints.slice(3, 7);
+				test.array(points).is(exp);
+
+				done();
+			});
+		});
+
+		it('should retrieve all remaining blob points', function(done) {
+			var begin = new Date(2000, 10, 5, 2);
+			var end = new Date(2049, 10, 5, 10);
+			var range = ts.Range(begin, end);
+
+			columns[1].ranges([range], function(err, points) {
+				test.must(err).be.equal(null);
+
+				exp = blobPoints.slice(3, 7);
+				blobsCheck(exp, points);
+
 				done();
 			});
 		});
