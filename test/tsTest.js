@@ -569,4 +569,98 @@ describe('TimeSeries', function() {
 		});
 	}); // Ranges
 
+	describe('aggregations', function() {
+		var ts = null
+		var columns = null
+		var doublePoints = null
+		var blobPoints = null
+
+		before('init', function(done) {
+			var columnInfo = [qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")]
+			ts = cluster.ts("aggregations")
+
+			ts.create(columnInfo, function(err, cols) {
+				test.must(err).be.equal(null);
+				test.must(cols.Length).be(columnInfo.Length);
+
+				columns = cols;
+				done();
+			});
+		});
+
+		it('should insert double points', function(done) {
+			doublePoints = [
+				qdb.DoublePoint(new Date(2049, 10, 5, 1), 0.1 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 2), 0.2 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 3), 0.3 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 4), 0.4 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 5), 0.5 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 6), 0.1 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 7), 0.2 ),
+				qdb.DoublePoint(new Date(2049, 10, 5, 8), 0.3 ),
+			];
+
+			columns[0].insert(doublePoints, function(err) {
+				test.must(err).be.equal(null);
+				done();
+			});
+		});
+
+		it('should insert blob points', function(done) {
+			blobPoints = [
+				qdb.BlobPoint(new Date(2049, 10, 5, 1), new Buffer("#1")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 2), new Buffer("#2")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 3), new Buffer("#3")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 4), new Buffer("#4")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 5), new Buffer("#5")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 6), new Buffer("#6")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 7), new Buffer("#7")),
+				qdb.BlobPoint(new Date(2049, 10, 5, 8), new Buffer("#8")),
+
+			];
+
+			columns[1].insert(blobPoints, function(err) {
+				test.must(err).be.equal(null);
+				done();
+			});
+		});
+
+		it('should create valid aggregation', function() {
+			var range = ts.Range(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
+			var agg = qdb.TsAggregation(qdb.AggFirst, range)
+			var aggc = qdb.TsAggregation(qdb.AggLast, range, 42)
+
+			test.object(agg).hasProperty('type');
+			test.object(agg).hasProperty('range');
+			test.object(agg).hasProperty('count');
+
+			test.must(agg.type).be(qdb.AggFirst);
+			test.must(aggc.type).be(qdb.AggLast);
+
+			test.must(agg.range).be(range);
+			test.must(agg.count).eql(0);
+			test.must(aggc.count).eql(42);
+		});
+
+		it('should find first and last points', function(done) {
+			var range = ts.Range(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
+			var first = qdb.TsAggregation(qdb.AggFirst, range)
+			var last = qdb.TsAggregation(qdb.AggLast, range)
+
+			columns[0].aggregate([first, last], function(err, results) {
+				test.must(err).be.equal(null);
+				test.must(results).not.be.equal(null);
+				test.must(results.length).be(2);
+
+				var act = doublePoints[0];
+				test.must(results[0]).eql(act);
+
+				act = doublePoints[doublePoints.length-1];
+				test.must(results[1]).eql(act);
+
+				done();
+			});
+		});
+	}); // Aggregations
+
 }); // time series

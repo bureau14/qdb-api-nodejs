@@ -46,8 +46,13 @@ public:
             NODE_SET_METHOD(exports, "DoubleColumnInfo", columnInfoTpl<qdb_ts_column_double>);
             NODE_SET_METHOD(exports, "BlobColumnInfo", columnInfoTpl<qdb_ts_column_blob>);
 
-            AddTsColumnType(exports, "TS_COLUMN_BLOB", qdb_ts_column_blob);
-            AddTsColumnType(exports, "TS_COLUMN_DOUBLE", qdb_ts_column_double);
+            AddTsType<qdb_ts_column_type_t>(exports, "TS_COLUMN_BLOB", qdb_ts_column_blob);
+            AddTsType<qdb_ts_column_type_t>(exports, "TS_COLUMN_DOUBLE", qdb_ts_column_double);
+
+            AddTsType<qdb_ts_aggregation_type_t>(exports, "AggFirst", qdb_agg_first);
+            AddTsType<qdb_ts_aggregation_type_t>(exports, "AggLast", qdb_agg_last);
+
+            NODE_SET_METHOD(exports, "TsAggregation", aggregation);
         });
     }
 
@@ -93,6 +98,39 @@ private:
         args.GetReturnValue().Set(obj);
     }
 
+    static void aggregation(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        v8::Isolate * isolate = args.GetIsolate();
+        v8::Local<v8::Object> obj = v8::Object::New(isolate);
+
+        MethodMan call(args);
+        if (args.Length() != 2 && args.Length() != 3)
+        {
+            call.throwException("Wrong number of arguments");
+            return;
+        }
+
+        if (!args[0]->IsInt32() || !args[1]->IsObject())
+        {
+            call.throwException("Wrong type of arguments");
+            return;
+        }
+
+        if (args.Length() == 3 && !args[2]->IsNumber())
+        {
+            call.throwException("Wrong type of arguments");
+            return;
+        }
+
+        auto count = (args.Length() == 3) ? args[2]->Int32Value() : 0;
+
+        obj->Set(v8::String::NewFromUtf8(isolate, "type"), args[0]);
+        obj->Set(v8::String::NewFromUtf8(isolate, "range"), args[1]);
+        obj->Set(v8::String::NewFromUtf8(isolate, "count"), v8::Number::New(isolate, count));
+
+        args.GetReturnValue().Set(obj);
+    }
+
     template <qdb_ts_column_type_t type>
     static void columnInfoTpl(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
@@ -118,7 +156,7 @@ private:
         Entry<TimeSeries>::queue_work(
             args,
             [](qdb_request * qdb_req) {
-                auto & info = qdb_req->input.content.columnsInfo;
+                auto & info = qdb_req->input.content.columns;
                 std::vector<qdb_ts_column_info_t> cols;
                 cols.resize(info.size());
 
@@ -138,10 +176,11 @@ private:
     static void processArrayColumnsInfoResult(uv_work_t * req, int status);
     static void processColumnsCreateResult(uv_work_t * req, int status);
 
-    static void AddTsColumnType(v8::Local<v8::Object> exports, const char * name, qdb_ts_column_type_t type)
+    template <typename Type>
+    static void AddTsType(v8::Local<v8::Object> exports, const char * name, Type t)
     {
         v8::Isolate * isolate = exports->GetIsolate();
-        detail::AddConstantProperty(isolate, exports, name, v8::Int32::New(isolate, type));
+        detail::AddConstantProperty(isolate, exports, name, v8::Int32::New(isolate, t));
     }
 
 private:

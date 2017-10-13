@@ -120,10 +120,14 @@ struct qdb_request
             qdb_int_t value;
 
             // Time series
-            std::vector<column_info> columnsInfo;
-            std::vector<qdb_ts_double_point> doublePoints;
-            std::vector<qdb_ts_blob_point> blobPoints;
+            // TODO(denisb): consider to move it all to err slice ?
+            std::vector<column_info> columns;
+            std::vector<qdb_ts_blob_point> blob_points;
+            std::vector<qdb_ts_double_point> double_points;
             std::vector<qdb_ts_filtered_range_t> ranges;
+
+            std::vector<qdb_ts_blob_aggregation_t> blob_aggrs;
+            std::vector<qdb_ts_double_aggregation_t> double_aggrs;
         };
 
         query_content content;
@@ -605,6 +609,28 @@ public:
         });
     }
 
+    std::pair<qdb_ts_filtered_range_t, bool> convertFilter(v8::Local<v8::Object> obj)
+    {
+
+        auto beginp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "begin");
+        auto endp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "end");
+
+        auto begin = obj->Get(beginp);
+        auto end = obj->Get(endp);
+
+        qdb_ts_filtered_range_t filter;
+        if (!begin->IsDate() || !end->IsDate()) return std::make_pair(filter, false);
+
+        auto beginMs = v8::Local<v8::Date>::Cast(begin)->ValueOf();
+        auto endMs = v8::Local<v8::Date>::Cast(end)->ValueOf();
+
+        filter.range.begin = ms_to_qdb_timespec(beginMs);
+        filter.range.end = ms_to_qdb_timespec(endMs);
+        filter.filter.type = qdb_ts_filter_none;
+
+        return std::make_pair(filter, true);
+    }
+
     std::vector<qdb_ts_blob_point> eatAndConvertBlobPointsArray(void)
     {
         return eatAndConvertPointsArray<qdb_ts_blob_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
@@ -629,29 +655,59 @@ public:
             auto len = arr.first->Length();
             res.reserve(len);
 
-            auto beginProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "begin");
-            auto endProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "end");
-
             for (auto i = 0u; i < len; ++i)
             {
                 auto vi = arr.first->Get(i);
                 if (!vi->IsObject()) return range_vector();
 
                 auto obj = vi->ToObject();
-                auto begin = obj->Get(beginProp);
-                auto end = obj->Get(endProp);
+                auto filter = convertFilter(obj);
+                if (!filter.second) return range_vector();
 
-                if (!begin->IsDate() || !end->IsDate()) return range_vector();
+                res.push_back(filter.first);
+            }
+        }
 
-                auto beginMs = v8::Local<v8::Date>::Cast(begin)->ValueOf();
-                auto endMs = v8::Local<v8::Date>::Cast(end)->ValueOf();
+        return res;
+    }
 
-                qdb_ts_filtered_range_t r;
-                r.range.begin = ms_to_qdb_timespec(beginMs);
-                r.range.end = ms_to_qdb_timespec(endMs);
-                r.filter.type = qdb_ts_filter_none;
+    std::vector<qdb_ts_double_aggregation_t> eatAndConvertDoubleAggrArray(void)
+    {
+        using aggr_vector = std::vector<qdb_ts_double_aggregation_t>;
+        aggr_vector res;
 
-                res.push_back(r);
+        auto arr = eatArray();
+        if (arr.second)
+        {
+            auto len = arr.first->Length();
+            res.reserve(len);
+
+            auto typeProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "type");
+            auto rangeProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "range");
+            auto countProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "count");
+
+            for (auto i = 0u; i < len; ++i)
+            {
+                auto vi = arr.first->Get(i);
+                if (!vi->IsObject()) return aggr_vector();
+
+                auto obj = vi->ToObject();
+                auto type = obj->Get(typeProp);
+                auto range = obj->Get(rangeProp);
+                auto count = obj->Get(countProp);
+
+                if (!type->IsNumber() || !range->IsObject() || !count->IsNumber()) return aggr_vector();
+
+                auto filter = convertFilter(range->ToObject());
+                if (!filter.second) return aggr_vector();
+
+                qdb_ts_double_aggregation_t aggr;
+                aggr.type = static_cast<qdb_ts_aggregation_type_t>(type->Int32Value());
+                aggr.filtered_range = filter.first;
+                aggr.count = static_cast<qdb_size_t>(count->Int32Value());
+                aggr.result = qdb_ts_double_point();
+
+                res.push_back(aggr);
             }
         }
 
@@ -721,7 +777,7 @@ public:
 
     qdb_request & columnsInfo(qdb_request & req)
     {
-        req.input.content.columnsInfo = _eater.eatAndConvertColumnsInfoArray();
+        req.input.content.columns = _eater.eatAndConvertColumnsInfoArray();
         return req;
     }
 
@@ -745,19 +801,25 @@ public:
 
     qdb_request & doublePoints(qdb_request & req)
     {
-        req.input.content.doublePoints = _eater.eatAndConvertDoublePointsArray();
+        req.input.content.double_points = _eater.eatAndConvertDoublePointsArray();
         return req;
     }
 
     qdb_request & blobPoints(qdb_request & req)
     {
-        req.input.content.blobPoints = _eater.eatAndConvertBlobPointsArray();
+        req.input.content.blob_points = _eater.eatAndConvertBlobPointsArray();
         return req;
     }
 
     qdb_request & ranges(qdb_request & req)
     {
         req.input.content.ranges = _eater.eatAndConvertRangeArray();
+        return req;
+    }
+
+    qdb_request & doubleAggregations(qdb_request & req)
+    {
+        req.input.content.double_aggrs = _eater.eatAndConvertDoubleAggrArray();
         return req;
     }
 

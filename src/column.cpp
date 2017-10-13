@@ -23,7 +23,7 @@ void BlobColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
     Column<BlobColumn>::queue_work(args,
                                    [ts](qdb_request * qdb_req) {
                                        auto alias = qdb_req->input.alias.c_str();
-                                       auto & points = qdb_req->input.content.blobPoints;
+                                       const auto & points = qdb_req->input.content.blob_points;
                                        qdb_req->output.error = qdb_ts_blob_insert(qdb_req->handle(), ts.c_str(), alias,
                                                                                   points.data(), points.size());
                                    },
@@ -63,7 +63,7 @@ void DoubleColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
     Column<DoubleColumn>::queue_work(args,
                                      [ts](qdb_request * qdb_req) {
                                          auto alias = qdb_req->input.alias.c_str();
-                                         auto & points = qdb_req->input.content.doublePoints;
+                                         const auto & points = qdb_req->input.content.double_points;
 
                                          qdb_req->output.error = qdb_ts_double_insert(
                                              qdb_req->handle(), ts.c_str(), alias, points.data(), points.size());
@@ -91,6 +91,27 @@ void DoubleColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
                                      qdb_req->handle(), ts.c_str(), alias, ranges.data(), ranges.size(), bufp, count);
                              },
                              DoubleColumn::processDoublePointArrayResult, &ArgsEaterBinder::ranges);
+}
+
+void DoubleColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    MethodMan call(args);
+
+    DoubleColumn * c = call.nativeHolder<DoubleColumn>();
+    assert(c);
+
+    auto ts = c->timeSeries();
+    DoubleColumn::queue_work(args,
+                             [ts](qdb_request * qdb_req) {
+                                 auto alias = qdb_req->input.alias.c_str();
+                                 qdb_ts_double_aggregation_t * aggrs = qdb_req->input.content.double_aggrs.data();
+                                 const qdb_size_t count = qdb_req->input.content.double_aggrs.size();
+
+                                 qdb_req->output.error =
+                                     qdb_ts_double_aggregate(qdb_req->handle(), ts.c_str(), alias, aggrs, count);
+
+                             },
+                             DoubleColumn::processDoubleAggregateResult, &ArgsEaterBinder::doubleAggregations);
 }
 
 void BlobColumn::processBlobPointArrayResult(uv_work_t * req, int status)
@@ -162,6 +183,42 @@ void DoubleColumn::processDoublePointArrayResult(uv_work_t * req, int status)
 
             // safe to call even on null/invalid buffers
             qdb_release(qdb_req->handle(), entries);
+        }
+        else
+        {
+            // provide an empty array
+            array = v8::Array::New(isolate, 0);
+        }
+
+        return make_value_array(error_code, array);
+    });
+}
+
+void DoubleColumn::processDoubleAggregateResult(uv_work_t * req, int status)
+{
+    processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+        v8::Handle<v8::Array> array;
+
+        auto error_code = processErrorCode(isolate, status, qdb_req);
+        if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+        {
+            const auto & entries = qdb_req->input.content.double_aggrs;
+            const size_t entries_count = entries.size();
+
+            array = v8::Array::New(isolate, static_cast<int>(entries_count));
+            if (array.IsEmpty())
+            {
+                error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
+            }
+            else
+            {
+                for (size_t i = 0; i < entries_count; ++i)
+                {
+                    const auto & point = entries[i].result;
+                    auto obj = DoublePoint::MakePoint(isolate, point.timestamp, point.value);
+                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                }
+            }
         }
         else
         {

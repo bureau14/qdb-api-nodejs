@@ -205,14 +205,17 @@ public:
         Column<DoubleColumn>::Init(exports, "DoubleColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
             NODE_SET_PROTOTYPE_METHOD(tpl, "insert", DoubleColumn::insert);
             NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", DoubleColumn::ranges);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", DoubleColumn::aggregate);
         });
     }
 
 private:
     static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
     static void ranges(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void aggregate(const v8::FunctionCallbackInfo<v8::Value> & args);
 
     static void processDoublePointArrayResult(uv_work_t * req, int status);
+    static void processDoubleAggregateResult(uv_work_t * req, int status);
 
     static v8::Persistent<v8::Function> constructor;
 };
