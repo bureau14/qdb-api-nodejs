@@ -228,7 +228,7 @@ describe('TimeSeries', function() {
 
 			ts.create(columnInfo, function(err, cols) {
 				test.must(err).be.equal(null);
-				test.must(cols.Length).be.equal(columnInfo.Length);
+				test.should(cols.length).eql(columnInfo.length);
 
 				columns = cols;
 				done();
@@ -341,7 +341,7 @@ describe('TimeSeries', function() {
 
 			ts.create(columnInfo, function(err, cols) {
 				test.must(err).be.equal(null);
-				test.must(cols.Length).be.equal(columnInfo.Length);
+				test.should(cols.length).eql(columnInfo.length);
 
 				columns = cols;
 				done();
@@ -574,14 +574,15 @@ describe('TimeSeries', function() {
 		var columns = null
 		var doublePoints = null
 		var blobPoints = null
+		var range = null
 
 		before('init', function(done) {
-			var columnInfo = [qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")]
 			ts = cluster.ts("aggregations")
+			range = ts.Range(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
 
-			ts.create(columnInfo, function(err, cols) {
+			ts.create([qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")], function(err, cols) {
 				test.must(err).be.equal(null);
-				test.must(cols.Length).be(columnInfo.Length);
+				test.should(cols.length).eql(2);
 
 				columns = cols;
 				done();
@@ -642,25 +643,36 @@ describe('TimeSeries', function() {
 			test.must(aggc.count).eql(42);
 		});
 
-		it('should find first and last points', function(done) {
-			var range = ts.Range(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
-			var first = qdb.TsAggregation(qdb.AggFirst, range)
-			var last = qdb.TsAggregation(qdb.AggLast, range)
 
-			columns[0].aggregate([first, last], function(err, results) {
+		var checkAggrs = function(col, aggrs, exp, done) {
+			col.aggregate(aggrs, function(err, results) {
 				test.must(err).be.equal(null);
 				test.must(results).not.be.equal(null);
-				test.must(results.length).be(2);
+				test.must(results.length).be(exp.length);
 
-				var act = doublePoints[0];
-				test.must(results[0]).eql(act);
-
-				act = doublePoints[doublePoints.length-1];
-				test.must(results[1]).eql(act);
+				for (var i = 0; i < exp.length; i++) {
+					test.should(results[i]).eql(exp[i]);
+				}
 
 				done();
 			});
+		};
+
+		it('should find first and last double points', function(done) {
+			var aggrs = [qdb.TsAggregation(qdb.AggFirst, range), qdb.TsAggregation(qdb.AggLast, range)];
+			var exp = [doublePoints[0], doublePoints.slice(-1)[0]];
+
+			checkAggrs(columns[0], aggrs, exp, done);
 		});
+
+		it('should find first and last blob points', function(done) {
+			var aggrs = [qdb.TsAggregation(qdb.AggFirst, range), qdb.TsAggregation(qdb.AggLast, range)];
+			var exp = [blobPoints[0], blobPoints.slice(-1)[0]];
+
+			checkAggrs(columns[1], aggrs, exp, done);
+		});
+
+
 	}); // Aggregations
 
 }); // time series

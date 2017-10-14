@@ -671,9 +671,10 @@ public:
         return res;
     }
 
-    std::vector<qdb_ts_double_aggregation_t> eatAndConvertDoubleAggrArray(void)
+    template <typename Type>
+    std::vector<Type> eatAndConvertAggrArray(void)
     {
-        using aggr_vector = std::vector<qdb_ts_double_aggregation_t>;
+        using aggr_vector = std::vector<Type>;
         aggr_vector res;
 
         auto arr = eatArray();
@@ -701,11 +702,10 @@ public:
                 auto filter = convertFilter(range->ToObject());
                 if (!filter.second) return aggr_vector();
 
-                qdb_ts_double_aggregation_t aggr;
+                Type aggr;
                 aggr.type = static_cast<qdb_ts_aggregation_type_t>(type->Int32Value());
                 aggr.filtered_range = filter.first;
                 aggr.count = static_cast<qdb_size_t>(count->Int32Value());
-                aggr.result = qdb_ts_double_point();
 
                 res.push_back(aggr);
             }
@@ -817,9 +817,15 @@ public:
         return req;
     }
 
+    qdb_request & blobAggregations(qdb_request & req)
+    {
+        req.input.content.blob_aggrs = _eater.eatAndConvertAggrArray<qdb_ts_blob_aggregation_t>();
+        return req;
+    }
+
     qdb_request & doubleAggregations(qdb_request & req)
     {
-        req.input.content.double_aggrs = _eater.eatAndConvertDoubleAggrArray();
+        req.input.content.double_aggrs = _eater.eatAndConvertAggrArray<qdb_ts_double_aggregation_t>();
         return req;
     }
 
