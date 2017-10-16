@@ -37,3 +37,4 @@ db/
 lib/
 deps
 tags
+*.swp

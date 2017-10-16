@@ -94,7 +94,7 @@ public:
         args.GetReturnValue().Set(instance.ToLocalChecked());
     }
 
-    qdb_ts_filtered_range_t nativeValue() const
+    qdb_ts_filtered_range_t nativeRange() const
     {
         return this->filtered_range;
     }

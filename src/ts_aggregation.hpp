@@ -7,7 +7,7 @@
 #include <qdb/client.h>
 #include <qdb/ts.h>
 
-#include "ts_ranges.hpp"
+#include "ts_range.hpp"
 
 namespace quasardb
 {
@@ -17,12 +17,11 @@ class Aggregation : public node::ObjectWrap
     static const size_t ParametersCount = 2;
 
 public:
-    Aggregation(qdb_ts_aggregation_type_t type,
-                qdb_ts_filtered_range_t range,
-                v8::Isolate * isolate,
-                v8::Local<v8::Object> obj)
-        : type(type), range(range), range_obj(isolate, obj)
+    Aggregation(qdb_ts_aggregation_type_t type, v8::Isolate * isolate, v8::Local<v8::Object> range)
+        : type(type), range_obj(isolate, range)
     {
+        auto fr = node::ObjectWrap::Unwrap<FilteredRange>(range);
+        this->range = fr->nativeRange();
     }
 
     virtual ~Aggregation()
@@ -103,11 +102,8 @@ private:
 
             auto type = static_cast<qdb_ts_aggregation_type_t>(args[0]->Int32Value());
 
-            // TODO: Check type of the class
-            auto robj = args[1]->ToObject();
-            auto fr = node::ObjectWrap::Unwrap<FilteredRange>(robj);
-
-            auto obj = new Aggregation(type, fr->nativeValue(), args.GetIsolate(), robj);
+            // TODO: Check that type of the class was FilteredRange
+            auto obj = new Aggregation(type, args.GetIsolate(), args[1]->ToObject());
 
             obj->Wrap(args.This());
             args.GetReturnValue().Set(args.This());

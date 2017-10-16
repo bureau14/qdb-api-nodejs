@@ -1,8 +1,8 @@
-#include "column.hpp"
+#include "ts_column.hpp"
 #include "entry.hpp"
 #include "error.hpp"
-#include "points.hpp"
 #include "time_series.hpp"
+#include "ts_point.hpp"
 
 #include <qdb/ts.h>
 

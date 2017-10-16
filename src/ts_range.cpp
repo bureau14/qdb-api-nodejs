@@ -1,4 +1,4 @@
-#include "ts_ranges.hpp"
+#include "ts_range.hpp"
 
 namespace quasardb
 {

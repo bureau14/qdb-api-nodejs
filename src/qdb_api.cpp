@@ -1,8 +1,8 @@
 #include "cluster.hpp"
-#include "column.hpp"
-#include "points.hpp"
 #include "ts_aggregation.hpp"
-#include "ts_ranges.hpp"
+#include "ts_column.hpp"
+#include "ts_point.hpp"
+#include "ts_range.hpp"
 #include <node.h>
 #include <clocale>
 

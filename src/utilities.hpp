@@ -3,7 +3,7 @@
 #include "cluster_data.hpp"
 #include "time.hpp"
 #include "ts_aggregation.hpp"
-#include "ts_ranges.hpp"
+#include "ts_range.hpp"
 #include <qdb/batch.h>
 #include <qdb/client.h>
 #include <qdb/integer.h>
@@ -628,7 +628,7 @@ public:
                 auto obj = node::ObjectWrap::Unwrap<FilteredRange>(vi->ToObject());
                 assert(obj);
 
-                res.push_back(obj->nativeValue());
+                res.push_back(obj->nativeRange());
             }
         }
 

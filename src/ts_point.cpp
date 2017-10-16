@@ -1,4 +1,4 @@
-#include "points.hpp"
+#include "ts_point.hpp"
 
 namespace quasardb
 {

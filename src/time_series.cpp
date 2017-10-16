@@ -1,7 +1,7 @@
 #include "time_series.hpp"
 #include "cluster.hpp"
-#include "column.hpp"
 #include "entry.hpp"
+#include "ts_column.hpp"
 
 namespace quasardb
 {
