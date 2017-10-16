@@ -193,11 +193,18 @@ void BlobColumn::processBlobAggregateResult(uv_work_t * req, int status)
             }
             else
             {
+                auto resprop = v8::String::NewFromUtf8(isolate, "result");
+                auto cntprop = v8::String::NewFromUtf8(isolate, "count");
+
                 for (size_t i = 0; i < aggrs.size(); ++i)
                 {
                     const auto & point = aggrs[i].result;
-                    auto obj =
+                    auto result =
                         BlobPoint::MakePointWithCopy(isolate, point.timestamp, point.content, point.content_length);
+
+                    auto obj = v8::Object::New(isolate);
+                    obj->Set(resprop, result);
+                    obj->Set(cntprop, v8::Number::New(isolate, aggrs[i].count));
                     if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
 
                     // safe to call even on null/invalid buffers
@@ -270,10 +277,18 @@ void DoubleColumn::processDoubleAggregateResult(uv_work_t * req, int status)
             }
             else
             {
+                auto resprop = v8::String::NewFromUtf8(isolate, "result");
+                auto cntprop = v8::String::NewFromUtf8(isolate, "count");
+
                 for (size_t i = 0; i < aggrs.size(); ++i)
                 {
                     const auto & point = aggrs[i].result;
-                    auto obj = DoublePoint::MakePoint(isolate, point.timestamp, point.value);
+                    auto result = DoublePoint::MakePoint(isolate, point.timestamp, point.value);
+
+                    auto obj = v8::Object::New(isolate);
+                    obj->Set(resprop, result);
+                    obj->Set(cntprop, v8::Number::New(isolate, aggrs[i].count));
+
                     if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
                 }
             }

@@ -51,8 +51,31 @@ public:
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
         // Export aggregation types
-        AddTsType<qdb_ts_aggregation_type_t>(exports, "AggFirst", qdb_agg_first);
-        AddTsType<qdb_ts_aggregation_type_t>(exports, "AggLast", qdb_agg_last);
+        AddAggrType(exports, "AggFirst", qdb_agg_first);
+        AddAggrType(exports, "AggLast", qdb_agg_last);
+        AddAggrType(exports, "AggMin", qdb_agg_min);
+        AddAggrType(exports, "AggMax", qdb_agg_max);
+
+        AddAggrType(exports, "AggArithmeticMean", qdb_agg_arithmetic_mean);
+        AddAggrType(exports, "AggHarmonicMean", qdb_agg_harmonic_mean);
+        AddAggrType(exports, "AggGeometricMean", qdb_agg_geometric_mean);
+        AddAggrType(exports, "AggQuadraticMean", qdb_agg_quadratic_mean);
+
+        AddAggrType(exports, "AggCount", qdb_agg_count);
+        AddAggrType(exports, "AggSum", qdb_agg_sum);
+        AddAggrType(exports, "AggSumOfSquares", qdb_agg_sum_of_squares);
+        AddAggrType(exports, "AggSpread", qdb_agg_spread);
+
+        AddAggrType(exports, "AggSampleVariance", qdb_agg_sample_variance);
+        AddAggrType(exports, "AggSampleStddev", qdb_agg_sample_stddev);
+        AddAggrType(exports, "AggPopulationVariance", qdb_agg_population_variance);
+        AddAggrType(exports, "AggPopulationStddev", qdb_agg_population_stddev);
+
+        AddAggrType(exports, "AggAbsMin", qdb_agg_abs_min);
+        AddAggrType(exports, "AggAbsMax", qdb_agg_abs_max);
+        AddAggrType(exports, "AggProduct", qdb_agg_product);
+        AddAggrType(exports, "AggSkewness", qdb_agg_skewness);
+        AddAggrType(exports, "AggKurtosis", qdb_agg_kurtosis);
 
         constructor.Reset(isolate, tpl->GetFunction());
         exports->Set(v8::String::NewFromUtf8(isolate, "Aggregation"), tpl->GetFunction());
@@ -155,11 +178,10 @@ private:
         });
     }
 
-    template <typename Type>
-    static void AddTsType(v8::Local<v8::Object> exports, const char * name, Type t)
+    static void AddAggrType(v8::Local<v8::Object> exports, const char * name, qdb_ts_aggregation_type_t type)
     {
         v8::Isolate * isolate = exports->GetIsolate();
-        auto value = v8::Int32::New(isolate, t);
+        auto value = v8::Int32::New(isolate, type);
         v8::Maybe<bool> maybe =
             exports->DefineOwnProperty(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, name), value,
                                        static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));

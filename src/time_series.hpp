@@ -44,8 +44,8 @@ public:
             NODE_SET_METHOD(exports, "DoubleColumnInfo", columnInfoTpl<qdb_ts_column_double>);
             NODE_SET_METHOD(exports, "BlobColumnInfo", columnInfoTpl<qdb_ts_column_blob>);
 
-            AddTsType<qdb_ts_column_type_t>(exports, "TS_COLUMN_BLOB", qdb_ts_column_blob);
-            AddTsType<qdb_ts_column_type_t>(exports, "TS_COLUMN_DOUBLE", qdb_ts_column_double);
+            AddTsType(exports, "TS_COLUMN_BLOB", qdb_ts_column_blob);
+            AddTsType(exports, "TS_COLUMN_DOUBLE", qdb_ts_column_double);
 
         });
     }
@@ -113,11 +113,10 @@ private:
     static void processArrayColumnsInfoResult(uv_work_t * req, int status);
     static void processColumnsCreateResult(uv_work_t * req, int status);
 
-    template <typename Type>
-    static void AddTsType(v8::Local<v8::Object> exports, const char * name, Type t)
+    static void AddTsType(v8::Local<v8::Object> exports, const char * name, qdb_ts_column_type_t type)
     {
         v8::Isolate * isolate = exports->GetIsolate();
-        detail::AddConstantProperty(isolate, exports, name, v8::Int32::New(isolate, t));
+        detail::AddConstantProperty(isolate, exports, name, v8::Int32::New(isolate, type));
     }
 
 private:

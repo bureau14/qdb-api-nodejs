@@ -64,11 +64,11 @@ public:
         NODE_SET_METHOD(exports, "FilterDoubleOutside", filterDoubleRange<qdb_ts_filter_double_outside_range>);
 
         // Export filter types
-        AddTsType<qdb_ts_filter_type_t>(exports, "TS_FILTER_NONE", qdb_ts_filter_none);
-        AddTsType<qdb_ts_filter_type_t>(exports, "TS_FILTER_UNIQUE", qdb_ts_filter_unique);
-        AddTsType<qdb_ts_filter_type_t>(exports, "TS_FILTER_SAMPLE", qdb_ts_filter_sample);
-        AddTsType<qdb_ts_filter_type_t>(exports, "TS_FILTER_DOUBLE_INSIDE_RANGE", qdb_ts_filter_double_inside_range);
-        AddTsType<qdb_ts_filter_type_t>(exports, "TS_FILTER_DOUBLE_OUTSIDE_RANGE", qdb_ts_filter_double_outside_range);
+        AddTsFilterType(exports, "TS_FILTER_NONE", qdb_ts_filter_none);
+        AddTsFilterType(exports, "TS_FILTER_UNIQUE", qdb_ts_filter_unique);
+        AddTsFilterType(exports, "TS_FILTER_SAMPLE", qdb_ts_filter_sample);
+        AddTsFilterType(exports, "TS_FILTER_DOUBLE_INSIDE_RANGE", qdb_ts_filter_double_inside_range);
+        AddTsFilterType(exports, "TS_FILTER_DOUBLE_OUTSIDE_RANGE", qdb_ts_filter_double_outside_range);
 
         constructor.Reset(isolate, tpl->GetFunction());
         exports->Set(v8::String::NewFromUtf8(isolate, "TsRange"), tpl->GetFunction());
@@ -299,11 +299,10 @@ private:
         args.GetReturnValue().Set(obj);
     }
 
-    template <typename Type>
-    static void AddTsType(v8::Local<v8::Object> exports, const char * name, Type t)
+    static void AddTsFilterType(v8::Local<v8::Object> exports, const char * name, qdb_ts_filter_type_t type)
     {
         v8::Isolate * isolate = exports->GetIsolate();
-        auto value = v8::Int32::New(isolate, t);
+        auto value = v8::Int32::New(isolate, type);
         v8::Maybe<bool> maybe =
             exports->DefineOwnProperty(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, name), value,
                                        static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));

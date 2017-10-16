@@ -636,7 +636,7 @@ describe('TimeSeries', function() {
 			range = qdb.TsRange(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
 
 			ts.create([qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")], function(err, cols) {
-				test.must(err).be.equal(null);
+				test.should(err).be.equal(null);
 				test.should(cols.length).eql(2);
 
 				columns = cols;
@@ -657,7 +657,7 @@ describe('TimeSeries', function() {
 			];
 
 			columns[0].insert(doublePoints, function(err) {
-				test.must(err).be.equal(null);
+				test.should(err).be.equal(null);
 				done();
 			});
 		});
@@ -676,7 +676,7 @@ describe('TimeSeries', function() {
 			];
 
 			columns[1].insert(blobPoints, function(err) {
-				test.must(err).be.equal(null);
+				test.should(err).be.equal(null);
 				done();
 			});
 		});
@@ -688,18 +688,22 @@ describe('TimeSeries', function() {
 			test.object(agg).hasProperty('type');
 			test.object(agg).hasProperty('range');
 
-			test.must(agg.type).be(qdb.AggFirst);
-			test.must(agg.range).be(range);
+			test.should(agg.type).eql(qdb.AggFirst);
+			test.should(agg.range).eql(range);
 		});
 
 		var checkAggrs = function(col, aggrs, exp, done) {
 			col.aggregate(aggrs, function(err, results) {
-				test.must(err).be.equal(null);
-				test.must(results).not.be.equal(null);
-				test.must(results.length).be(exp.length);
+				test.should(err).be.equal(null);
+				test.should(results).not.be.equal(null);
+				test.should(results.length).eql(exp.length);
 
 				for (var i = 0; i < exp.length; i++) {
-					test.should(results[i]).eql(exp[i]);
+					test.object(results[i]).hasProperty('result');
+					test.object(results[i]).hasProperty('count');
+
+					test.should(results[i].result).eql(exp[i]);
+					test.should(results[i].count).eql(1);
 				}
 
 				done();
@@ -718,6 +722,21 @@ describe('TimeSeries', function() {
 			var exp = [blobPoints[0], blobPoints.slice(-1)[0]];
 
 			checkAggrs(columns[1], aggrs, exp, done);
+		});
+
+		it('should return sum of all double points', function(done) {
+			var aggrs = [qdb.Aggregation(qdb.AggSum, range)];
+
+			columns[0].aggregate(aggrs, function(err, results) {
+				test.should(err).be.equal(null);
+				test.should(results).not.be.equal(null);
+				test.should(results.length).eql(1);
+
+				test.should(results[0].count).eql(8);
+				test.should(results[0].result.value).eql(2.1);
+
+				done();
+			});
 		});
 
 	}); // Aggregations
