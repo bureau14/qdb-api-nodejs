@@ -152,7 +152,7 @@ private:
         qdb_ts_filter_t filter;
 
         auto typeProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "type");
-        auto type = static_cast<qdb_ts_filter_type>(obj->Get(typeProp)->Int32Value());
+        auto type = static_cast<qdb_ts_filter_type_t>(obj->Get(typeProp)->Int32Value());
 
         filter.type = type;
         switch (type)
