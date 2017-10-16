@@ -30,8 +30,11 @@
         "src/points.hpp",
         "src/column.cpp",
         "src/column.hpp",
+        "src/ts_ranges.cpp",
+        "src/ts_ranges.hpp",
         "src/cluster_data.hpp",
         "src/utilities.hpp",
+        "src/time.hpp",
         "test/test.js"
       ],
       "conditions": [

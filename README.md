@@ -319,7 +319,7 @@ Creating and populating columns:
 ```javascript
 var ts = c.ts('temperature');
 
-ts.Create([ts.DoubleColumnInfo("ColDouble"), ts.BlobColumnInfo("ColBlob")], function(err, columns){
+ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns){
 	if (err) {
 		// ...
 	}
@@ -346,14 +346,14 @@ Getting values from time series columns:
 ```javascript
 var ts = c.ts('temperature');
 
-ts.Create([ts.DoubleColumnInfo("ColDouble"), ts.BlobColumnInfo("ColBlob")], function(err, columns){
+ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns){
 	if (err) {
 		// ...
 	}
 
 	// ... populating with values
 
-	var range = ts.Range(new Date(2021, 10, 10), new Date(2021, 11, 11));
+	var range = qdb.TsRange(new Date(2021, 10, 10), new Date(2021, 11, 11));
 	column[0].ranges([range], function(err, points){
 		// ...
 	});
@@ -367,7 +367,7 @@ Erasing values from time series columns:
 ```javascript
 var ts = c.ts('temperature');
 
-ts.Create([ts.DoubleColumnInfo("ColDouble"), ts.BlobColumnInfo("ColBlob")], function(err, columns) {
+ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns) {
 	if (err) {
 		// ...
 	}
@@ -375,8 +375,8 @@ ts.Create([ts.DoubleColumnInfo("ColDouble"), ts.BlobColumnInfo("ColBlob")], func
 	// ... populating with values
 
 	var ranges = [
-					ts.Range(new Date(2021, 10, 10, 8, 0), new Date(2021, 10, 10, 12, 0)),
-					ts.Range(new Date(2021, 11, 11, 0, 0), new Date(2021, 11, 11, 10, 0))
+					qdb.TsRange(new Date(2021, 10, 10, 8, 0), new Date(2021, 10, 10, 12, 0)),
+					qdb.TsRange(new Date(2021, 11, 11, 0, 0), new Date(2021, 11, 11, 10, 0))
 	];
 
 	column[0].erase(ranges, function(err, erased) {

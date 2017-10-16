@@ -1,6 +1,8 @@
 #pragma once
 
 #include "cluster_data.hpp"
+#include "time.hpp"
+#include "ts_ranges.hpp"
 #include <qdb/batch.h>
 #include <qdb/client.h>
 #include <qdb/integer.h>
@@ -61,22 +63,6 @@ inline void release_node_buffer(char * data, void * hint)
 }
 
 } // namespace detail
-
-inline qdb_timespec_t ms_to_qdb_timespec(double ms)
-{
-    auto ns = ms * 1000000ull;
-
-    qdb_timespec_t ts;
-    ts.tv_sec = static_cast<qdb_time_t>(ns / 1000000000ull);
-    ts.tv_nsec = static_cast<qdb_time_t>(ns - ts.tv_sec * 1000000000ull);
-
-    return ts;
-}
-
-inline double qdb_timespec_to_ms(const qdb_timespec_t & ts)
-{
-    return static_cast<double>(ts.tv_sec) * 1000.0 + static_cast<double>(ts.tv_nsec / 1000000ull);
-}
 
 // POD for storing info about columns from js calls
 struct column_info
@@ -609,28 +595,6 @@ public:
         });
     }
 
-    std::pair<qdb_ts_filtered_range_t, bool> convertFilter(v8::Local<v8::Object> obj)
-    {
-
-        auto beginp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "begin");
-        auto endp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "end");
-
-        auto begin = obj->Get(beginp);
-        auto end = obj->Get(endp);
-
-        qdb_ts_filtered_range_t filter;
-        if (!begin->IsDate() || !end->IsDate()) return std::make_pair(filter, false);
-
-        auto beginMs = v8::Local<v8::Date>::Cast(begin)->ValueOf();
-        auto endMs = v8::Local<v8::Date>::Cast(end)->ValueOf();
-
-        filter.range.begin = ms_to_qdb_timespec(beginMs);
-        filter.range.end = ms_to_qdb_timespec(endMs);
-        filter.filter.type = qdb_ts_filter_none;
-
-        return std::make_pair(filter, true);
-    }
-
     std::vector<qdb_ts_blob_point> eatAndConvertBlobPointsArray(void)
     {
         return eatAndConvertPointsArray<qdb_ts_blob_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
@@ -660,11 +624,10 @@ public:
                 auto vi = arr.first->Get(i);
                 if (!vi->IsObject()) return range_vector();
 
-                auto obj = vi->ToObject();
-                auto filter = convertFilter(obj);
-                if (!filter.second) return range_vector();
+                auto obj = node::ObjectWrap::Unwrap<FilteredRange>(vi->ToObject());
+                assert(obj);
 
-                res.push_back(filter.first);
+                res.push_back(obj->NativeValue());
             }
         }
 
@@ -699,12 +662,12 @@ public:
 
                 if (!type->IsNumber() || !range->IsObject() || !count->IsNumber()) return aggr_vector();
 
-                auto filter = convertFilter(range->ToObject());
-                if (!filter.second) return aggr_vector();
+                auto fr = node::ObjectWrap::Unwrap<FilteredRange>(range->ToObject());
+                assert(fr);
 
                 Type aggr;
                 aggr.type = static_cast<qdb_ts_aggregation_type_t>(type->Int32Value());
-                aggr.filtered_range = filter.first;
+                aggr.filtered_range = fr->NativeValue();
                 aggr.count = static_cast<qdb_size_t>(count->Int32Value());
 
                 res.push_back(aggr);

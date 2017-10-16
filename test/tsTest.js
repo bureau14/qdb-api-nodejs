@@ -389,7 +389,7 @@ describe('TimeSeries', function() {
 		it('should create valid range', function() {
 			var begin = new Date(2049, 10, 5, 1);
 			var end = new Date(2049, 10, 5, 3);
-			var range = ts.Range(begin, end);
+			var range = qdb.TsRange(begin, end);
 
 			test.object(range).hasProperty('begin');
 			test.object(range).hasProperty('end');
@@ -401,7 +401,7 @@ describe('TimeSeries', function() {
 		it('should retrieve nothing', function(done) {
 			var begin = new Date(2000, 10, 5, 2);
 			var end = new Date(2020, 10, 5, 4);
-			var range = ts.Range(begin, end);
+			var range = qdb.TsRange(begin, end);
 
 			columns[0].ranges([range], function(err, points) {
 				test.must(err).be.equal(null);
@@ -414,7 +414,7 @@ describe('TimeSeries', function() {
 		it('should retrieve double points in range', function(done) {
 			var begin = new Date(2049, 10, 5, 2);
 			var end = new Date(2049, 10, 5, 4);
-			var range = ts.Range(begin, end);
+			var range = qdb.TsRange(begin, end);
 
 			columns[0].ranges([range], function(err, points) {
 				test.must(err).be.equal(null);
@@ -430,7 +430,7 @@ describe('TimeSeries', function() {
 			var e1 = new Date(2049, 10, 5, 4);
 			var b2 = new Date(2030, 10, 5, 7);
 			var e2 = new Date(2030, 10, 5, 8);
-			var ranges = [ts.Range(b1, e1), ts.Range(b2, e2)];
+			var ranges = [qdb.TsRange(b1, e1), qdb.TsRange(b2, e2)];
 
 			columns[0].ranges(ranges, function(err, points) {
 				test.must(err).be.equal(null);
@@ -444,7 +444,7 @@ describe('TimeSeries', function() {
 		it('should retrieve all double points', function(done) {
 			var begin = new Date(2000, 10, 5, 2);
 			var end = new Date(2049, 10, 5, 10);
-			var range = ts.Range(begin, end);
+			var range = qdb.TsRange(begin, end);
 
 			columns[0].ranges([range], function(err, points) {
 				test.must(err).be.equal(null);
@@ -468,7 +468,7 @@ describe('TimeSeries', function() {
 		it('should retrieve blob points in range', function(done) {
 			var begin = new Date(2049, 10, 5, 2);
 			var end = new Date(2049, 10, 5, 4);
-			var range = ts.Range(begin, end);
+			var range = qdb.TsRange(begin, end);
 
 			columns[1].ranges([range], function(err, points) {
 				test.must(err).be.equal(null);
@@ -484,7 +484,7 @@ describe('TimeSeries', function() {
 			var e1 = new Date(2049, 10, 5, 4);
 			var b2 = new Date(2030, 10, 5, 7);
 			var e2 = new Date(2030, 10, 5, 8);
-			var ranges = [ts.Range(b1, e1), ts.Range(b2, e2)];
+			var ranges = [qdb.TsRange(b1, e1), qdb.TsRange(b2, e2)];
 
 			columns[1].ranges(ranges, function(err, points) {
 				test.must(err).be.equal(null);
@@ -498,7 +498,7 @@ describe('TimeSeries', function() {
 		it('should retrieve all blob points', function(done) {
 			var begin = new Date(2000, 10, 5, 2);
 			var end = new Date(2049, 10, 5, 10);
-			var range = ts.Range(begin, end);
+			var range = qdb.TsRange(begin, end);
 
 			columns[1].ranges([range], function(err, points) {
 				test.must(err).be.equal(null);
@@ -513,7 +513,7 @@ describe('TimeSeries', function() {
 			var e1 = new Date(2030, 10, 5, 10);
 			var b2 = new Date(2049, 10, 5, 5);
 			var e2 = new Date(2049, 10, 5, 6);
-			var ranges = [ts.Range(b1, e1), ts.Range(b2, e2)];
+			var ranges = [qdb.TsRange(b1, e1), qdb.TsRange(b2, e2)];
 
 			columns[0].erase(ranges, function(err, erased) {
 				test.must(err).be.equal(null);
@@ -528,7 +528,7 @@ describe('TimeSeries', function() {
 			var e1 = new Date(2030, 10, 5, 10);
 			var b2 = new Date(2049, 10, 5, 5);
 			var e2 = new Date(2049, 10, 5, 6);
-			var ranges = [ts.Range(b1, e1), ts.Range(b2, e2)];
+			var ranges = [qdb.TsRange(b1, e1), qdb.TsRange(b2, e2)];
 
 			columns[1].erase(ranges, function(err, erased) {
 				test.must(err).be.equal(null);
@@ -541,7 +541,7 @@ describe('TimeSeries', function() {
 		it('should retrieve all remaining double points', function(done) {
 			var begin = new Date(2000, 10, 5, 2);
 			var end = new Date(2049, 10, 5, 10);
-			var range = ts.Range(begin, end);
+			var range = qdb.TsRange(begin, end);
 
 			columns[0].ranges([range], function(err, points) {
 				test.must(err).be.equal(null);
@@ -556,7 +556,7 @@ describe('TimeSeries', function() {
 		it('should retrieve all remaining blob points', function(done) {
 			var begin = new Date(2000, 10, 5, 2);
 			var end = new Date(2049, 10, 5, 10);
-			var range = ts.Range(begin, end);
+			var range = qdb.TsRange(begin, end);
 
 			columns[1].ranges([range], function(err, points) {
 				test.must(err).be.equal(null);
@@ -569,6 +569,61 @@ describe('TimeSeries', function() {
 		});
 	}); // Ranges
 
+	describe('filtered ranges', function() {
+		var min = 3.14
+		var max = 3.14*2
+		var begin = new Date(2000, 10, 5, 2);
+		var end = new Date(2049, 10, 5, 10);
+
+		var basicCheck = function(range, type) {
+			test.object(range).isInstanceOf(qdb.TsRange);
+			test.object(range).hasProperty("begin");
+			test.object(range).hasProperty("end");
+			test.object(range).hasProperty("filter");
+			test.object(range.filter).hasProperty("type");
+
+			test.should(range.begin).eql(begin);
+			test.should(range.end).eql(end);
+			test.should(range.filter.type).eql(type);
+		};
+
+		it('should create valid unique filtered range', function() {
+			var range = qdb.TsRange(begin, end, qdb.FilterUnique());
+			basicCheck(range, qdb.TS_FILTER_UNIQUE);
+		});
+
+		it('should create valid sample filtered range', function() {
+			var range = qdb.TsRange(begin, end, qdb.FilterSample(42));
+
+			basicCheck(range, qdb.TS_FILTER_SAMPLE);
+
+			test.object(range.filter).hasProperty("samples");
+			test.should(range.filter.samples).eql(42);
+		});
+
+		it('should create valid double inside filtered range', function() {
+			var range = qdb.TsRange(begin, end, qdb.FilterDoubleInside(min, max));
+
+			basicCheck(range, qdb.TS_FILTER_DOUBLE_INSIDE_RANGE);
+
+			test.object(range.filter).hasProperty("min");
+			test.object(range.filter).hasProperty("max");
+			test.should(range.filter.min).eql(min);
+			test.should(range.filter.max).eql(max);
+		});
+
+		it('should create valid double outside filtered range', function() {
+			var range = qdb.TsRange(begin, end, qdb.FilterDoubleOutside(min, max));
+
+			basicCheck(range, qdb.TS_FILTER_DOUBLE_OUTSIDE_RANGE);
+
+			test.object(range.filter).hasProperty("min");
+			test.object(range.filter).hasProperty("max");
+			test.should(range.filter.min).eql(min);
+			test.should(range.filter.max).eql(max);
+		});
+	}); // Filtered ranges
+
 	describe('aggregations', function() {
 		var ts = null
 		var columns = null
@@ -578,7 +633,7 @@ describe('TimeSeries', function() {
 
 		before('init', function(done) {
 			ts = cluster.ts("aggregations")
-			range = ts.Range(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
+			range = qdb.TsRange(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
 
 			ts.create([qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")], function(err, cols) {
 				test.must(err).be.equal(null);
@@ -627,7 +682,7 @@ describe('TimeSeries', function() {
 		});
 
 		it('should create valid aggregation', function() {
-			var range = ts.Range(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
+			var range = qdb.TsRange(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
 			var agg = qdb.TsAggregation(qdb.AggFirst, range)
 			var aggc = qdb.TsAggregation(qdb.AggLast, range, 42)
 
@@ -642,7 +697,6 @@ describe('TimeSeries', function() {
 			test.must(agg.count).eql(0);
 			test.must(aggc.count).eql(42);
 		});
-
 
 		var checkAggrs = function(col, aggrs, exp, done) {
 			col.aggregate(aggrs, function(err, results) {
@@ -671,7 +725,6 @@ describe('TimeSeries', function() {
 
 			checkAggrs(columns[1], aggrs, exp, done);
 		});
-
 
 	}); // Aggregations
 

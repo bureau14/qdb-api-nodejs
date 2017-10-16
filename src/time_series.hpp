@@ -40,8 +40,6 @@ public:
             NODE_SET_PROTOTYPE_METHOD(tpl, "insert", newColumnTpl<qdb_ts_insert_columns>);
             NODE_SET_PROTOTYPE_METHOD(tpl, "columns", columns);
 
-            NODE_SET_PROTOTYPE_METHOD(tpl, "Range", range);
-
             // Export to global namespace
             NODE_SET_METHOD(exports, "DoubleColumnInfo", columnInfoTpl<qdb_ts_column_double>);
             NODE_SET_METHOD(exports, "BlobColumnInfo", columnInfoTpl<qdb_ts_column_blob>);
@@ -72,30 +70,6 @@ private:
                                               qdb_ts_list_columns(qdb_req->handle(), alias, info, count);
                                       },
                                       TimeSeries::processArrayColumnsInfoResult, &ArgsEaterBinder::holder);
-    }
-
-    static void range(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        v8::Isolate * isolate = args.GetIsolate();
-        v8::Local<v8::Object> obj = v8::Object::New(isolate);
-
-        MethodMan call(args);
-        if (args.Length() != 2)
-        {
-            call.throwException("Wrong number of arguments");
-            return;
-        }
-
-        if (!args[0]->IsDate() || !args[1]->IsDate())
-        {
-            call.throwException("Wrong type of arguments");
-            return;
-        }
-
-        obj->Set(v8::String::NewFromUtf8(isolate, "begin"), args[0]);
-        obj->Set(v8::String::NewFromUtf8(isolate, "end"), args[1]);
-
-        args.GetReturnValue().Set(obj);
     }
 
     static void aggregation(const v8::FunctionCallbackInfo<v8::Value> & args)
