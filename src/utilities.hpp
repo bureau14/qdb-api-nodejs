@@ -2,6 +2,7 @@
 
 #include "cluster_data.hpp"
 #include "time.hpp"
+#include "ts_aggregation.hpp"
 #include "ts_ranges.hpp"
 #include <qdb/batch.h>
 #include <qdb/client.h>
@@ -627,7 +628,7 @@ public:
                 auto obj = node::ObjectWrap::Unwrap<FilteredRange>(vi->ToObject());
                 assert(obj);
 
-                res.push_back(obj->NativeValue());
+                res.push_back(obj->nativeValue());
             }
         }
 
@@ -646,31 +647,22 @@ public:
             auto len = arr.first->Length();
             res.reserve(len);
 
-            auto typeProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "type");
-            auto rangeProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "range");
-            auto countProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "count");
-
             for (auto i = 0u; i < len; ++i)
             {
                 auto vi = arr.first->Get(i);
                 if (!vi->IsObject()) return aggr_vector();
 
                 auto obj = vi->ToObject();
-                auto type = obj->Get(typeProp);
-                auto range = obj->Get(rangeProp);
-                auto count = obj->Get(countProp);
 
-                if (!type->IsNumber() || !range->IsObject() || !count->IsNumber()) return aggr_vector();
+                auto aggr = node::ObjectWrap::Unwrap<Aggregation>(obj);
+                assert(aggr);
 
-                auto fr = node::ObjectWrap::Unwrap<FilteredRange>(range->ToObject());
-                assert(fr);
+                Type item;
+                item.type = aggr->nativeType();
+                item.filtered_range = aggr->nativeRange();
+                item.count = 0;
 
-                Type aggr;
-                aggr.type = static_cast<qdb_ts_aggregation_type_t>(type->Int32Value());
-                aggr.filtered_range = fr->NativeValue();
-                aggr.count = static_cast<qdb_size_t>(count->Int32Value());
-
-                res.push_back(aggr);
+                res.push_back(item);
             }
         }
 

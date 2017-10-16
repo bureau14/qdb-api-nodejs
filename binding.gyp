@@ -32,6 +32,8 @@
         "src/column.hpp",
         "src/ts_ranges.cpp",
         "src/ts_ranges.hpp",
+        "src/ts_aggregation.cpp",
+        "src/ts_aggregation.hpp",
         "src/cluster_data.hpp",
         "src/utilities.hpp",
         "src/time.hpp",

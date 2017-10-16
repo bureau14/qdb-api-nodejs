@@ -47,10 +47,6 @@ public:
             AddTsType<qdb_ts_column_type_t>(exports, "TS_COLUMN_BLOB", qdb_ts_column_blob);
             AddTsType<qdb_ts_column_type_t>(exports, "TS_COLUMN_DOUBLE", qdb_ts_column_double);
 
-            AddTsType<qdb_ts_aggregation_type_t>(exports, "AggFirst", qdb_agg_first);
-            AddTsType<qdb_ts_aggregation_type_t>(exports, "AggLast", qdb_agg_last);
-
-            NODE_SET_METHOD(exports, "TsAggregation", aggregation);
         });
     }
 
@@ -70,39 +66,6 @@ private:
                                               qdb_ts_list_columns(qdb_req->handle(), alias, info, count);
                                       },
                                       TimeSeries::processArrayColumnsInfoResult, &ArgsEaterBinder::holder);
-    }
-
-    static void aggregation(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        v8::Isolate * isolate = args.GetIsolate();
-        v8::Local<v8::Object> obj = v8::Object::New(isolate);
-
-        MethodMan call(args);
-        if (args.Length() != 2 && args.Length() != 3)
-        {
-            call.throwException("Wrong number of arguments");
-            return;
-        }
-
-        if (!args[0]->IsInt32() || !args[1]->IsObject())
-        {
-            call.throwException("Wrong type of arguments");
-            return;
-        }
-
-        if (args.Length() == 3 && !args[2]->IsNumber())
-        {
-            call.throwException("Wrong type of arguments");
-            return;
-        }
-
-        auto count = (args.Length() == 3) ? args[2]->Int32Value() : 0;
-
-        obj->Set(v8::String::NewFromUtf8(isolate, "type"), args[0]);
-        obj->Set(v8::String::NewFromUtf8(isolate, "range"), args[1]);
-        obj->Set(v8::String::NewFromUtf8(isolate, "count"), v8::Number::New(isolate, count));
-
-        args.GetReturnValue().Set(obj);
     }
 
     template <qdb_ts_column_type_t type>

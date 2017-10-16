@@ -1,6 +1,7 @@
 #include "cluster.hpp"
 #include "column.hpp"
 #include "points.hpp"
+#include "ts_aggregation.hpp"
 #include "ts_ranges.hpp"
 #include <node.h>
 #include <clocale>
@@ -40,6 +41,7 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::BlobPoint::Init(exports);
     quasardb::DoubleColumn::Init(exports);
     quasardb::BlobColumn::Init(exports);
+    quasardb::Aggregation::Init(exports);
 
     InitConstants(exports);
 }

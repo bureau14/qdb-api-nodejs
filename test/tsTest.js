@@ -683,19 +683,13 @@ describe('TimeSeries', function() {
 
 		it('should create valid aggregation', function() {
 			var range = qdb.TsRange(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
-			var agg = qdb.TsAggregation(qdb.AggFirst, range)
-			var aggc = qdb.TsAggregation(qdb.AggLast, range, 42)
+			var agg = qdb.Aggregation(qdb.AggFirst, range)
 
 			test.object(agg).hasProperty('type');
 			test.object(agg).hasProperty('range');
-			test.object(agg).hasProperty('count');
 
 			test.must(agg.type).be(qdb.AggFirst);
-			test.must(aggc.type).be(qdb.AggLast);
-
 			test.must(agg.range).be(range);
-			test.must(agg.count).eql(0);
-			test.must(aggc.count).eql(42);
 		});
 
 		var checkAggrs = function(col, aggrs, exp, done) {
@@ -713,14 +707,14 @@ describe('TimeSeries', function() {
 		};
 
 		it('should find first and last double points', function(done) {
-			var aggrs = [qdb.TsAggregation(qdb.AggFirst, range), qdb.TsAggregation(qdb.AggLast, range)];
+			var aggrs = [qdb.Aggregation(qdb.AggFirst, range), qdb.Aggregation(qdb.AggLast, range)];
 			var exp = [doublePoints[0], doublePoints.slice(-1)[0]];
 
 			checkAggrs(columns[0], aggrs, exp, done);
 		});
 
 		it('should find first and last blob points', function(done) {
-			var aggrs = [qdb.TsAggregation(qdb.AggFirst, range), qdb.TsAggregation(qdb.AggLast, range)];
+			var aggrs = [qdb.Aggregation(qdb.AggFirst, range), qdb.Aggregation(qdb.AggLast, range)];
 			var exp = [blobPoints[0], blobPoints.slice(-1)[0]];
 
 			checkAggrs(columns[1], aggrs, exp, done);
