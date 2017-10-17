@@ -1,4 +1,8 @@
 #include "cluster.hpp"
+#include "ts_aggregation.hpp"
+#include "ts_column.hpp"
+#include "ts_point.hpp"
+#include "ts_range.hpp"
 #include <node.h>
 #include <clocale>
 
@@ -31,6 +35,13 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::Range::Init(exports);
     quasardb::Set::Init(exports);
     quasardb::Tag::Init(exports);
+    quasardb::FilteredRange::Init(exports);
+    quasardb::TimeSeries::Init(exports);
+    quasardb::DoublePoint::Init(exports);
+    quasardb::BlobPoint::Init(exports);
+    quasardb::DoubleColumn::Init(exports);
+    quasardb::BlobColumn::Init(exports);
+    quasardb::Aggregation::Init(exports);
 
     InitConstants(exports);
 }

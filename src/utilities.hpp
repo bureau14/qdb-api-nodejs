@@ -1,11 +1,16 @@
 #pragma once
 
 #include "cluster_data.hpp"
+#include "time.hpp"
+#include "ts_aggregation.hpp"
+#include "ts_range.hpp"
 #include <qdb/batch.h>
 #include <qdb/client.h>
 #include <qdb/integer.h>
+#include <qdb/ts.h>
 #include <node.h>
 #include <node_buffer.h>
+#include <array>
 #include <functional>
 #include <utility>
 #include <vector>
@@ -15,7 +20,7 @@ namespace quasardb
 namespace detail
 {
 
-static void
+static inline void
 AddConstantProperty(v8::Isolate * isolate, v8::Local<v8::Object> object, const char * key, v8::Local<v8::Value> value)
 {
     // object->ForceSet(v8::String::NewFromUtf8(isolate, key), value,
@@ -60,6 +65,18 @@ inline void release_node_buffer(char * data, void * hint)
 
 } // namespace detail
 
+// POD for storing info about columns from js calls
+struct column_info
+{
+    column_info(std::string name = std::string(), qdb_ts_column_type_t type = qdb_ts_column_uninitialized)
+        : name(name), type(type)
+    {
+    }
+
+    std::string name;
+    qdb_ts_column_type_t type;
+};
+
 struct qdb_request
 {
     struct slice
@@ -88,6 +105,16 @@ struct qdb_request
             std::vector<std::string> strs;
             slice buffer;
             qdb_int_t value;
+
+            // Time series
+            // TODO(denisb): consider to move it all to err slice ?
+            std::vector<column_info> columns;
+            std::vector<qdb_ts_blob_point> blob_points;
+            std::vector<qdb_ts_double_point> double_points;
+            std::vector<qdb_ts_filtered_range_t> ranges;
+
+            std::vector<qdb_ts_blob_aggregation_t> blob_aggrs;
+            std::vector<qdb_ts_double_aggregation_t> double_aggrs;
         };
 
         query_content content;
@@ -103,6 +130,7 @@ struct qdb_request
 
         union {
             slice buffer;
+            qdb_uint_t uvalue;
             qdb_int_t value;
             qdb_entry_metadata_t entry_metadata;
             qdb_entry_type_t entry_type;
@@ -130,6 +158,7 @@ struct qdb_request
     ~qdb_request(void)
     {
         callback.Reset();
+        holder.Reset();
     }
 
 private:
@@ -171,6 +200,7 @@ public:
 
 public:
     v8::Persistent<v8::Function> callback;
+    v8::Persistent<v8::Object> holder;
 
     v8::Local<v8::Function> callbackAsLocal(void)
     {
@@ -480,6 +510,170 @@ public:
         return res;
     }
 
+    // Expected array of JS objects which has two properties:
+    //	name - string, column name
+    //	type - integer, column type
+    std::vector<column_info> eatAndConvertColumnsInfoArray(void)
+    {
+        using column_vector = std::vector<column_info>;
+        column_vector res;
+
+        auto arr = eatArray();
+
+        if (arr.second)
+        {
+            auto len = arr.first->Length();
+            res.reserve(len);
+
+            auto nameProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "name");
+            auto typeProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "type");
+
+            for (auto i = 0u; i < len; ++i)
+            {
+                auto vi = arr.first->Get(i);
+                if (!vi->IsObject()) return column_vector();
+
+                auto obj = vi->ToObject();
+                auto name = obj->Get(nameProp);
+                auto type = obj->Get(typeProp);
+
+                if (!name->IsString() || !type->IsNumber()) return column_vector();
+
+                v8::String::Utf8Value sval(name->ToString());
+                res.emplace_back(std::string(*sval, sval.length()), qdb_ts_column_type_t(type->Int32Value()));
+            }
+        }
+
+        return res;
+    }
+
+    template <typename Type, typename Func>
+    std::vector<Type> eatAndConvertPointsArray(Func f)
+    {
+        using point_vector = std::vector<Type>;
+        point_vector res;
+
+        auto arr = eatArray();
+        if (arr.second)
+        {
+            auto len = arr.first->Length();
+            res.reserve(len);
+
+            auto tsProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "timestamp");
+            auto valueProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "value");
+
+            for (auto i = 0u; i < len; ++i)
+            {
+                auto vi = arr.first->Get(i);
+                if (!vi->IsObject()) return point_vector();
+
+                auto obj = vi->ToObject();
+                auto date = obj->Get(tsProp);
+                auto value = obj->Get(valueProp);
+
+                if (!date->IsDate()) return point_vector();
+
+                auto ms = v8::Local<v8::Date>::Cast(date)->ValueOf();
+                auto point = f(ms_to_qdb_timespec(ms), value);
+
+                if (!point.second) return point_vector();
+                res.push_back(point.first);
+            }
+        }
+
+        return res;
+    }
+
+    std::vector<qdb_ts_double_point> eatAndConvertDoublePointsArray(void)
+    {
+        return eatAndConvertPointsArray<qdb_ts_double_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
+            qdb_ts_double_point p;
+            if (!value->IsNumber()) return std::make_pair(p, false);
+
+            p.timestamp = ts;
+            p.value = value->NumberValue();
+            return std::make_pair(p, true);
+        });
+    }
+
+    std::vector<qdb_ts_blob_point> eatAndConvertBlobPointsArray(void)
+    {
+        return eatAndConvertPointsArray<qdb_ts_blob_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
+            qdb_ts_blob_point p;
+            if (!value->IsObject()) return std::make_pair(p, false);
+
+            p.timestamp = ts;
+            p.content = node::Buffer::Data(value);
+            p.content_length = node::Buffer::Length(value);
+            return std::make_pair(p, true);
+        });
+    }
+
+    std::vector<qdb_ts_filtered_range_t> eatAndConvertRangeArray(void)
+    {
+        using range_vector = std::vector<qdb_ts_filtered_range_t>;
+        range_vector res;
+
+        auto arr = eatArray();
+        if (arr.second)
+        {
+            auto len = arr.first->Length();
+            res.reserve(len);
+
+            for (auto i = 0u; i < len; ++i)
+            {
+                auto vi = arr.first->Get(i);
+                if (!vi->IsObject()) return range_vector();
+
+                auto obj = node::ObjectWrap::Unwrap<FilteredRange>(vi->ToObject());
+                assert(obj);
+
+                res.push_back(obj->nativeRange());
+            }
+        }
+
+        return res;
+    }
+
+    template <typename Type>
+    std::vector<Type> eatAndConvertAggrArray(void)
+    {
+        using aggr_vector = std::vector<Type>;
+        aggr_vector res;
+
+        auto arr = eatArray();
+        if (arr.second)
+        {
+            auto len = arr.first->Length();
+            res.reserve(len);
+
+            for (auto i = 0u; i < len; ++i)
+            {
+                auto vi = arr.first->Get(i);
+                if (!vi->IsObject()) return aggr_vector();
+
+                auto obj = vi->ToObject();
+
+                auto aggr = node::ObjectWrap::Unwrap<Aggregation>(obj);
+                assert(aggr);
+
+                Type item;
+                item.type = aggr->nativeType();
+                item.filtered_range = aggr->nativeRange();
+                item.count = 0;
+
+                res.push_back(item);
+            }
+        }
+
+        return res;
+    }
+
+    v8::Local<v8::Object> eatHolder(void)
+    {
+        return _method.holder();
+    }
+
     qdb_request::slice eatAndConvertBuffer(void)
     {
         auto buf = eatObject();
@@ -536,6 +730,12 @@ public:
         return req;
     }
 
+    qdb_request & columnsInfo(qdb_request & req)
+    {
+        req.input.content.columns = _eater.eatAndConvertColumnsInfoArray();
+        return req;
+    }
+
     qdb_request & buffer(qdb_request & req)
     {
         req.input.content.buffer = _eater.eatAndConvertBuffer();
@@ -545,6 +745,42 @@ public:
     qdb_request & expiry(qdb_request & req)
     {
         req.input.expiry = _eater.eatAndConvertDate();
+        return req;
+    }
+
+    qdb_request & holder(qdb_request & req)
+    {
+        req.holder.Reset(v8::Isolate::GetCurrent(), _eater.eatHolder());
+        return req;
+    }
+
+    qdb_request & doublePoints(qdb_request & req)
+    {
+        req.input.content.double_points = _eater.eatAndConvertDoublePointsArray();
+        return req;
+    }
+
+    qdb_request & blobPoints(qdb_request & req)
+    {
+        req.input.content.blob_points = _eater.eatAndConvertBlobPointsArray();
+        return req;
+    }
+
+    qdb_request & ranges(qdb_request & req)
+    {
+        req.input.content.ranges = _eater.eatAndConvertRangeArray();
+        return req;
+    }
+
+    qdb_request & blobAggregations(qdb_request & req)
+    {
+        req.input.content.blob_aggrs = _eater.eatAndConvertAggrArray<qdb_ts_blob_aggregation_t>();
+        return req;
+    }
+
+    qdb_request & doubleAggregations(qdb_request & req)
+    {
+        req.input.content.double_aggrs = _eater.eatAndConvertAggrArray<qdb_ts_double_aggregation_t>();
         return req;
     }
 
@@ -581,6 +817,27 @@ public:
 
 private:
     ArgsEater _eater;
+};
+
+template <size_t ArgsLength>
+struct ArgumentsCopier;
+
+template <>
+struct ArgumentsCopier<1>
+{
+    static inline std::array<v8::Local<v8::Value>, 1> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        return {{args[0]}};
+    }
+};
+
+template <>
+struct ArgumentsCopier<2>
+{
+    static inline std::array<v8::Local<v8::Value>, 2> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        return {{args[0], args[1]}};
+    }
 };
 
 } // namespace quasardb

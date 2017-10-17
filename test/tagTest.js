@@ -28,13 +28,14 @@ describe('Tag', function() {
     });
 
     describe('entries list test', function() {
-        var b, i, q, s;
+        var b, i, q, s, ts;
 
         before('init', function() {
             b = cluster.blob('blob_tag_test');
             i = cluster.integer('int_tag_test');
             q = cluster.deque('deque_tag_test');
             s = cluster.set('set_tag_test');
+            ts = cluster.ts('time_series_tag_test');
         });
 
         it('should return an empty tag list', function(done) {
@@ -88,6 +89,15 @@ describe('Tag', function() {
             });
         });
 
+        it('should create the time series double columns for tag test', function(done)
+        {
+			ts.create([qdb.DoubleColumnInfo("col1")], function(err) {
+				test.must(err).be.equal(null);
+
+				done();
+			});
+        });
+
         it('should tag the blob successfully', function(done)
         {
             b.attachTag(dasTag, function(err)
@@ -128,6 +138,16 @@ describe('Tag', function() {
             });
         });
 
+        it('should tag the time series successfully', function(done)
+        {
+            ts.attachTag(dasTag, function(err)
+            {
+                test.must(err).be.equal(null);
+
+                done();
+            });
+        });
+
         it('should return correct entry type', function (done) {
             t.getMetadata(function (err, meta) {
                 test.must(err).be.equal(null);
@@ -144,12 +164,13 @@ describe('Tag', function() {
             {
                 test.must(err).be.equal(null);
 
-                entries.must.have.length(4);
+                entries.must.have.length(5);
 
                 test.must(entries.indexOf('blob_tag_test')).be.gte(0);
                 test.must(entries.indexOf('int_tag_test')).be.gte(0);
                 test.must(entries.indexOf('deque_tag_test')).be.gte(0);
                 test.must(entries.indexOf('set_tag_test')).be.gte(0);
+                test.must(entries.indexOf('time_series_tag_test')).be.gte(0);
 
                 done();
             });
@@ -188,6 +209,16 @@ describe('Tag', function() {
         it('should untag the set successfully', function(done)
         {
             s.detachTag(dasTag, function(err)
+            {
+                test.must(err).be.equal(null);
+
+                done();
+            });
+        });
+
+        it('should untag the time series successfully', function(done)
+        {
+            ts.detachTag(dasTag, function(err)
             {
                 test.must(err).be.equal(null);
 
@@ -240,6 +271,16 @@ describe('Tag', function() {
         it('should remove the set for tag test', function(done)
         {
             s.remove(function(err)
+            {
+                test.must(err).be.equal(null);
+
+                done();
+            });
+        });
+
+        it('should remove the time series for tag test', function(done)
+        {
+            ts.remove(function(err)
             {
                 test.must(err).be.equal(null);
 

@@ -9,6 +9,7 @@
 #include "prefix.hpp"
 #include "range.hpp"
 #include "tag.hpp"
+#include "time_series.hpp"
 #include <node.h>
 #include <node_object_wrap.h>
 #include <mutex>
@@ -58,6 +59,7 @@ public:
         NODE_SET_PROTOTYPE_METHOD(tpl, "integer", integer);
         NODE_SET_PROTOTYPE_METHOD(tpl, "set", set);
         NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "ts", ts);
 
         NODE_SET_PROTOTYPE_METHOD(tpl, "prefix", prefix);
         NODE_SET_PROTOTYPE_METHOD(tpl, "range", range);
@@ -71,6 +73,7 @@ public:
         AddEntryType(exports, "ENTRY_TAG", qdb_entry_tag);
         AddEntryType(exports, "ENTRY_DEQUE", qdb_entry_deque);
         AddEntryType(exports, "ENTRY_STREAM", qdb_entry_stream);
+        AddEntryType(exports, "ENTRY_TS", qdb_entry_ts);
 
         constructor.Reset(isolate, tpl->GetFunction());
         exports->Set(v8::String::NewFromUtf8(isolate, "Cluster"), tpl->GetFunction());
@@ -236,10 +239,6 @@ private:
 
         return data;
     }
-
-private:
-    template <size_t ArgsLength>
-    struct ArgumentsCopier;
 
 public:
     template <typename Object>
@@ -407,6 +406,11 @@ public:
         objectFactory<Tag>(args);
     }
 
+    static void ts(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        objectFactory<TimeSeries>(args);
+    }
+
 public:
     static void setTimeout(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
@@ -492,23 +496,6 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
-template <>
-struct Cluster::ArgumentsCopier<1>
-{
-    static std::array<v8::Local<v8::Value>, 1> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        return {{args[0]}};
-    }
-};
-
-template <>
-struct Cluster::ArgumentsCopier<2>
-{
-    static std::array<v8::Local<v8::Value>, 2> copy(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        return {{args[0], args[1]}};
-    }
-};
 
 template <typename Object>
 struct Cluster::Factory<Object, 0>

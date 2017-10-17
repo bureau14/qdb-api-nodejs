@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <type_traits>
 
@@ -348,6 +349,7 @@ private:
         }
     }
 
+protected:
     static auto processErrorCode(v8::Isolate * isolate, int status, const qdb_request * req) -> v8::Local<v8::Value>
     {
         if (status < 0)
@@ -450,6 +452,18 @@ public:
         });
     }
 
+    static void processUintegerResult(uv_work_t * req, int status)
+    {
+        processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+            const auto error_code = processErrorCode(isolate, status, qdb_req);
+            auto result_data = ((status >= 0) && (qdb_req->output.error == qdb_e_ok))
+                                   ? v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.uvalue))
+                                   : v8::Number::New(isolate, 0.0);
+
+            return make_value_array(error_code, result_data);
+        });
+    }
+
     static void processDateResult(uv_work_t * req, int status)
     {
         processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
@@ -461,12 +475,6 @@ public:
             }
             return make_value_array(error_code, v8::Undefined(isolate));
         });
-    }
-
-    // No-op.
-    static double convertToMillis(const qdb_timespec_t & ts)
-    {
-        return static_cast<double>(ts.tv_sec) * 1000.0 + static_cast<double>(ts.tv_nsec / 1000000ull);
     }
 
     static void processEntryMetadataResult(uv_work_t * req, int status)
@@ -496,14 +504,14 @@ public:
 
             using LocalValue = v8::Local<v8::Value>;
             {
-                double millis = convertToMillis(qdb_req->output.content.entry_metadata.modification_time);
+                double millis = qdb_timespec_to_ms(qdb_req->output.content.entry_metadata.modification_time);
                 meta->Set(v8::String::NewFromUtf8(isolate, "modification_time"),
                           (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))
                                        : LocalValue(v8::Undefined(isolate)));
             }
 
             {
-                double millis = convertToMillis(qdb_req->output.content.entry_metadata.expiry_time);
+                double millis = qdb_timespec_to_ms(qdb_req->output.content.entry_metadata.expiry_time);
                 meta->Set(v8::String::NewFromUtf8(isolate, "expiry_time"),
                           (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))
                                        : LocalValue(v8::Undefined(isolate)));
@@ -558,7 +566,20 @@ protected:
         detail::queue_work(args, spawnRequest<F, Params...>, f, after_work_cb, p...);
     }
 
+public:
+    cluster_data_ptr cluster_data(void)
+    {
+        cluster_data_ptr res;
+        {
+            std::lock_guard<std::mutex> lock(_data_mutex);
+            res = _cluster_data;
+        }
+
+        return res;
+    }
+
 private:
+    std::mutex _data_mutex;
     cluster_data_ptr _cluster_data;
     std::unique_ptr<std::string> _alias;
 };
