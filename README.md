@@ -375,8 +375,8 @@ ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], fu
 	// ... populating with values
 
 	var ranges = [
-					qdb.TsRange(new Date(2021, 10, 10, 8, 0), new Date(2021, 10, 10, 12, 0)),
-					qdb.TsRange(new Date(2021, 11, 11, 0, 0), new Date(2021, 11, 11, 10, 0))
+	    qdb.TsRange(new Date(2021, 10, 10, 8, 0), new Date(2021, 10, 10, 12, 0)),
+	    qdb.TsRange(new Date(2021, 11, 11, 0, 0), new Date(2021, 11, 11, 10, 0))
 	];
 
 	column[0].erase(ranges, function(err, erased) {
@@ -385,6 +385,57 @@ ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], fu
 });
 
 ```
+
+
+Aggregations on time series columns
+
+
+```javascript
+var ts = c.ts('temperature');
+
+ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns) {
+	if (err) {
+		// ...
+	}
+
+	// ... populating with values
+
+	var range = qdb.TsRange(new Date(2021, 10, 10, 8, 0), new Date(2021, 10, 10, 12, 0));
+	var aggFirst = qdb.Aggregatoin(dqb.AggFirst, range);
+	var aggMax = qdb.Aggregatoin(dqb.AggMax, range);
+	var aggSum = qdb.Aggregatoin(dqb.AggSum, range);
+
+    // Aggregate over double column
+    column[0].aggregate([aggFirst, aggMax, aggSum], function(err, aggrs) {
+        if (err) {
+            // ...
+        }
+
+        var firstPoint = aggrs[0].result;
+        var maxPoint = aggrs[1].result;
+        var sumValue = aggrs[2].result.value;
+        var sumCount = aggrs[2].count;
+
+        // Using aggr values
+	});
+
+    // Aggregate over blob column
+    column[1].aggregate([aggFirst], function(err, aggrs) {
+        if (err) {
+            // ...
+        }
+
+        var firstBlob = aggrs[0].result;
+	});
+
+});
+
+```
+
+`aggregate` function return error (if any) and array of result for each aggregation which was passed as input.
+Each result element consists from two properties:
+ * `result` contains Blob or Double point;
+ * `count` contains (if applicable) the number of datapoints on which aggregation has been computed.
 
 ## Not supported yet
 
