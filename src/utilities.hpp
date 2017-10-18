@@ -674,6 +674,17 @@ public:
         return _method.holder();
     }
 
+    std::string eatAndConvertTsAlias(void)
+    {
+        auto holder = _method.holder();
+        auto tsProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "timeseries");
+
+        auto ts = holder->Get(tsProp);
+        if (!ts->IsString()) return std::string();
+
+        return convertString(ts->ToString());
+    }
+
     qdb_request::slice eatAndConvertBuffer(void)
     {
         auto buf = eatObject();
@@ -781,6 +792,12 @@ public:
     qdb_request & doubleAggregations(qdb_request & req)
     {
         req.input.content.double_aggrs = _eater.eatAndConvertAggrArray<qdb_ts_double_aggregation_t>();
+        return req;
+    }
+
+    qdb_request & tsAlias(qdb_request & req)
+    {
+        req.input.content.str = _eater.eatAndConvertTsAlias();
         return req;
     }
 

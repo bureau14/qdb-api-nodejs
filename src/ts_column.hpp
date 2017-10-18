@@ -49,8 +49,8 @@ public:
             auto proto = tpl->PrototypeTemplate();
 
             proto->SetAccessorProperty(
-                v8::String::NewFromUtf8(isolate, "name"),
-                v8::FunctionTemplate::New(isolate, Column<Derivate>::getName, v8::Local<v8::Value>(), s),
+                v8::String::NewFromUtf8(isolate, "timeseries"),
+                v8::FunctionTemplate::New(isolate, Column<Derivate>::getTsAlias, v8::Local<v8::Value>(), s),
                 v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
             proto->SetAccessorProperty(
@@ -164,11 +164,11 @@ private:
         f(args, c);
     }
 
-    static void getName(const v8::FunctionCallbackInfo<v8::Value> & args)
+    static void getTsAlias(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Column::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, const Column * c) {
             v8::Isolate * isolate = args.GetIsolate();
-            args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, c->native_alias().c_str()));
+            args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, c->ts.c_str()));
         });
     }
 
