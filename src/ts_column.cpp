@@ -14,125 +14,98 @@ v8::Persistent<v8::Function> DoubleColumn::constructor;
 
 void BlobColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    MethodMan call(args);
+    Column<BlobColumn>::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            const auto & points = qdb_req->input.content.blob_points;
 
-    BlobColumn * c = call.nativeHolder<BlobColumn>();
-    assert(c);
-
-    auto ts = c->timeSeries();
-    Column<BlobColumn>::queue_work(args,
-                                   [ts](qdb_request * qdb_req) {
-                                       auto alias = qdb_req->input.alias.c_str();
-                                       const auto & points = qdb_req->input.content.blob_points;
-                                       qdb_req->output.error = qdb_ts_blob_insert(qdb_req->handle(), ts.c_str(), alias,
-                                                                                  points.data(), points.size());
-                                   },
-                                   Entry<Column>::processVoidResult, &ArgsEaterBinder::blobPoints);
+            qdb_req->output.error = qdb_ts_blob_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+        },
+        Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::blobPoints);
 }
 
 void BlobColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    MethodMan call(args);
+    BlobColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            auto & ranges = qdb_req->input.content.ranges;
+            auto bufp =
+                reinterpret_cast<qdb_ts_blob_point **>(const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+            auto count = &(qdb_req->output.content.buffer.size);
 
-    BlobColumn * c = call.nativeHolder<BlobColumn>();
-    assert(c);
-
-    auto ts = c->timeSeries();
-    BlobColumn::queue_work(args,
-                           [ts](qdb_request * qdb_req) {
-                               auto alias = qdb_req->input.alias.c_str();
-                               auto & ranges = qdb_req->input.content.ranges;
-                               auto bufp = reinterpret_cast<qdb_ts_blob_point **>(
-                                   const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
-                               auto count = &(qdb_req->output.content.buffer.size);
-
-                               qdb_req->output.error = qdb_ts_blob_get_ranges(
-                                   qdb_req->handle(), ts.c_str(), alias, ranges.data(), ranges.size(), bufp, count);
-                           },
-                           BlobColumn::processBlobPointArrayResult, &ArgsEaterBinder::ranges);
+            qdb_req->output.error =
+                qdb_ts_blob_get_ranges(qdb_req->handle(), ts, alias, ranges.data(), ranges.size(), bufp, count);
+        },
+        BlobColumn::processBlobPointArrayResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::ranges);
 }
 
 void BlobColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    MethodMan call(args);
+    BlobColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            qdb_ts_blob_aggregation_t * aggrs = qdb_req->input.content.blob_aggrs.data();
+            const qdb_size_t count = qdb_req->input.content.blob_aggrs.size();
 
-    BlobColumn * c = call.nativeHolder<BlobColumn>();
-    assert(c);
+            qdb_req->output.error = qdb_ts_blob_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
 
-    auto ts = c->timeSeries();
-    BlobColumn::queue_work(args,
-                           [ts](qdb_request * qdb_req) {
-                               auto alias = qdb_req->input.alias.c_str();
-                               qdb_ts_blob_aggregation_t * aggrs = qdb_req->input.content.blob_aggrs.data();
-                               const qdb_size_t count = qdb_req->input.content.blob_aggrs.size();
-
-                               qdb_req->output.error =
-                                   qdb_ts_blob_aggregate(qdb_req->handle(), ts.c_str(), alias, aggrs, count);
-
-                           },
-                           BlobColumn::processBlobAggregateResult, &ArgsEaterBinder::blobAggregations);
+        },
+        BlobColumn::processBlobAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::blobAggregations);
 }
 
 void DoubleColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    MethodMan call(args);
+    Column<DoubleColumn>::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            const auto & points = qdb_req->input.content.double_points;
 
-    DoubleColumn * c = call.nativeHolder<DoubleColumn>();
-    assert(c);
-
-    auto ts = c->timeSeries();
-    Column<DoubleColumn>::queue_work(args,
-                                     [ts](qdb_request * qdb_req) {
-                                         auto alias = qdb_req->input.alias.c_str();
-                                         const auto & points = qdb_req->input.content.double_points;
-
-                                         qdb_req->output.error = qdb_ts_double_insert(
-                                             qdb_req->handle(), ts.c_str(), alias, points.data(), points.size());
-                                     },
-                                     Entry<Column>::processVoidResult, &ArgsEaterBinder::doublePoints);
+            qdb_req->output.error = qdb_ts_double_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+        },
+        Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::doublePoints);
 }
 
 void DoubleColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    MethodMan call(args);
+    DoubleColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            auto & ranges = qdb_req->input.content.ranges;
+            auto bufp =
+                reinterpret_cast<qdb_ts_double_point **>(const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+            auto count = &(qdb_req->output.content.buffer.size);
 
-    DoubleColumn * c = call.nativeHolder<DoubleColumn>();
-    assert(c);
-
-    auto ts = c->timeSeries();
-    DoubleColumn::queue_work(args,
-                             [ts](qdb_request * qdb_req) {
-                                 auto alias = qdb_req->input.alias.c_str();
-                                 auto & ranges = qdb_req->input.content.ranges;
-                                 auto bufp = reinterpret_cast<qdb_ts_double_point **>(
-                                     const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
-                                 auto count = &(qdb_req->output.content.buffer.size);
-
-                                 qdb_req->output.error = qdb_ts_double_get_ranges(
-                                     qdb_req->handle(), ts.c_str(), alias, ranges.data(), ranges.size(), bufp, count);
-                             },
-                             DoubleColumn::processDoublePointArrayResult, &ArgsEaterBinder::ranges);
+            qdb_req->output.error =
+                qdb_ts_double_get_ranges(qdb_req->handle(), ts, alias, ranges.data(), ranges.size(), bufp, count);
+        },
+        DoubleColumn::processDoublePointArrayResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::ranges);
 }
 
 void DoubleColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    MethodMan call(args);
+    DoubleColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            qdb_ts_double_aggregation_t * aggrs = qdb_req->input.content.double_aggrs.data();
+            const qdb_size_t count = qdb_req->input.content.double_aggrs.size();
 
-    DoubleColumn * c = call.nativeHolder<DoubleColumn>();
-    assert(c);
+            qdb_req->output.error = qdb_ts_double_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
 
-    auto ts = c->timeSeries();
-    DoubleColumn::queue_work(args,
-                             [ts](qdb_request * qdb_req) {
-                                 auto alias = qdb_req->input.alias.c_str();
-                                 qdb_ts_double_aggregation_t * aggrs = qdb_req->input.content.double_aggrs.data();
-                                 const qdb_size_t count = qdb_req->input.content.double_aggrs.size();
-
-                                 qdb_req->output.error =
-                                     qdb_ts_double_aggregate(qdb_req->handle(), ts.c_str(), alias, aggrs, count);
-
-                             },
-                             DoubleColumn::processDoubleAggregateResult, &ArgsEaterBinder::doubleAggregations);
+        },
+        DoubleColumn::processDoubleAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::doubleAggregations);
 }
 
 void BlobColumn::processBlobPointArrayResult(uv_work_t * req, int status)

@@ -186,8 +186,9 @@ describe('TimeSeries', function() {
 				// FIXME: So far qdb returns columns in the same order as we
 				// created them, but would be better if test compares using `indexof` or somthing like that
 				for (var i = 0; i < columns.length; i++) {
-					test.must(columns[i].name).be.equal(columnInfo[i].name);
+					test.must(columns[i].alias()).be.equal(columnInfo[i].name);
 					test.must(columns[i].type).be.equal(columnInfo[i].type);
+					test.must(columns[i].timeseries).be.equal(ts.alias());
 				}
 
 				done();
