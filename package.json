@@ -38,6 +38,7 @@
   "binary": {
     "module_name": "quasardb",
     "module_path": "./lib/binding/",
-    "host": "https://npm.quasardb.net"
+    "host": "https://npm.quasardb.net",
+    "remote_path": "2.1.0-nightly.2"
   }
 }
