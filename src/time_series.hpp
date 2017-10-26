@@ -36,8 +36,8 @@ public:
     static void Init(v8::Local<v8::Object> exports)
     {
         Entry<TimeSeries>::Init(exports, "TimeSeries", [exports](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "create", newColumnTpl<qdb_ts_create>);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", newColumnTpl<qdb_ts_insert_columns>);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "create", ts_create);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", ts_insert_columns);
             NODE_SET_PROTOTYPE_METHOD(tpl, "columns", columns);
 
             // Export to global namespace
@@ -87,8 +87,7 @@ private:
         args.GetReturnValue().Set(info);
     }
 
-    template <qdb_error_t func(qdb_handle_t, const char *, const qdb_ts_column_info_t *, qdb_size_t)>
-    static void newColumnTpl(const v8::FunctionCallbackInfo<v8::Value> & args)
+    static void ts_create(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<TimeSeries>::queue_work(
             args,
@@ -105,7 +104,29 @@ private:
                 });
 
                 auto alias = qdb_req->input.alias.c_str();
-                qdb_req->output.error = func(qdb_req->handle(), alias, cols.data(), cols.size());
+                qdb_req->output.error = qdb_ts_create(qdb_req->handle(), alias, qdb_default_shard_size, cols.data(), cols.size());
+            },
+            TimeSeries::processColumnsCreateResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
+    }
+
+    static void ts_insert_columns(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        Entry<TimeSeries>::queue_work(
+            args,
+            [](qdb_request * qdb_req) {
+                auto & info = qdb_req->input.content.columns;
+                std::vector<qdb_ts_column_info_t> cols;
+                cols.resize(info.size());
+
+                std::transform(info.cbegin(), info.cend(), cols.begin(), [qdb_req](const column_info & ci) {
+                    qdb_ts_column_info_t info;
+                    info.name = ci.name.c_str();
+                    info.type = ci.type;
+                    return info;
+                });
+
+                auto alias = qdb_req->input.alias.c_str();
+                qdb_req->output.error = qdb_ts_insert_columns(qdb_req->handle(), alias, cols.data(), cols.size());
             },
             TimeSeries::processColumnsCreateResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
     }
