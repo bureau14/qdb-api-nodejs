@@ -104,7 +104,7 @@ private:
                 });
 
                 auto alias = qdb_req->input.alias.c_str();
-                qdb_req->output.error = qdb_ts_create(qdb_req->handle(), alias, qdb_default_shard_size, cols.data(), cols.size());
+                qdb_req->output.error = qdb_ts_create(qdb_req->handle(), alias, qdb_d_default_shard_size, cols.data(), cols.size());
             },
             TimeSeries::processColumnsCreateResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
     }
