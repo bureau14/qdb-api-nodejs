@@ -102,7 +102,7 @@ i.attachTag('dasTag', function(err) { /* */ });
 
 var t = c.tag('dasTag');
 
-t.getEntries(function(err, entries} { /* entries is the list of entries */ });
+t.getEntries(function(err, entries) { /* entries is the list of entries */ });
 ```
 
 It is also possible to list the tags of an entry or test for the existence of a tag:
