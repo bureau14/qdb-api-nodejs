@@ -319,14 +319,14 @@ Creating and populating columns:
 ```javascript
 var ts = c.ts('temperature');
 
-ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns){
+ts.create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns){
 	if (err) {
 		// ...
 	}
 
 	// columns is a array of `active column` instances
-	var p1 = qdb.DublePoint(new Date(2049, 10, 5), 100.0);
-	var p2 = qdb.DublePoint(new Date(2049, 10, 5, 4, 3), 110.0);
+	var p1 = qdb.DoublePoint(new Date(2049, 10, 5), 100.0);
+	var p2 = qdb.DoublePoint(new Date(2049, 10, 5, 4, 3), 110.0);
 
 	columns[0].insert([p1, p2], function(err) {
 		// ...
@@ -346,7 +346,7 @@ Getting values from time series columns:
 ```javascript
 var ts = c.ts('temperature');
 
-ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns){
+ts.create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns){
 	if (err) {
 		// ...
 	}
@@ -367,7 +367,7 @@ Erasing values from time series columns:
 ```javascript
 var ts = c.ts('temperature');
 
-ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns) {
+ts.create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns) {
 	if (err) {
 		// ...
 	}
@@ -393,7 +393,7 @@ Aggregations on time series columns
 ```javascript
 var ts = c.ts('temperature');
 
-ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns) {
+ts.create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], function(err, columns) {
 	if (err) {
 		// ...
 	}
@@ -401,9 +401,9 @@ ts.Create([qdb.DoubleColumnInfo("ColDouble"), qdb.BlobColumnInfo("ColBlob")], fu
 	// ... populating with values
 
 	var range = qdb.TsRange(new Date(2021, 10, 10, 8, 0), new Date(2021, 10, 10, 12, 0));
-	var aggFirst = qdb.Aggregatoin(dqb.AggFirst, range);
-	var aggMax = qdb.Aggregatoin(dqb.AggMax, range);
-	var aggSum = qdb.Aggregatoin(dqb.AggSum, range);
+	var aggFirst = qdb.Aggregation(dqb.AggFirst, range);
+	var aggMax = qdb.Aggregation(dqb.AggMax, range);
+	var aggSum = qdb.Aggregation(dqb.AggSum, range);
 
     // Aggregate over double column
     column[0].aggregate([aggFirst, aggMax, aggSum], function(err, aggrs) {
