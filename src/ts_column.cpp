@@ -3,7 +3,6 @@
 #include "error.hpp"
 #include "time_series.hpp"
 #include "ts_point.hpp"
-
 #include <qdb/ts.h>
 
 namespace quasardb
@@ -294,4 +293,4 @@ CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * na
     return std::make_pair(Error::MakeError(isolate, qdb_e_not_implemented), false);
 }
 
-} // quasardb namespace
+} // namespace quasardb

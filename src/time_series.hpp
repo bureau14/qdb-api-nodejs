@@ -1,23 +1,19 @@
 #pragma once
 
-#include <memory>
-#include <string>
-
+#include "entry.hpp"
+#include <qdb/ts.h>
 #include <node.h>
 #include <node_buffer.h>
 #include <node_object_wrap.h>
 #include <uv.h>
-
-#include <qdb/ts.h>
-
-#include "entry.hpp"
+#include <memory>
+#include <string>
 
 namespace quasardb
 {
 
 class TimeSeries : public Entry<TimeSeries>
 {
-
     friend class Entry<TimeSeries>;
     friend class Cluster;
 
@@ -28,6 +24,7 @@ private:
     TimeSeries(cluster_data_ptr cd, const char * alias) : Entry<TimeSeries>(cd, alias)
     {
     }
+
     virtual ~TimeSeries(void)
     {
     }
@@ -92,7 +89,7 @@ private:
         Entry<TimeSeries>::queue_work(
             args,
             [](qdb_request * qdb_req) {
-                auto & info = qdb_req->input.content.columns;
+                const auto & info = qdb_req->input.content.columns;
                 std::vector<qdb_ts_column_info_t> cols;
                 cols.resize(info.size());
 
@@ -104,7 +101,8 @@ private:
                 });
 
                 auto alias = qdb_req->input.alias.c_str();
-                qdb_req->output.error = qdb_ts_create(qdb_req->handle(), alias, qdb_d_default_shard_size, cols.data(), cols.size());
+                qdb_req->output.error =
+                    qdb_ts_create(qdb_req->handle(), alias, qdb_d_default_shard_size, cols.data(), cols.size());
             },
             TimeSeries::processColumnsCreateResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
     }
@@ -114,7 +112,7 @@ private:
         Entry<TimeSeries>::queue_work(
             args,
             [](qdb_request * qdb_req) {
-                auto & info = qdb_req->input.content.columns;
+                const auto & info = qdb_req->input.content.columns;
                 std::vector<qdb_ts_column_info_t> cols;
                 cols.resize(info.size());
 
@@ -143,4 +141,5 @@ private:
 private:
     static v8::Persistent<v8::Function> constructor;
 };
-} // quasardb namespace
+
+} // namespace quasardb

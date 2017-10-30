@@ -1,13 +1,11 @@
 #pragma once
 
+#include "time.hpp"
+#include <qdb/client.h>
+#include <qdb/ts.h>
 #include <node.h>
 #include <node_buffer.h>
 #include <node_object_wrap.h>
-
-#include <qdb/client.h>
-#include <qdb/ts.h>
-
-#include "time.hpp"
 
 namespace quasardb
 {
@@ -315,6 +313,6 @@ private:
     v8::Persistent<v8::Object> filter_obj;
 
     static v8::Persistent<v8::Function> constructor;
-}; // FilteredRange
+};
 
 } // namespace quasardb

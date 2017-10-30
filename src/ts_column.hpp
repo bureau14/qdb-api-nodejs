@@ -1,21 +1,22 @@
 #pragma once
 
-#include <memory>
-#include <string>
-
 #include "entry.hpp"
 #include "time_series.hpp"
 #include "utilities.hpp"
-
+#include <qdb/ts.h>
 #include <node.h>
 #include <node_buffer.h>
 #include <node_object_wrap.h>
 #include <uv.h>
-
-#include <qdb/ts.h>
+#include <memory>
+#include <string>
 
 namespace quasardb
 {
+
+// FIXME(marek): Deriving from Entry is conceptually wrong.
+// A column of a timeseries is not a standalone entry for a database and operations such as getTags() or remove() are
+// illegal.
 template <typename Derivate>
 class Column : public Entry<Derivate>
 {
@@ -66,7 +67,8 @@ public:
         static const size_t argc = Derivate::ParametersCount;
 
         v8::Local<v8::Value> argv[argc] = {
-            owner, v8::String::NewFromUtf8(isolate, name),
+            owner,
+            v8::String::NewFromUtf8(isolate, name),
         };
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
@@ -258,4 +260,4 @@ private:
 std::pair<v8::Local<v8::Object>, bool>
 CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type);
 
-} // quasardb namespace
+} // namespace quasardb

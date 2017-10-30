@@ -102,4 +102,5 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
         return make_value_array(error_code, array);
     });
 }
-}
+
+} // namespace quasardb

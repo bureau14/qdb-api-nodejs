@@ -1,11 +1,10 @@
 #pragma once
 
 #include "utilities.hpp"
+#include <qdb/client.h>
 #include <node.h>
 #include <node_buffer.h>
 #include <node_object_wrap.h>
-
-#include <qdb/client.h>
 
 // The reason why this points classes is out of Cluster factory object
 // is that we don't need cluster shared state inside these points.
@@ -128,7 +127,8 @@ public:
         static const size_t argc = ParametersCount;
 
         v8::Local<v8::Value> argv[argc] = {
-            v8::Date::New(isolate, qdb_timespec_to_ms(ts)), v8::Number::New(isolate, value),
+            v8::Date::New(isolate, qdb_timespec_to_ms(ts)),
+            v8::Number::New(isolate, value),
         };
 
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
@@ -213,7 +213,8 @@ public:
 
         auto bufp = static_cast<const char *>(content);
         v8::Local<v8::Value> argv[argc] = {
-            v8::Date::New(isolate, qdb_timespec_to_ms(ts)), node::Buffer::Copy(isolate, bufp, size).ToLocalChecked(),
+            v8::Date::New(isolate, qdb_timespec_to_ms(ts)),
+            node::Buffer::Copy(isolate, bufp, size).ToLocalChecked(),
         };
 
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
@@ -268,6 +269,6 @@ private:
     v8::Persistent<v8::Object> buffer;
 
     static v8::Persistent<v8::Function> constructor;
-}; // class BlobPoint
+};
 
 } // namespace quasardb
