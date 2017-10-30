@@ -83,6 +83,11 @@ describe('TimeSeries', function() {
         it('should create column', function(done) {
             ts.create([ columnInfo ], function(err, columns) {
                 test.must(err).be.equal(null);
+                test.must(columns).not.be.empty()
+                test.must(columns.length).be.equal(1)
+                test.must(columns[0].alias()).be.equal("Col2");
+                test.must(columns[0].type).be.equal(qdb.TS_COLUMN_DOUBLE);
+                test.must(columns[0].timeseries).be.equal(ts.alias());
 
                 done();
             });
@@ -105,6 +110,16 @@ describe('TimeSeries', function() {
         it('should insert new columns', function(done) {
             ts.insert([ qdb.DoubleColumnInfo("Colx"), qdb.BlobColumnInfo("Coly") ], function(err, columns) {
                 test.must(err).be.equal(null);
+                test.must(columns).not.be.empty()
+                test.must(columns.length).be.equal(2)
+
+                test.must(columns[0].alias()).be.equal("Colx");
+                test.must(columns[0].type).be.equal(qdb.TS_COLUMN_DOUBLE);
+                test.must(columns[0].timeseries).be.equal(ts.alias());
+
+                test.must(columns[1].alias()).be.equal("Coly");
+                test.must(columns[1].type).be.equal(qdb.TS_COLUMN_BLOB);
+                test.must(columns[1].timeseries).be.equal(ts.alias());
 
                 done();
             });
