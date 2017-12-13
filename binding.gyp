@@ -20,6 +20,8 @@
         "src/integer.hpp",
         "src/prefix.cpp",
         "src/prefix.hpp",
+        "src/query.cpp",
+        "src/query.hpp",
         "src/range.cpp",
         "src/range.hpp",
         "src/tag.cpp",

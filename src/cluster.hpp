@@ -7,13 +7,14 @@
 #include "hset.hpp"
 #include "integer.hpp"
 #include "prefix.hpp"
+#include "query.hpp"
 #include "range.hpp"
 #include "tag.hpp"
 #include "time_series.hpp"
+#include <qdb/query.h>
 #include <node.h>
 #include <node_object_wrap.h>
 #include <mutex>
-
 namespace quasardb
 {
 
@@ -62,6 +63,7 @@ public:
         NODE_SET_PROTOTYPE_METHOD(tpl, "ts", ts);
 
         NODE_SET_PROTOTYPE_METHOD(tpl, "prefix", prefix);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "query", query);
         NODE_SET_PROTOTYPE_METHOD(tpl, "range", range);
 
         NODE_SET_PROTOTYPE_METHOD(tpl, "setTimeout", setTimeout);
@@ -390,6 +392,10 @@ public:
     {
         objectFactory<Prefix>(args);
     }
+    static void query(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        objectFactory<Query>(args);
+    }
 
     static void range(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
@@ -495,7 +501,6 @@ private:
 
     static v8::Persistent<v8::Function> constructor;
 };
-
 
 template <typename Object>
 struct Cluster::Factory<Object, 0>
