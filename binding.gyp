@@ -24,7 +24,7 @@
         "src/query.hpp",
         "src/range.cpp",
         "src/range.hpp",
-	"src/suffix.cpp",
+        "src/suffix.cpp",
         "src/suffix.hpp",
         "src/tag.cpp",
         "src/tag.hpp",
