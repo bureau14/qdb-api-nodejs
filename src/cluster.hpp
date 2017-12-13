@@ -9,6 +9,7 @@
 #include "prefix.hpp"
 #include "query.hpp"
 #include "range.hpp"
+#include "suffix.hpp"
 #include "tag.hpp"
 #include "time_series.hpp"
 #include <qdb/query.h>
@@ -67,6 +68,7 @@ public:
         NODE_SET_PROTOTYPE_METHOD(tpl, "range", range);
 
         NODE_SET_PROTOTYPE_METHOD(tpl, "setTimeout", setTimeout);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "suffix", suffix);
 
         AddEntryType(exports, "ENTRY_UNINITIALIZED", qdb_entry_uninitialized);
         AddEntryType(exports, "ENTRY_BLOB", qdb_entry_blob);
@@ -405,6 +407,11 @@ public:
     static void set(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Set>(args);
+    }
+
+    static void suffix(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        objectFactory<Suffix>(args);
     }
 
     static void tag(const v8::FunctionCallbackInfo<v8::Value> & args)
