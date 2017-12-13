@@ -32,6 +32,7 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::Deque::Init(exports);
     quasardb::Integer::Init(exports);
     quasardb::Prefix::Init(exports);
+    quasardb::Query::Init(exports);
     quasardb::Range::Init(exports);
     quasardb::Set::Init(exports);
     quasardb::Tag::Init(exports);
