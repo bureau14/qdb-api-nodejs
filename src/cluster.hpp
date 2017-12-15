@@ -426,7 +426,6 @@ public:
 public:
     static void getTimeout(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-
         MethodMan call(args);
 
         if (args.Length() != 0)

@@ -38,7 +38,7 @@ describe('Cluster', function() {
     }); // connect
 
     describe('setTimeout', function() {
-        it('should set the timeout to 5\'000 ms', function() {
+        it('should set the timeout to 5 seconds', function() {
             cluster.setTimeout(5000);
         });
 
@@ -50,7 +50,7 @@ describe('Cluster', function() {
     }); // setTimeout
 
     describe('getTimeout', function() {
-        it('should return the default timeout to 5\'000 ms', function(done) {
+        it('should return the default timeout to 5 seconds', function(done) {
             test.must(cluster.getTimeout()).be.equal(5000);
             done();
         });
