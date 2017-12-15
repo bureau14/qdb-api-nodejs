@@ -12,7 +12,6 @@
 #include "suffix.hpp"
 #include "tag.hpp"
 #include "time_series.hpp"
-#include <qdb/query.h>
 #include <node.h>
 #include <node_object_wrap.h>
 #include <mutex>
@@ -62,11 +61,11 @@ public:
         NODE_SET_PROTOTYPE_METHOD(tpl, "set", set);
         NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
         NODE_SET_PROTOTYPE_METHOD(tpl, "ts", ts);
-
         NODE_SET_PROTOTYPE_METHOD(tpl, "prefix", prefix);
         NODE_SET_PROTOTYPE_METHOD(tpl, "query", query);
         NODE_SET_PROTOTYPE_METHOD(tpl, "range", range);
 
+        NODE_SET_PROTOTYPE_METHOD(tpl, "getTimeout", getTimeout);
         NODE_SET_PROTOTYPE_METHOD(tpl, "setTimeout", setTimeout);
         NODE_SET_PROTOTYPE_METHOD(tpl, "suffix", suffix);
 
@@ -425,6 +424,23 @@ public:
     }
 
 public:
+    static void getTimeout(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+
+        MethodMan call(args);
+
+        if (args.Length() != 0)
+        {
+            call.throwException("Wrong number of arguments");
+            return;
+        }
+
+        Cluster * c = call.nativeHolder<Cluster>();
+        assert(c);
+
+        call.template setReturnValue<v8::Integer>(c->_timeout);
+    }
+
     static void setTimeout(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         MethodMan call(args);

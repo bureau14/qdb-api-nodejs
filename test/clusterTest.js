@@ -1,6 +1,6 @@
 var test = require('unit.js');
 var qdb = require('..');
-var config = require('./config')
+var config = require('./config');
 
 describe('Cluster', function() {
     var cluster = new qdb.Cluster(config.cluster_uri);
@@ -48,4 +48,16 @@ describe('Cluster', function() {
             });
         });
     }); // setTimeout
+
+    describe('getTimeout', function() {
+        it('should return the default timeout to 5\'000 ms', function(done) {
+            test.must(cluster.getTimeout()).be.equal(5000);
+            done();
+        });
+        it('should return the new timeout after changing the default timeout', function(done) {
+            cluster.setTimeout(3000);
+            test.must(cluster.getTimeout()).be.equal(3000);
+            done();
+        });
+    }); // getTimeout
 });
