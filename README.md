@@ -15,8 +15,8 @@ npm install quasardb --save
 Alternatively if you want to compile from source:
 
 1. Clone git repository
-2. [Download quasardb server and C api](https://download.quasardb.net/quasardb/)
-3. Extract both tarballs into `qdb-api-nodejs\deps\qdb`
+1. [Download quasardb server and C api](https://download.quasardb.net/quasardb/)
+1. Extract both tarballs into `qdb-api-nodejs\deps\qdb`
 
 Then:
 
