@@ -70,7 +70,7 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
         if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
         {
             const auto & columns = qdb_req->input.content.columns;
-            array = v8::Array::New(isolate, columns.size());
+            array = v8::Array::New(isolate, static_cast<int>(columns.size()));
             if (array.IsEmpty())
             {
                 error_code = Error::MakeError(isolate, qdb_e_no_memory_local);

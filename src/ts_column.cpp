@@ -176,7 +176,7 @@ void BlobColumn::processBlobAggregateResult(uv_work_t * req, int status)
 
                     auto obj = v8::Object::New(isolate);
                     obj->Set(resprop, result);
-                    obj->Set(cntprop, v8::Number::New(isolate, aggrs[i].count));
+                    obj->Set(cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
                     if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
 
                     // safe to call even on null/invalid buffers
@@ -259,7 +259,7 @@ void DoubleColumn::processDoubleAggregateResult(uv_work_t * req, int status)
 
                     auto obj = v8::Object::New(isolate);
                     obj->Set(resprop, result);
-                    obj->Set(cntprop, v8::Number::New(isolate, aggrs[i].count));
+                    obj->Set(cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
 
                     if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
                 }

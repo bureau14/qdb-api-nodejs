@@ -18,41 +18,41 @@ namespace quasardb
 
 class Cluster;
 
-class Query : public Entry<Query>
+class QueryFind : public Entry<QueryFind>
 {
-    friend class Entry<Query>;
+    friend class Entry<QueryFind>;
     friend class Cluster;
 
 public:
     static const size_t ParameterCount = 1;
 
 private:
-    Query(cluster_data_ptr cd, const char * alias) : Entry<Query>(cd, alias)
+    QueryFind(cluster_data_ptr cd, const char * alias) : Entry<QueryFind>(cd, alias)
     {
     }
-    virtual ~Query(void)
+    virtual ~QueryFind(void)
     {
     }
 
 public:
     static void Init(v8::Local<v8::Object> exports)
     {
-        Entry<Query>::Init(exports, "Query",
+        Entry<QueryFind>::Init(exports, "QueryFind",
                            [](v8::Local<v8::FunctionTemplate> tpl) { NODE_SET_PROTOTYPE_METHOD(tpl, "run", run); });
     }
 
 public:
     static void run(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Entry<Query>::queue_work(args,
+        Entry<QueryFind>::queue_work(args,
                                  [](qdb_request * qdb_req) {
                                      qdb_req->output.error =
-                                         qdb_query(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                         qdb_query_find(qdb_req->handle(), qdb_req->input.alias.c_str(),
                                                    reinterpret_cast<const char ***>(
                                                        const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
                                                    &(qdb_req->output.content.buffer.size));
                                  },
-                                 Entry<Query>::processArrayStringResult);
+                                 Entry<QueryFind>::processArrayStringResult);
     }
 
 private:

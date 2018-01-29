@@ -7,7 +7,7 @@
 #include "hset.hpp"
 #include "integer.hpp"
 #include "prefix.hpp"
-#include "query.hpp"
+#include "query_find.hpp"
 #include "range.hpp"
 #include "suffix.hpp"
 #include "tag.hpp"
@@ -62,7 +62,7 @@ public:
         NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
         NODE_SET_PROTOTYPE_METHOD(tpl, "ts", ts);
         NODE_SET_PROTOTYPE_METHOD(tpl, "prefix", prefix);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "query", query);
+        NODE_SET_PROTOTYPE_METHOD(tpl, "queryFind", queryFind);
         NODE_SET_PROTOTYPE_METHOD(tpl, "range", range);
 
         NODE_SET_PROTOTYPE_METHOD(tpl, "getTimeout", getTimeout);
@@ -393,9 +393,9 @@ public:
     {
         objectFactory<Prefix>(args);
     }
-    static void query(const v8::FunctionCallbackInfo<v8::Value> & args)
+    static void queryFind(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        objectFactory<Query>(args);
+        objectFactory<QueryFind>(args);
     }
 
     static void range(const v8::FunctionCallbackInfo<v8::Value> & args)
