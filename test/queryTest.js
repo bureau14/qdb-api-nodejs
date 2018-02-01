@@ -28,7 +28,7 @@ describe('Query', function (done) {
 
     it('should say E_INVALID_ARGUMENT when invalid query string is used', function (done) {
         var query = "sdljdflsdkjf";
-        cluster.queryFind(query).run(function (err, output) {
+        cluster.query(query).run(function (err, output) {
             err.code.must.be.equal(qdb.E_INVALID_ARGUMENT);
             output.must.have.length(0);
             done();
@@ -36,8 +36,8 @@ describe('Query', function (done) {
     });
 
     it('shouldn\'t return the alias name when querying with tag and type=integer', function (done) {
-        var query = "find(Tag='" + my_tag1 + "' AND type=integer)";
-        cluster.queryFind(query).run(function (err, output) {
+        var query = "Tag='" + my_tag1 + "' AND type=integer";
+        cluster.query(query).run(function (err, output) {
             test.must(err).be.equal(null);
             output.must.have.length(0);
             done();
@@ -45,8 +45,8 @@ describe('Query', function (done) {
     });
 
     it('should return the alias name when querying with tag and type=blob', function (done) {
-        var query = "find(Tag='" + my_tag1 + "' AND type=blob)";
-        cluster.queryFind(query).run(function (err, output) {
+        var query = "Tag='" + my_tag1 + "' AND type=blob";
+        cluster.query(query).run(function (err, output) {
             test.must(err).be.equal(null);
             output.must.have.length(1);
             test.must(output.indexOf(blob_name)).be.gte(0);
@@ -55,8 +55,8 @@ describe('Query', function (done) {
     });
 
     it('should return the alias name when querying with a single tag1', function (done) {
-        var query = "find(Tag='" + my_tag1 + "')";
-        cluster.queryFind(query).run(function (err, output) {
+        var query = "Tag='" + my_tag1 + "'";
+        cluster.query(query).run(function (err, output) {
             test.must(err).be.equal(null);
             output.must.have.length(1);
             test.must(output.indexOf(blob_name)).be.gte(0);
@@ -65,8 +65,8 @@ describe('Query', function (done) {
     });
 
     it('should return the alias name when querying with a single tag2', function (done) {
-        var query = "find(Tag='" + my_tag2 + "')";
-        cluster.queryFind(query).run(function (err, output) {
+        var query = "Tag='" + my_tag2 + "'";
+        cluster.query(query).run(function (err, output) {
             test.must(err).be.equal(null);
             output.must.have.length(1);
             test.must(output.indexOf(blob_name)).be.gte(0);
@@ -75,8 +75,8 @@ describe('Query', function (done) {
     });
 
     it('should return the alias name when querying with two tags', function (done) {
-        var query = "find(Tag='" + my_tag1 + "' AND tag='" + my_tag2 + "')";
-        cluster.queryFind(query).run(function (err, output) {
+        var query = "Tag='" + my_tag1 + "' AND tag='" + my_tag2 + "'";
+        cluster.query(query).run(function (err, output) {
             test.must(err).be.equal(null);
             output.must.have.length(1);
             test.must(output.indexOf(blob_name)).be.gte(0);
