@@ -338,6 +338,12 @@ private:
     }
 
 public:
+    // :desc: Connects to a quasardb cluster. The successful function is run when the connection is made. The
+    // failure callback is called for major errors such as disconnections from the cluster after the connection is
+    // successful.
+    // :args: callback() (function) - A callback or anonymous function without parameters.
+    // callback_on_failure(err) (function) - A callback or anonymous function with error parameter.
+
     static void connect(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         MethodMan call(args);
@@ -374,49 +380,87 @@ public:
     }
 
 public:
+    // :desc: Creates a Blob associated with the specified alias. No query is performed at this point.
+    // :args: alias (String) - the alias of the blob in the database.
+    // :returns: the Blob
     static void blob(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Blob>(args);
     }
+
+    //:desc: Creates a Deque associated with the specified alias. No query is performed at this point.
+    //:args: alias (String) - The alias of the deque in the database
+    //:returns: the Deque
 
     static void deque(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Deque>(args);
     }
 
+    //:desc: Creates an Integer associated with the specified alias. No query is performed at this point.
+    //:args: alias (String) - the alias of the integer in the database.
+    //:returns: the Integer
+
     static void integer(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Integer>(args);
     }
 
+    //:desc: Retrieves aliases with the input prefix argument
+    //:args: prefix (String) - The prefix to search for.
+    //:returns: the Prefix
+
     static void prefix(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Prefix>(args);
     }
+
+    //:desc: Retrieves list of aliases that matches the query condition
+    //:args: Query (String) - the query string
+    //:returns: List of matched aliases.
     static void queryFind(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<QueryFind>(args);
     }
+
+    //:desc: Returns a range object which supports BlobScan, BlobScanRegex
+    //:returns: The Range object
 
     static void range(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Range>(args);
     }
 
+    //:desc: Creates a Set associated with the specified alias. No query is performed at this point.
+    //:args: alias (String) - the alias of the set in the database.
+    //:returns: the Set
+
     static void set(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Set>(args);
     }
+
+    //:desc: Retrieves aliases with the input suffix argument
+    //:args: suffix (String) - The prefix to search for.
+    //:returns: the Suffix
 
     static void suffix(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Suffix>(args);
     }
 
+    //:desc: Creates a Tag with the specified name.
+    //:args: tagName (String) - the name of the tag in the database.
+    //:returns: the Tag
+
     static void tag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Tag>(args);
     }
+
+    //:desc: Creates a timeseries object with the given alias
+    //:args: alias (String) - the name of the timeseries
+    //:returns: the ts object
 
     static void ts(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
@@ -424,6 +468,9 @@ public:
     }
 
 public:
+    //:desc: Returns the current set timeout in milliseconds
+    //:returns: Current set timeout in milliseconds
+
     static void getTimeout(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         MethodMan call(args);
@@ -439,6 +486,9 @@ public:
 
         call.template setReturnValue<v8::Integer>(c->_timeout);
     }
+
+    //:desc: Set the current timeout in milliseconds
+    //:args: timeout (Integer) - this timeout is in milliseconds
 
     static void setTimeout(const v8::FunctionCallbackInfo<v8::Value> & args)
     {

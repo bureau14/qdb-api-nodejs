@@ -45,6 +45,10 @@ public:
     }
 
 public:
+    // :desc: Returns a list of aliases matching the pattern
+    // :args: pattern (int) - the pattern to match
+    // maxCount (int) - the maximum count of returned matches
+    // callback(err, aliases) (function) - A callback function that has error and aliases parameters. Aliases would hold the result.
     static void blobScan(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Range>::queue_work(
@@ -59,6 +63,10 @@ public:
             Entry<Range>::processArrayStringResult, &ArgsEaterBinder::string, &ArgsEaterBinder::integer);
     }
 
+    // :desc: Returns a list of aliases matching the pattern
+    // :args: pattern (int) - the regular expression pattern to match
+    // maxCount (int) - the maximum count of returned matches
+    // callback(err, aliases) (function) - A callback function that has error and aliases parameters. Aliases would hold the result.
     static void blobScanRegex(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Range>::queue_work(

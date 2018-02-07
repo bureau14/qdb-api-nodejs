@@ -44,6 +44,11 @@ public:
     }
 
 public:
+
+    // :desc: Adds the specified value to the set.
+    // :args: value (Buffer) - the value to add to the Set.
+    // callback(err, data) (function) - A callback or anonymous function with error and data parameters.
+    // :returns : true if the value was added, false if it was already present in the set.
     static void insert(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Set>::queue_work(args,
@@ -55,6 +60,9 @@ public:
                                Entry<Set>::processVoidResult, &ArgsEaterBinder::buffer);
     }
 
+    //:desc: Removes the value from the set.
+    //:args: value (Buffer) - the value to remove from the Set.
+    //callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void erase(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Set>::queue_work(args,
@@ -66,6 +74,9 @@ public:
                                Entry<Set>::processVoidResult, &ArgsEaterBinder::buffer);
     }
 
+    //:desc: Determines if the value is present in the set.
+    //:args: value (Buffer) - the value to look for in the Set.
+    // callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void contains(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Set>::queue_work(args,

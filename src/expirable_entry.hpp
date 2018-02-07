@@ -33,6 +33,9 @@ public:
     }
 
 public:
+    //:desc: Sets the expiration time for the ExpirableEntity at a given Date.
+    //:args: expiry_time (Date) - A Date at which the ExpirableEntity expires.
+    //callback(err) (function) - A callback or anonymous function with error parameter.
     static void expiresAt(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Derivate>::queue_work(args,
@@ -43,6 +46,9 @@ public:
                                     Entry<Derivate>::processVoidResult, &ArgsEaterBinder::expiry);
     }
 
+    //:desc: Sets the expiration time for the ExpirableEntity as a number of seconds from call time.
+    //:args: seconds (int) - A number of seconds from call time at which the ExpirableEntity expires.
+    //callback(err) (function) - A callback or anonymous function with error parameter.
     static void expiresFromNow(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Derivate>::queue_work(args,
@@ -54,6 +60,8 @@ public:
                                     Entry<Derivate>::processVoidResult, &ArgsEaterBinder::integer);
     }
 
+    //:desc: Gets the expiration time of the ExpirableEntity.
+    //:args: callback(err, expiry) (function) - A callback or anonymous function with: error parameter, a Date object with the expiration time of the entity. An undefined expiry Date means the ExpirableEntity does not expire.
     static void getExpiry(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Derivate>::queue_work(args,

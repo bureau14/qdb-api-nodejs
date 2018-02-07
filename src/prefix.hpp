@@ -45,6 +45,9 @@ public:
     }
 
 public:
+    //:desc: Gets the matched aliases of the specified prefix string.
+    //:args: maxCount (int) - maximum count of returned aliases.
+    // callback(err, aliases) (function) - A callback function with err and aliases parameter, aliases would hold the answer.
     static void getEntries(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Prefix>::queue_work(
