@@ -50,6 +50,9 @@ public:
     }
 
 public:
+    //:desc: Add a value to the front of the queue.
+    //:args: content (Buffer) - The value to add to the queue.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void pushFront(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Deque>::queue_work(args,
@@ -61,6 +64,9 @@ public:
                                  Entry<Deque>::processVoidResult, &ArgsEaterBinder::buffer);
     }
 
+    //:desc: Add a value to the back of the queue.
+    //:args: content (Buffer) - The value to add to the queue.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void pushBack(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Deque>::queue_work(args,
@@ -72,6 +78,8 @@ public:
                                  Entry<Deque>::processVoidResult, &ArgsEaterBinder::buffer);
     }
 
+    //:desc: Remove the value at the front of the queue and return it.
+    //:args: callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void popFront(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Deque>::queue_work(args,
@@ -84,6 +92,8 @@ public:
                                  Entry<Deque>::processBufferResult, &ArgsEaterBinder::buffer);
     }
 
+    //:desc: Remove the value at the end of the queue and return it.
+    //:args: callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void popBack(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Deque>::queue_work(args,
@@ -96,6 +106,8 @@ public:
                                  Entry<Deque>::processBufferResult, &ArgsEaterBinder::buffer);
     }
 
+    //:desc: Retrieves the value at the front of the queue, without removing it.
+    //:args: callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void front(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Deque>::queue_work(args,
@@ -108,6 +120,8 @@ public:
                                  Entry<Deque>::processBufferResult, &ArgsEaterBinder::buffer);
     }
 
+    //:desc: Retrieves the value at the end of the queue, without removing it.
+    //:args: callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void back(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Deque>::queue_work(args,
@@ -120,6 +134,8 @@ public:
                                  Entry<Deque>::processBufferResult, &ArgsEaterBinder::buffer);
     }
 
+    //:desc: Returns the size of the Deque.
+    //:args: callback(err, size) (function) - A callback or anonymous function with error and size parameters.
     static void size(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Deque>::queue_work(args,
@@ -132,6 +148,10 @@ public:
                                  Entry<Deque>::processIntegerResult);
     }
 
+    //:sign: at
+    //:desc: Retrieves the value at the index in the queue. The item at the index must exist or it will throw an error.
+    //:args: index (Integer) - The index of the object in the Deque.
+    // callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void getAt(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Deque>::queue_work(
@@ -144,6 +164,9 @@ public:
             Entry<Deque>::processBufferResult, &ArgsEaterBinder::integer);
     }
 
+    //:desc: Sets the value at the index in the deque.
+    //:args: index (Integer) - The index of the object in the Deque.
+    // callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void setAt(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Deque>::queue_work(args,

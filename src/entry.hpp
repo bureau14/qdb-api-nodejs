@@ -82,6 +82,9 @@ public:
     }
 
 public:
+
+    //:desc: Returns the alias of the entity
+    //:returns: A string representing the alias of the Entity
     static void alias(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         MethodMan this_call(args);
@@ -94,6 +97,9 @@ public:
     }
 
 public:
+    //:desc: Removes the Entity
+    //:args: callback(err) (function) - A callback function with error parameter
+    //:returns: A string representing the alias of the Entity
     static void remove(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -158,6 +164,9 @@ private:
 
 public:
     // tag management function
+    //:desc: Attaches the Entity to the specified tag. Errors if the tag is already assigned.
+    //:args: tagName (String) - The name of the tag.
+    //callback(err) (function) - A callback or anonymous function with error parameter.
     static void attachTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -169,6 +178,9 @@ public:
                    processVoidResult, &ArgsEaterBinder::string);
     }
 
+    //:desc: Attaches the Entity to the specified tags. Errors if any of the tags is already assigned.
+    //:args: tagNames (String[]) - Array of names of the tags (Array of Strings).
+    //callback(err) (function) - A callback or anonymous function with error parameter.
     static void attachTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -193,6 +205,9 @@ public:
                    processEntryMetadataResult);
     }
 
+    //:desc: Detaches the Entity from the specified tag. Errors if the tag is not assigned.
+    //:args: tagName (String) - The name of the tag.
+    //callback(err) (function) - A callback or anonymous function with error parameter.
     static void detachTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -204,6 +219,9 @@ public:
                    processVoidResult, &ArgsEaterBinder::string);
     }
 
+    //:desc: Detaches the Entity from the specified tags. Errors if any of the tags is not assigned.
+    //:args: tagNames (String[]) - Array of names of the tags (Array of Strings).
+    //callback(err) (function) - A callback or anonymous function with error parameter.
     static void detachTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -217,6 +235,9 @@ public:
                    processVoidResult, &ArgsEaterBinder::strings);
     }
 
+    //:desc: Determines if the Entity has the specified tag.
+    //:args: tagName (String) - The name of the tag.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void hasTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -228,6 +249,9 @@ public:
                    processVoidResult, &ArgsEaterBinder::string);
     }
 
+    //:desc: Determines if the Entity has the specified tags.
+    //:args: tagNames (String[]) - Array of names of the tags (Array of Strings).
+    // callback(err, success_count, result) (function) - A callback or anonymous function with: error parameter, number of specified tags assigned to the Entity and query result. Result is an Object with as many fields as the length of tagNames array, each having a bool value true (tag assigned) or false (otherwise).
     static void hasTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -254,6 +278,8 @@ public:
                    processBatchHasTagResult, &ArgsEaterBinder::strings);
     }
 
+    //:desc: Gets an array of tag objects associated with the Entity.
+    //:args: callback(err, tags) (function) - A callback or anonymous function with error and array of tags parameters.
     static void getTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
