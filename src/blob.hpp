@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <string>
@@ -46,6 +45,10 @@ public:
 
 public:
     // put a new entry, with an optional expiry time
+    //:desc: Sets blob's content but fails if the blob already exists. See also update().
+    //:args: content (Buffer) - A string representing the blob's content to be set.
+    // expiry_time (Date) - An optional Date with the absolute time at which the entry should expire.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void put(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         ExpirableEntry<Blob>::queue_work(
@@ -59,6 +62,10 @@ public:
     }
 
     // put a new entry, with an optional expiry time
+    //:desc: Updates the content of the blob.
+    //:args: content (Buffer) - A Buffer representing the blob's content to be added.
+    // expiry_time (Date) - An optional Date with the absolute time at which the entry should expire.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void update(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         ExpirableEntry<Blob>::queue_work(
@@ -72,6 +79,8 @@ public:
     }
 
     // return the alias content
+    //:desc: Retrieves the blob's content, passes to callback as data.
+    //:args: callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void get(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         ExpirableEntry<Blob>::queue_work(args,

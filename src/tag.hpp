@@ -43,6 +43,8 @@ public:
     }
 
 public:
+    // :desc: Gets an array of entities associated with the Tag.
+    // :args: callback(err, entities) (function) - A callback or anonymous function with error and array of entities parameters.
     static void getEntries(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<Tag>::queue_work(args,

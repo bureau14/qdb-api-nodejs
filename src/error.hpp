@@ -208,6 +208,8 @@ private:
     }
 
 public:
+    //:desc: Determines if the error is an informational error.
+    //:returns: True if the error is informational, false otherwise.
     static void informational(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {
@@ -216,6 +218,8 @@ public:
         });
     }
 
+    //:desc: Gets the origin of the error
+    //:returns: A string containing the origin of the error.
     static void origin(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {
@@ -224,6 +228,8 @@ public:
         });
     }
 
+    //:desc: Gets the severity of the errror
+    //:returns: A string containing the severity of the error.
     static void severity(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {
@@ -232,6 +238,8 @@ public:
         });
     }
 
+    //:desc: Gets a description of the error.
+    //:returns: A string containing the error message.
     static void message(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {
@@ -241,6 +249,8 @@ public:
         });
     }
 
+    //:desc: Gets the error code.
+    //:returns: An integer with the error code.
     static void code(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {

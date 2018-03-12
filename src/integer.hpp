@@ -46,7 +46,11 @@ public:
     }
 
 public:
-    // put a new entry, with an optional expiry time
+
+    //:desc: put a new entry, with an optional expiry time
+    //:args: value (int) - The value of the integer.
+    // expiry_time(Date) - An optional Date with the absolute time at which the entry should expire.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void put(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         ExpirableEntry<Integer>::queue_work(
@@ -58,7 +62,10 @@ public:
             ExpirableEntry<Integer>::processVoidResult, &ArgsEaterBinder::integer, &ArgsEaterBinder::expiry);
     }
 
-    // put a new entry, with an optional expiry time
+    //:desc: put a new entry, with an optional expiry time
+    //:args: value (int) - The value of the integer.
+    // expiry_time(Date) - An optional Date with the absolute time at which the entry should expire.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void update(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         ExpirableEntry<Integer>::queue_work(
@@ -70,7 +77,8 @@ public:
             ExpirableEntry<Integer>::processVoidResult, &ArgsEaterBinder::integer, &ArgsEaterBinder::expiry);
     }
 
-    // return the alias content
+    //:desc: return the alias content
+    //:args: callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void get(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         ExpirableEntry<Integer>::queue_work(args,
@@ -82,7 +90,8 @@ public:
                                             ExpirableEntry<Integer>::processIntegerResult);
     }
 
-    // remove the alias
+    //:desc: remove the alias
+    //:args: callback(err) - A callback function with error parameter
     static void remove(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         ExpirableEntry<Integer>::queue_work(args,
@@ -93,7 +102,9 @@ public:
                                             ExpirableEntry<Integer>::processVoidResult);
     }
 
-    // add
+    // :desc: Atomically increment the value in the database.
+    // :args: value (int) - The value to add to the value in the database.
+    // callback(err, data) (function) - A callback or anonymous function with error and data parameters.
     static void add(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         ExpirableEntry<Integer>::queue_work(args,
