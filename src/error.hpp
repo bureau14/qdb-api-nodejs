@@ -128,6 +128,15 @@ public:
         AddErrorCode(exports, "E_OK_CREATED", qdb_e_ok_created);
         AddErrorCode(exports, "E_NO_SPACE_LEFT", qdb_e_no_space_left);
         AddErrorCode(exports, "E_QUOTA_EXCEEDED", qdb_e_quota_exceeded);
+        AddErrorCode(exports, "E_ALIAS_TOO_LONG", qdb_e_alias_too_long);
+        AddErrorCode(exports, "E_CLOCK_SKEW", qdb_e_clock_skew);
+        AddErrorCode(exports, "E_ACCESS_DENIED", qdb_e_access_denied);
+        AddErrorCode(exports, "E_LOGIN_FAILED", qdb_e_login_failed);
+        AddErrorCode(exports, "E_COLUMN_NOT_FOUND", qdb_e_column_not_found);
+        AddErrorCode(exports, "E_QUERY_TOO_COMPLEX", qdb_e_query_too_complex);
+        AddErrorCode(exports, "E_INVALID_CRYPTO_KEY", qdb_e_invalid_crypto_key);
+        AddErrorCode(exports, "E_INVALID_QUERY", qdb_e_invalid_query);
+        AddErrorCode(exports, "E_INVALID_REGEX", qdb_e_invalid_regex);
 
         constructor.Reset(isolate, tpl->GetFunction());
         exports->Set(v8::String::NewFromUtf8(isolate, "Error"), tpl->GetFunction());
