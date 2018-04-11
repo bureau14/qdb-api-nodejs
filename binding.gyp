@@ -14,8 +14,6 @@
         "src/deque.hpp",
         "src/error.cpp",
         "src/error.hpp",
-        "src/hset.cpp",
-        "src/hset.hpp",
         "src/integer.cpp",
         "src/integer.hpp",
         "src/prefix.cpp",

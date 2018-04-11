@@ -77,14 +77,6 @@ i.put(3, function(err){ /* */});
 i.add(7, function(err, data){ /* */});
 ```
 
-We also provide distributed sets:
-
-```javascript
-var s = c.set('the_set');
-
-s.insert(new Buffer("boom"), function(err) { /* */ });
-```
-
 ## Tags
 
 [quasardb](https://www.quasardb.net/) is advanced key-value store with a powerful tagging feature. Tags lookup are fast, scalable and reliable.

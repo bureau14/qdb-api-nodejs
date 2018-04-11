@@ -34,7 +34,6 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::Prefix::Init(exports);
     quasardb::QueryFind::Init(exports);
     quasardb::Range::Init(exports);
-    quasardb::Set::Init(exports);
     quasardb::Suffix::Init(exports);
     quasardb::Tag::Init(exports);
     quasardb::FilteredRange::Init(exports);

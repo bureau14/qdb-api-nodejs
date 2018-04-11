@@ -4,7 +4,6 @@
 #include "cluster_data.hpp"
 #include "deque.hpp"
 #include "error.hpp"
-#include "hset.hpp"
 #include "integer.hpp"
 #include "prefix.hpp"
 #include "query_find.hpp"
@@ -58,7 +57,6 @@ public:
         NODE_SET_PROTOTYPE_METHOD(tpl, "blob", blob);
         NODE_SET_PROTOTYPE_METHOD(tpl, "deque", deque);
         NODE_SET_PROTOTYPE_METHOD(tpl, "integer", integer);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "set", set);
         NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
         NODE_SET_PROTOTYPE_METHOD(tpl, "ts", ts);
         NODE_SET_PROTOTYPE_METHOD(tpl, "prefix", prefix);
@@ -72,7 +70,6 @@ public:
         AddEntryType(exports, "ENTRY_UNINITIALIZED", qdb_entry_uninitialized);
         AddEntryType(exports, "ENTRY_BLOB", qdb_entry_blob);
         AddEntryType(exports, "ENTRY_INTEGER", qdb_entry_integer);
-        AddEntryType(exports, "ENTRY_HSET", qdb_entry_hset);
         AddEntryType(exports, "ENTRY_TAG", qdb_entry_tag);
         AddEntryType(exports, "ENTRY_DEQUE", qdb_entry_deque);
         AddEntryType(exports, "ENTRY_STREAM", qdb_entry_stream);
@@ -429,15 +426,6 @@ public:
     static void range(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Range>(args);
-    }
-
-    //:desc: Creates a Set associated with the specified alias. No query is performed at this point.
-    //:args: alias (String) - the alias of the set in the database.
-    //:returns: the Set
-
-    static void set(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        objectFactory<Set>(args);
     }
 
     //:desc: Retrieves aliases with the input suffix argument
