@@ -109,12 +109,18 @@ struct qdb_request
             // Time series
             // TODO(denisb): consider to move it all to err slice ?
             std::vector<column_info> columns;
+
             std::vector<qdb_ts_blob_point> blob_points;
             std::vector<qdb_ts_double_point> double_points;
+            std::vector<qdb_ts_int64_point> int64_points;
+            std::vector<qdb_ts_timestamp_point> timestamp_points;
+
             std::vector<qdb_ts_filtered_range_t> ranges;
 
             std::vector<qdb_ts_blob_aggregation_t> blob_aggrs;
             std::vector<qdb_ts_double_aggregation_t> double_aggrs;
+            std::vector<qdb_ts_int64_aggregation_t> int64_aggrs;
+            std::vector<qdb_ts_timestamp_aggregation_t> timestamp_aggrs;
         };
 
         query_content content;
@@ -588,6 +594,7 @@ public:
     {
         return eatAndConvertPointsArray<qdb_ts_double_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
             qdb_ts_double_point p;
+
             if (!value->IsNumber()) return std::make_pair(p, false);
 
             p.timestamp = ts;
@@ -600,11 +607,43 @@ public:
     {
         return eatAndConvertPointsArray<qdb_ts_blob_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
             qdb_ts_blob_point p;
+
             if (!value->IsObject()) return std::make_pair(p, false);
 
             p.timestamp = ts;
             p.content = node::Buffer::Data(value);
             p.content_length = node::Buffer::Length(value);
+            return std::make_pair(p, true);
+        });
+    }
+
+    std::vector<qdb_ts_int64_point> eatAndConvertInt64PointsArray(void)
+    {
+        return eatAndConvertPointsArray<qdb_ts_int64_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
+            qdb_ts_int64_point p;
+
+            if (!value->IsNumber()) return std::make_pair(p, false);
+
+            p.timestamp = ts;
+            p.value = value->IntegerValue();
+            return std::make_pair(p, true);
+        });
+    }
+
+    std::vector<qdb_ts_timestamp_point> eatAndConvertTimestampPointsArray(void)
+    {
+        return eatAndConvertPointsArray<qdb_ts_timestamp_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
+            qdb_ts_timestamp_point p;
+
+            if (!value->IsDate()) return std::make_pair(p, false);
+
+            p.timestamp = ts;
+
+            const qdb_time_t ms_since_epoch = static_cast<qdb_time_t>(v8::Date::Cast(*value)->NumberValue());
+
+            p.value.tv_sec = ms_since_epoch / 1000;
+            p.value.tv_nsec = (ms_since_epoch % 1000) * 1000;
+
             return std::make_pair(p, true);
         });
     }
@@ -777,6 +816,18 @@ public:
         return req;
     }
 
+    qdb_request & int64Points(qdb_request & req)
+    {
+        req.input.content.int64_points = _eater.eatAndConvertInt64PointsArray();
+        return req;
+    }
+
+    qdb_request & timestampPoints(qdb_request & req)
+    {
+        req.input.content.timestamp_points = _eater.eatAndConvertTimestampPointsArray();
+        return req;
+    }
+
     qdb_request & ranges(qdb_request & req)
     {
         req.input.content.ranges = _eater.eatAndConvertRangeArray();
@@ -792,6 +843,18 @@ public:
     qdb_request & doubleAggregations(qdb_request & req)
     {
         req.input.content.double_aggrs = _eater.eatAndConvertAggrArray<qdb_ts_double_aggregation_t>();
+        return req;
+    }
+
+    qdb_request & int64Aggregations(qdb_request & req)
+    {
+        req.input.content.int64_aggrs = _eater.eatAndConvertAggrArray<qdb_ts_int64_aggregation_t>();
+        return req;
+    }
+
+    qdb_request & timestampAggregations(qdb_request & req)
+    {
+        req.input.content.timestamp_aggrs = _eater.eatAndConvertAggrArray<qdb_ts_timestamp_aggregation_t>();
         return req;
     }
 

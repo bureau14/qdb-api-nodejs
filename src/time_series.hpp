@@ -43,7 +43,6 @@ public:
 
             AddTsType(exports, "TS_COLUMN_BLOB", qdb_ts_column_blob);
             AddTsType(exports, "TS_COLUMN_DOUBLE", qdb_ts_column_double);
-
         });
     }
 
@@ -51,7 +50,8 @@ private:
     static void New(const v8::FunctionCallbackInfo<v8::Value> & args);
 
     // :desc: Retrieves the columns
-    // :args: callback(err, columns) (function) - A call back function that has error and columns parameter. columns will store the result.
+    // :args: callback(err, columns) (function) - A call back function that has error and columns parameter. columns
+    // will store the result.
     static void columns(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<TimeSeries>::queue_work(args,
@@ -89,7 +89,8 @@ private:
     // :sign: create([columnInfo], function(err, columns) {})
     // :desc: Creates a column in the timeseries object
     // :args: [columnInfo] (qdb.DoubleColumnInfo/qdb.BlobColumnInfo) - The column to create
-    // callback(err,columns) (function) - A call back function that has error and columns parameter. columns store the result.
+    // callback(err,columns) (function) - A call back function that has error and columns parameter. columns store the
+    // result.
     static void ts_create(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<TimeSeries>::queue_work(
@@ -99,7 +100,7 @@ private:
                 std::vector<qdb_ts_column_info_t> cols;
                 cols.resize(info.size());
 
-                std::transform(info.cbegin(), info.cend(), cols.begin(), [qdb_req](const column_info & ci) {
+                std::transform(info.cbegin(), info.cend(), cols.begin(), [](const column_info & ci) {
                     qdb_ts_column_info_t info;
                     info.name = ci.name.c_str();
                     info.type = ci.type;
@@ -116,7 +117,8 @@ private:
     // :sign: insert(columnInfo, function(err, columns))
     // :desc: Inserts one or more columns
     // :args: columnInfo (qdb.DoubleColumnInfo / qdb.BlobColumnInfo) - column data to insert
-    //  callback(err,columns) (function) - A call back function that has error and columns parameter. columns store the result.
+    //  callback(err,columns) (function) - A call back function that has error and columns parameter. columns store the
+    //  result.
     static void ts_insert_columns(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         Entry<TimeSeries>::queue_work(
@@ -126,7 +128,7 @@ private:
                 std::vector<qdb_ts_column_info_t> cols;
                 cols.resize(info.size());
 
-                std::transform(info.cbegin(), info.cend(), cols.begin(), [qdb_req](const column_info & ci) {
+                std::transform(info.cbegin(), info.cend(), cols.begin(), [](const column_info & ci) {
                     qdb_ts_column_info_t info;
                     info.name = ci.name.c_str();
                     info.type = ci.type;

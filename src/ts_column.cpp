@@ -54,7 +54,6 @@ void BlobColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
             const qdb_size_t count = qdb_req->input.content.blob_aggrs.size();
 
             qdb_req->output.error = qdb_ts_blob_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
-
         },
         BlobColumn::processBlobAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::blobAggregations);
 }
@@ -102,7 +101,6 @@ void DoubleColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
             const qdb_size_t count = qdb_req->input.content.double_aggrs.size();
 
             qdb_req->output.error = qdb_ts_double_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
-
         },
         DoubleColumn::processDoubleAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::doubleAggregations);
 }
@@ -282,10 +280,12 @@ CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * na
     {
     case qdb_ts_column_blob:
         return std::make_pair(BlobColumn::MakeColumn(isolate, owner, name), true);
-        break;
     case qdb_ts_column_double:
         return std::make_pair(DoubleColumn::MakeColumn(isolate, owner, name), true);
-        break;
+    case qdb_ts_column_timestamp:
+        return std::make_pair(Error::MakeError(isolate, qdb_e_not_implemented), false);
+    case qdb_ts_column_int64:
+        return std::make_pair(Error::MakeError(isolate, qdb_e_not_implemented), false);
     case qdb_ts_column_uninitialized:
         return std::make_pair(Error::MakeError(isolate, qdb_e_uninitialized), false);
     }
