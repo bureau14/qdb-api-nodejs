@@ -39,7 +39,18 @@
         "src/cluster_data.hpp",
         "src/utilities.hpp",
         "src/time.hpp",
-        "test/test.js"
+        "test/blobTest.js",
+        "test/clusterTest.js",
+        "test/config.js",
+        "test/deamonRunner.js",
+        "test/dequeTest.js",
+        "test/integerTest.js",
+        "test/prefixTest.js",
+        "test/queryTest.js",
+        "test/rangeTest.js",
+        "test/suffixTest.js",
+        "test/tagTest.js",
+        "test/tsTest.js"
       ],
       "conditions": [
         [
