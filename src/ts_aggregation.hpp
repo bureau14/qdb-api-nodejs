@@ -1,11 +1,11 @@
 #pragma once
 
+#include "ts_range.hpp"
+#include <qdb/client.h>
+#include <qdb/ts.h>
 #include <node.h>
 #include <node_buffer.h>
 #include <node_object_wrap.h>
-#include <qdb/client.h>
-#include <qdb/ts.h>
-#include "ts_range.hpp"
 
 namespace quasardb
 {
@@ -18,7 +18,7 @@ public:
     Aggregation(qdb_ts_aggregation_type_t type, v8::Isolate * isolate, v8::Local<v8::Object> range)
         : type(type), range_obj(isolate, range)
     {
-        auto fr = node::ObjectWrap::Unwrap<FilteredRange>(range);
+        auto fr = node::ObjectWrap::Unwrap<TsRange>(range);
         this->range = fr->nativeRange();
     }
 
@@ -99,7 +99,7 @@ public:
         return this->type;
     }
 
-    qdb_ts_filtered_range_t nativeRange() const
+    qdb_ts_range_t nativeRange() const
     {
         return this->range;
     }
@@ -123,7 +123,7 @@ private:
 
             auto type = static_cast<qdb_ts_aggregation_type_t>(args[0]->Int32Value());
 
-            // TODO: Check that type of the class was FilteredRange
+            // TODO: Check that type of the class was TsRange
             auto obj = new Aggregation(type, args.GetIsolate(), args[1]->ToObject());
 
             obj->Wrap(args.This());
@@ -189,7 +189,7 @@ private:
 
 private:
     qdb_ts_aggregation_type_t type;
-    qdb_ts_filtered_range_t range;
+    qdb_ts_range_t range;
 
     v8::Persistent<v8::Object> range_obj;
 

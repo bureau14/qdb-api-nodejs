@@ -115,7 +115,7 @@ struct qdb_request
             std::vector<qdb_ts_int64_point> int64_points;
             std::vector<qdb_ts_timestamp_point> timestamp_points;
 
-            std::vector<qdb_ts_filtered_range_t> ranges;
+            std::vector<qdb_ts_range_t> ranges;
 
             std::vector<qdb_ts_blob_aggregation_t> blob_aggrs;
             std::vector<qdb_ts_double_aggregation_t> double_aggrs;
@@ -648,9 +648,9 @@ public:
         });
     }
 
-    std::vector<qdb_ts_filtered_range_t> eatAndConvertRangeArray(void)
+    std::vector<qdb_ts_range_t> eatAndConvertRangeArray(void)
     {
-        using range_vector = std::vector<qdb_ts_filtered_range_t>;
+        using range_vector = std::vector<qdb_ts_range_t>;
         range_vector res;
 
         auto arr = eatArray();
@@ -664,7 +664,7 @@ public:
                 auto vi = arr.first->Get(i);
                 if (!vi->IsObject()) return range_vector();
 
-                auto obj = node::ObjectWrap::Unwrap<FilteredRange>(vi->ToObject());
+                auto obj = node::ObjectWrap::Unwrap<TsRange>(vi->ToObject());
                 assert(obj);
 
                 res.push_back(obj->nativeRange());
@@ -698,7 +698,7 @@ public:
 
                 Type item;
                 item.type = aggr->nativeType();
-                item.filtered_range = aggr->nativeRange();
+                item.range = aggr->nativeRange();
                 item.count = 0;
 
                 res.push_back(item);

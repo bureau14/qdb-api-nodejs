@@ -3,6 +3,6 @@
 namespace quasardb
 {
 
-v8::Persistent<v8::Function> FilteredRange::constructor;
+v8::Persistent<v8::Function> TsRange::constructor;
 
 } // namespace quasardb

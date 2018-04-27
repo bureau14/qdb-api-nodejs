@@ -36,7 +36,7 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::Range::Init(exports);
     quasardb::Suffix::Init(exports);
     quasardb::Tag::Init(exports);
-    quasardb::FilteredRange::Init(exports);
+    quasardb::TsRange::Init(exports);
     quasardb::TimeSeries::Init(exports);
     quasardb::DoublePoint::Init(exports);
     quasardb::BlobPoint::Init(exports);

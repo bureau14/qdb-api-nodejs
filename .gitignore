@@ -38,3 +38,4 @@ lib/
 deps
 tags
 *.swp
+.vscode/
