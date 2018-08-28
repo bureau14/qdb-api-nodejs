@@ -29,7 +29,6 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::Error::Init(exports);
 
     quasardb::Blob::Init(exports);
-    quasardb::Deque::Init(exports);
     quasardb::Integer::Init(exports);
     quasardb::Prefix::Init(exports);
     quasardb::QueryFind::Init(exports);

@@ -10,8 +10,6 @@
         "src/blob.hpp",
         "src/cluster.cpp",
         "src/cluster.hpp",
-        "src/deque.cpp",
-        "src/deque.hpp",
         "src/error.cpp",
         "src/error.hpp",
         "src/integer.cpp",

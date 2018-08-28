@@ -33,7 +33,6 @@ describe('Tag', function () {
         before('init', function (done) {
             b = cluster.blob('blob_tag_test');
             i = cluster.integer('int_tag_test');
-            q = cluster.deque('deque_tag_test');
             ts = cluster.ts('time_series_tag_test');
             done()
         });
@@ -64,14 +63,6 @@ describe('Tag', function () {
             });
         });
 
-        it('should create the deque for tag test', function (done) {
-            q.pushBack(new Buffer('mmm ok'), function (err) {
-                test.must(err).be.equal(null);
-
-                done();
-            });
-        });
-
         it('should create the time series double columns for tag test', function (done) {
             ts.create([qdb.DoubleColumnInfo("col1")], function (err) {
                 test.must(err).be.equal(null);
@@ -90,14 +81,6 @@ describe('Tag', function () {
 
         it('should tag the integer successfully', function (done) {
             i.attachTag(dasTag, function (err) {
-                test.must(err).be.equal(null);
-
-                done();
-            });
-        });
-
-        it('should tag the deque successfully', function (done) {
-            q.attachTag(dasTag, function (err) {
                 test.must(err).be.equal(null);
 
                 done();
@@ -126,11 +109,10 @@ describe('Tag', function () {
             t.getEntries(function (err, entries) {
                 test.must(err).be.equal(null);
 
-                entries.must.have.length(4);
+                entries.must.have.length(3);
 
                 test.must(entries.indexOf('blob_tag_test')).be.gte(0);
                 test.must(entries.indexOf('int_tag_test')).be.gte(0);
-                test.must(entries.indexOf('deque_tag_test')).be.gte(0);
                 test.must(entries.indexOf('time_series_tag_test')).be.gte(0);
 
                 done();
@@ -147,14 +129,6 @@ describe('Tag', function () {
 
         it('should untag the integer successfully', function (done) {
             i.detachTag(dasTag, function (err) {
-                test.must(err).be.equal(null);
-
-                done();
-            });
-        });
-
-        it('should untag the deque successfully', function (done) {
-            q.detachTag(dasTag, function (err) {
                 test.must(err).be.equal(null);
 
                 done();
@@ -189,14 +163,6 @@ describe('Tag', function () {
 
         it('should remove the integer for tag test', function (done) {
             i.remove(function (err) {
-                test.must(err).be.equal(null);
-
-                done();
-            });
-        });
-
-        it('should remove the deque for tag test', function (done) {
-            q.remove(function (err) {
                 test.must(err).be.equal(null);
 
                 done();

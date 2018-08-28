@@ -2,7 +2,6 @@
 
 #include "blob.hpp"
 #include "cluster_data.hpp"
-#include "deque.hpp"
 #include "error.hpp"
 #include "integer.hpp"
 #include "prefix.hpp"
@@ -55,7 +54,6 @@ public:
         NODE_SET_PROTOTYPE_METHOD(tpl, "connect", connect);
 
         NODE_SET_PROTOTYPE_METHOD(tpl, "blob", blob);
-        NODE_SET_PROTOTYPE_METHOD(tpl, "deque", deque);
         NODE_SET_PROTOTYPE_METHOD(tpl, "integer", integer);
         NODE_SET_PROTOTYPE_METHOD(tpl, "tag", tag);
         NODE_SET_PROTOTYPE_METHOD(tpl, "ts", ts);
@@ -383,15 +381,6 @@ public:
     static void blob(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Blob>(args);
-    }
-
-    //:desc: Creates a Deque associated with the specified alias. No query is performed at this point.
-    //:args: alias (String) - The alias of the deque in the database
-    //:returns: the Deque
-
-    static void deque(const v8::FunctionCallbackInfo<v8::Value> & args)
-    {
-        objectFactory<Deque>(args);
     }
 
     //:desc: Creates an Integer associated with the specified alias. No query is performed at this point.
