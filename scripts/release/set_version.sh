@@ -33,7 +33,7 @@ fi
 cd $(dirname -- $0)
 cd ${PWD}/../..
 
-# "xy-version": "2.1",
-sed -i -e 's/"xy-version": "[^"]*"/"xy-version": "'"${XY_VERSION}"'"/' package.json
+# "xyversion": "2.1",
+sed -i -e 's/"xyversion": "[^"]*"/"xyversion": "'"${XY_VERSION}"'"/' package.json
 # "version": "2.1.0-nightly.5",
 sed -i -e 's/"version": "[^"]*"/"version": "'"${FULL_XYZ_VERSION}"'"/' package.json

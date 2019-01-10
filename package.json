@@ -14,7 +14,7 @@
     "store"
   ],
   "main": "./index.js",
-  "xy-version": "3.1",
+  "xyversion": "3.1",
   "version": "3.1.0",
   "repository": {
     "type": "git",
@@ -40,6 +40,6 @@
     "module_name": "quasardb",
     "module_path": "./lib/binding/",
     "host": "https://download.quasardb.net",
-    "remote_path": "./{name}/{xy-version}/{version}/api/nodejs"
+    "remote_path": "./{name}/$npm_package_xyversion/{version}/api/nodejs"
   }
 }
