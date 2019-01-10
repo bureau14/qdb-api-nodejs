@@ -26,14 +26,16 @@ fi
 
 if [[ -n "${TAGS_VERSION}" ]] ; then
     FULL_XYZ_VERSION="${XYZ_VERSION}-${TAGS_VERSION}"
+    REMOTE_PATH_INFIX="nightly"
 else
     FULL_XYZ_VERSION="${XYZ_VERSION}"
+    REMOTE_PATH_INFIX="${XY_VERSION}/{version}"
 fi
 
 cd $(dirname -- $0)
 cd ${PWD}/../..
 
-# "xyversion": "2.1",
-sed -i -e 's/"xyversion": "[^"]*"/"xyversion": "'"${XY_VERSION}"'"/' package.json
 # "version": "2.1.0-nightly.5",
 sed -i -e 's/"version": "[^"]*"/"version": "'"${FULL_XYZ_VERSION}"'"/' package.json
+# "remote_path": "./{name}/3.1/{version}/api/nodejs"
+sed -i -e 's|"remote_path": "[^"]*"|"remote_path": "./{name}/'${REMOTE_PATH_INFIX}'/api/nodejs"|' package.json
