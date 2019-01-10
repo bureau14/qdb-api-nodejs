@@ -15,6 +15,7 @@ MINOR_VERSION=${WITHOUT_MAJOR_VERSION%%.*}
 WITHOUT_MINOR_VERSION=${INPUT_VERSION#${MAJOR_VERSION}.${MINOR_VERSION}.}
 PATCH_VERSION=${WITHOUT_MINOR_VERSION%%.*}
 
+XY_VERSION="${MAJOR_VERSION}.${MINOR_VERSION}"
 XYZ_VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}"
 
 if [[ "${INPUT_VERSION}" == *-* ]] ; then
@@ -32,5 +33,7 @@ fi
 cd $(dirname -- $0)
 cd ${PWD}/../..
 
+# "xy-version": "2.1",
+sed -i -e 's/"xy-version": "[^"]*"/"xy-version": "'"${XY_VERSION}"'"/' package.json
 # "version": "2.1.0-nightly.5",
 sed -i -e 's/"version": "[^"]*"/"version": "'"${FULL_XYZ_VERSION}"'"/' package.json
