@@ -41,7 +41,6 @@
         "test/clusterTest.js",
         "test/config.js",
         "test/deamonRunner.js",
-        "test/dequeTest.js",
         "test/integerTest.js",
         "test/prefixTest.js",
         "test/queryTest.js",
