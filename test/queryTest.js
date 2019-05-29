@@ -26,10 +26,10 @@ describe('Query', function (done) {
     });
 
 
-    it('should say E_INVALID_ARGUMENT when invalid query string is used', function (done) {
+    it('should say E_INVALID_QUERY when invalid query string is used', function (done) {
         var query = "sdljdflsdkjf";
         cluster.queryFind(query).run(function (err, output) {
-            err.code.must.be.equal(qdb.E_INVALID_ARGUMENT);
+            err.code.must.be.equal(qdb.E_INVALID_QUERY);
             output.must.have.length(0);
             done();
         });
