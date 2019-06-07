@@ -138,8 +138,11 @@ public:
         AddErrorCode(exports, "E_INVALID_QUERY", qdb_e_invalid_query);
         AddErrorCode(exports, "E_INVALID_REGEX", qdb_e_invalid_regex);
 
-        constructor.Reset(isolate, tpl->GetFunction());
-        exports->Set(v8::String::NewFromUtf8(isolate, "Error"), tpl->GetFunction());
+        auto maybe_function = tpl->GetFunction(isolate->GetCurrentContext());
+        if (maybe_function.IsEmpty()) return;
+
+        constructor.Reset(isolate, maybe_function.ToLocalChecked());
+        exports->Set(v8::String::NewFromUtf8(isolate, "Error"), maybe_function.ToLocalChecked());
     }
 
 private:

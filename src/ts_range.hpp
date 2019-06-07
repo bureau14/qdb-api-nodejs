@@ -28,7 +28,7 @@ public:
 
         // Prepare constructor template
         v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, New);
-        tpl->SetClassName(v8::String::NewFromUtf8(isolate, "TsRange"));
+        tpl->SetClassName(v8::String::NewFromUtf8(isolate, "TsRange" /*, v8::NewStringType::kNormal*/));
         tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
         v8::HandleScope handle_scope(isolate);
@@ -43,8 +43,11 @@ public:
                                    v8::FunctionTemplate::New(isolate, TsRange::end, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
-        constructor.Reset(isolate, tpl->GetFunction());
-        exports->Set(v8::String::NewFromUtf8(isolate, "TsRange"), tpl->GetFunction());
+        auto maybe_function = tpl->GetFunction(isolate->GetCurrentContext());
+        if (maybe_function.IsEmpty()) return;
+
+        constructor.Reset(isolate, maybe_function.ToLocalChecked());
+        exports->Set(v8::String::NewFromUtf8(isolate, "TsRange"), maybe_function.ToLocalChecked());
     }
 
     // Two arguments for regular range
@@ -131,8 +134,10 @@ private:
         TsRange::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr) {
             v8::Isolate * isolate = args.GetIsolate();
             auto ms = qdb_timespec_to_ms(fr->range.begin);
-            auto value = v8::Date::New(isolate, ms);
-            args.GetReturnValue().Set(value);
+            auto maybe_value = v8::Date::New(isolate->GetCurrentContext(), ms);
+            if (maybe_value.IsEmpty()) return;
+
+            args.GetReturnValue().Set(maybe_value.ToLocalChecked());
         });
     }
 
@@ -141,8 +146,10 @@ private:
         TsRange::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr) {
             v8::Isolate * isolate = args.GetIsolate();
             auto ms = qdb_timespec_to_ms(fr->range.end);
-            auto value = v8::Date::New(isolate, ms);
-            args.GetReturnValue().Set(value);
+            auto maybe_value = v8::Date::New(isolate->GetCurrentContext(), ms);
+            if (maybe_value.IsEmpty()) return;
+
+            args.GetReturnValue().Set(maybe_value.ToLocalChecked());
         });
     }
 

@@ -75,8 +75,11 @@ public:
         AddAggrType(exports, "AggSkewness", qdb_agg_skewness);
         AddAggrType(exports, "AggKurtosis", qdb_agg_kurtosis);
 
-        constructor.Reset(isolate, tpl->GetFunction());
-        exports->Set(v8::String::NewFromUtf8(isolate, "Aggregation"), tpl->GetFunction());
+        auto maybe_function = tpl->GetFunction(isolate->GetCurrentContext());
+        if (maybe_function.IsEmpty()) return;
+
+        constructor.Reset(isolate, maybe_function.ToLocalChecked());
+        exports->Set(v8::String::NewFromUtf8(isolate, "Aggregation"), maybe_function.ToLocalChecked());
     }
 
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)

@@ -77,9 +77,11 @@ private:
 
         init(tpl);
 
-        Derivate::constructor.Reset(isolate, tpl->GetFunction());
+        auto maybe_function = tpl->GetFunction(isolate->GetCurrentContext());
+        if (maybe_function.IsEmpty()) return;
 
-        exports->Set(v8::String::NewFromUtf8(isolate, className), tpl->GetFunction());
+        Derivate::constructor.Reset(isolate, maybe_function.ToLocalChecked());
+        exports->Set(v8::String::NewFromUtf8(isolate, className), maybe_function.ToLocalChecked());
     }
 
     static void getTimestamp(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -91,8 +93,14 @@ private:
         assert(pthis);
 
         auto ms = qdb_timespec_to_ms(pthis->timestamp);
-        auto date = v8::Date::New(args.GetIsolate(), ms);
-        args.GetReturnValue().Set(date);
+        auto maybe_date = v8::Date::New(args.GetIsolate()->GetCurrentContext(), ms);
+        if (maybe_date.IsEmpty())
+        {
+            assert("Cannot create new date");
+            return;
+        }
+
+        args.GetReturnValue().Set(maybe_date.ToLocalChecked());
     }
 
 private:
@@ -125,8 +133,15 @@ public:
     {
         static const size_t argc = ParametersCount;
 
+        auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), qdb_timespec_to_ms(ts));
+        if (maybe_date.IsEmpty())
+        {
+            assert("Cannot create new date");
+            return {};
+        }
+
         v8::Local<v8::Value> argv[argc] = {
-            v8::Date::New(isolate, qdb_timespec_to_ms(ts)),
+            maybe_date.ToLocalChecked(),
             v8::Number::New(isolate, value),
         };
 
@@ -226,9 +241,16 @@ public:
     {
         static const size_t argc = ParametersCount;
 
+        auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), qdb_timespec_to_ms(ts));
+        if (maybe_date.IsEmpty())
+        {
+            assert("Cannot create new date");
+            return {};
+        }
+
         auto bufp = static_cast<const char *>(content);
         v8::Local<v8::Value> argv[argc] = {
-            v8::Date::New(isolate, qdb_timespec_to_ms(ts)),
+            maybe_date.ToLocalChecked(),
             node::Buffer::Copy(isolate, bufp, size).ToLocalChecked(),
         };
 

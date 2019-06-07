@@ -1,6 +1,6 @@
-#include "time_series.hpp"
 #include "cluster.hpp"
 #include "entry.hpp"
+#include "time_series.hpp"
 #include "ts_column.hpp"
 
 namespace quasardb
@@ -16,7 +16,7 @@ void TimeSeries::New(const v8::FunctionCallbackInfo<v8::Value> & args)
 void TimeSeries::processArrayColumnsInfoResult(uv_work_t * req, int status)
 {
     processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
-        v8::Handle<v8::Array> array;
+        v8::Local<v8::Array> array;
 
         auto error_code = processErrorCode(isolate, status, qdb_req);
         if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
@@ -64,7 +64,7 @@ void TimeSeries::processArrayColumnsInfoResult(uv_work_t * req, int status)
 void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
 {
     processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
-        v8::Handle<v8::Array> array;
+        v8::Local<v8::Array> array;
 
         auto error_code = processErrorCode(isolate, status, qdb_req);
         if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))

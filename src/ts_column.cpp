@@ -1,7 +1,7 @@
-#include "ts_column.hpp"
 #include "entry.hpp"
 #include "error.hpp"
 #include "time_series.hpp"
+#include "ts_column.hpp"
 #include "ts_point.hpp"
 #include <qdb/ts.h>
 
@@ -108,7 +108,7 @@ void DoubleColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
 void BlobColumn::processBlobPointArrayResult(uv_work_t * req, int status)
 {
     processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
-        v8::Handle<v8::Array> array;
+        v8::Local<v8::Array> array;
 
         auto error_code = processErrorCode(isolate, status, qdb_req);
         if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
@@ -149,7 +149,7 @@ void BlobColumn::processBlobPointArrayResult(uv_work_t * req, int status)
 void BlobColumn::processBlobAggregateResult(uv_work_t * req, int status)
 {
     processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
-        v8::Handle<v8::Array> array;
+        v8::Local<v8::Array> array;
 
         auto error_code = processErrorCode(isolate, status, qdb_req);
         if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
@@ -195,7 +195,7 @@ void BlobColumn::processBlobAggregateResult(uv_work_t * req, int status)
 void DoubleColumn::processDoublePointArrayResult(uv_work_t * req, int status)
 {
     processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
-        v8::Handle<v8::Array> array;
+        v8::Local<v8::Array> array;
 
         auto error_code = processErrorCode(isolate, status, qdb_req);
         if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
@@ -234,7 +234,7 @@ void DoubleColumn::processDoublePointArrayResult(uv_work_t * req, int status)
 void DoubleColumn::processDoubleAggregateResult(uv_work_t * req, int status)
 {
     processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
-        v8::Handle<v8::Array> array;
+        v8::Local<v8::Array> array;
 
         auto error_code = processErrorCode(isolate, status, qdb_req);
         if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))

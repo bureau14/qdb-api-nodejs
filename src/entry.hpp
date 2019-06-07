@@ -335,9 +335,11 @@ public:
 
         init(tpl);
 
-        Derivate::constructor.Reset(isolate, tpl->GetFunction());
+        auto maybe_function = tpl->GetFunction(isolate->GetCurrentContext());
+        if (maybe_function.IsEmpty()) return;
 
-        exports->Set(v8::String::NewFromUtf8(isolate, className), tpl->GetFunction());
+        Derivate::constructor.Reset(isolate, maybe_function.ToLocalChecked());
+        exports->Set(v8::String::NewFromUtf8(isolate, className), maybe_function.ToLocalChecked());
     }
 
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -374,7 +376,7 @@ private:
         if (QDB_SUCCESS(err))
         {
             auto cb = qdb_req->callbackAsLocal();
-            cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+            cb->Call(isolate->GetCurrentContext(), isolate->GetCurrentContext()->Global(), argc, argv);
         }
         else
         {
@@ -447,7 +449,7 @@ public:
     static void processArrayStringResult(uv_work_t * req, int status)
     {
         processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
-            v8::Handle<v8::Array> array;
+            v8::Local<v8::Array> array;
 
             auto error_code = processErrorCode(isolate, status, qdb_req);
             if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
@@ -514,7 +516,15 @@ public:
             if ((status >= 0) && (qdb_req->output.error == qdb_e_ok) && (qdb_req->output.content.value > 0))
             {
                 double millis = static_cast<double>(qdb_req->output.content.value);
-                return make_value_array(error_code, v8::Date::New(isolate, millis));
+
+                auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), millis);
+                if (maybe_date.IsEmpty())
+                {
+                    assert("Cannot create new date");
+                    return make_value_array(error_code, v8::Undefined(isolate));
+                }
+
+                return make_value_array(error_code, maybe_date.ToLocalChecked());
             }
             return make_value_array(error_code, v8::Undefined(isolate));
         });
@@ -545,19 +555,32 @@ public:
             meta->Set(v8::String::NewFromUtf8(isolate, "size"),
                       v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.entry_metadata.size)));
 
-            using LocalValue = v8::Local<v8::Value>;
             {
                 double millis = qdb_timespec_to_ms(qdb_req->output.content.entry_metadata.modification_time);
+
+                auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), millis);
+                if (maybe_date.IsEmpty())
+                {
+                    assert("Cannot create new date");
+                    return make_value_array(error_code, meta);
+                }
+
                 meta->Set(v8::String::NewFromUtf8(isolate, "modification_time"),
-                          (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))
-                                       : LocalValue(v8::Undefined(isolate)));
+                          (millis > 0) ? maybe_date.ToLocalChecked() : v8::Local<v8::Value>(v8::Undefined(isolate)));
             }
 
             {
                 double millis = qdb_timespec_to_ms(qdb_req->output.content.entry_metadata.expiry_time);
+
+                auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), millis);
+                if (maybe_date.IsEmpty())
+                {
+                    assert("Cannot create new date");
+                    return make_value_array(error_code, meta);
+                }
+
                 meta->Set(v8::String::NewFromUtf8(isolate, "expiry_time"),
-                          (millis > 0) ? LocalValue(v8::Date::New(isolate, millis))
-                                       : LocalValue(v8::Undefined(isolate)));
+                          (millis > 0) ? maybe_date.ToLocalChecked() : v8::Local<v8::Value>(v8::Undefined(isolate)));
             }
 
             return make_value_array(error_code, meta);
@@ -589,7 +612,7 @@ public:
         processResult<3>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
             const auto error_code = processErrorCode(isolate, status, qdb_req);
             auto success_count = v8::Number::New(isolate, static_cast<double>(qdb_req->output.batch.success_count));
-            v8::Handle<v8::Object> obj = v8::Object::New(isolate);
+            v8::Local<v8::Object> obj = v8::Object::New(isolate);
 
             for (const auto & op : qdb_req->output.batch.operations)
             {

@@ -49,18 +49,18 @@ public:
     {
         v8::Local<v8::Function> c = callbackAsLocal(isolate, _on_success);
 
-        c->Call(isolate->GetCurrentContext()->Global(), 0, nullptr);
+        c->Call(isolate->GetCurrentContext(), isolate->GetCurrentContext()->Global(), 0, nullptr);
     }
 
     // can also be called by other objects
     void on_error(v8::Isolate * isolate, const v8::Local<v8::Object> & error_object)
     {
         static const unsigned int argc = 1;
-        v8::Handle<v8::Value> argv[argc] = {error_object};
+        v8::Local<v8::Value> argv[argc] = {error_object};
 
         v8::Local<v8::Function> c = callbackAsLocal(isolate, _on_error);
 
-        c->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+        c->Call(isolate->GetCurrentContext(), isolate->GetCurrentContext()->Global(), argc, argv);
     }
 
 private:

@@ -47,7 +47,10 @@ public:
 
         // Prepare constructor template
         v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, New);
-        tpl->SetClassName(v8::String::NewFromUtf8(isolate, "Cluster"));
+        auto maybe_classname = v8::String::NewFromUtf8(isolate, "Cluster", v8::NewStringType::kNormal);
+        if (maybe_classname.IsEmpty()) return;
+
+        tpl->SetClassName(maybe_classname.ToLocalChecked());
         tpl->InstanceTemplate()->SetInternalFieldCount(4);
 
         // Prototype
@@ -73,8 +76,11 @@ public:
         AddEntryType(exports, "ENTRY_STREAM", qdb_entry_stream);
         AddEntryType(exports, "ENTRY_TS", qdb_entry_ts);
 
-        constructor.Reset(isolate, tpl->GetFunction());
-        exports->Set(v8::String::NewFromUtf8(isolate, "Cluster"), tpl->GetFunction());
+        auto maybe_function = tpl->GetFunction(isolate->GetCurrentContext());
+        if (maybe_function.IsEmpty()) return;
+
+        constructor.Reset(isolate, maybe_function.ToLocalChecked());
+        exports->Set(v8::String::NewFromUtf8(isolate, "Cluster"), maybe_function.ToLocalChecked());
     }
 
 private:

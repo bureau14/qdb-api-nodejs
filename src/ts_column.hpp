@@ -36,7 +36,7 @@ public:
 
 public:
     template <typename F>
-    static void Init(v8::Handle<v8::Object> exports, const char * className, F init)
+    static void Init(v8::Local<v8::Object> exports, const char * className, F init)
     {
         Entry<Derivate>::Init(exports, className, [exports, init](v8::Local<v8::FunctionTemplate> tpl) {
             // call init function of derivate

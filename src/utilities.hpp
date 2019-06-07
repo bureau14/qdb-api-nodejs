@@ -324,7 +324,7 @@ public:
 
     v8::Local<v8::String> argString(int i) const
     {
-        return _args[i]->ToString();
+        return _args[i]->ToString(_args.GetIsolate());
     }
 
     std::pair<v8::Local<v8::String>, bool> checkedArgString(int i) const
@@ -518,12 +518,14 @@ public:
             auto len = arr.first->Length();
             res.reserve(len);
 
+            auto isolate = v8::Isolate::GetCurrent();
+
             for (auto i = 0u; i < len; ++i)
             {
                 auto vi = arr.first->Get(i);
                 if (!vi->IsString()) return string_vector();
 
-                v8::String::Utf8Value val(v8::Isolate::GetCurrent(), vi->ToString());
+                v8::String::Utf8Value val(v8::Isolate::GetCurrent(), vi->ToString(isolate));
                 res.push_back(std::string(*val, val.length()));
             }
         }
@@ -570,7 +572,7 @@ public:
                     return column_vector();
                 }
 
-                v8::String::Utf8Value sval(isolate, name->ToString());
+                v8::String::Utf8Value sval(isolate, name->ToString(isolate));
 
                 auto maybe_type = type->Int32Value(isolate->GetCurrentContext());
                 if (maybe_type.IsNothing())
@@ -793,7 +795,8 @@ public:
         auto ts = holder->Get(tsProp);
         if (!ts->IsString()) return std::string();
 
-        return convertString(ts->ToString());
+        auto isolate = v8::Isolate::GetCurrent();
+        return convertString(ts->ToString(isolate));
     }
 
     qdb_request::slice eatAndConvertBuffer(void)
