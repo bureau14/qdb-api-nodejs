@@ -82,7 +82,6 @@ public:
     }
 
 public:
-
     //:desc: Returns the alias of the entity
     //:returns: A string representing the alias of the Entity
     static void alias(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -102,10 +101,11 @@ public:
     //:returns: A string representing the alias of the Entity
     static void remove(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(args,
-                   [](qdb_request * qdb_req) //
-                   { qdb_req->output.error = qdb_remove(qdb_req->handle(), qdb_req->input.alias.c_str()); },
-                   processVoidResult, &ArgsEaterBinder::none);
+        queue_work(
+            args,
+            [](qdb_request * qdb_req) //
+            { qdb_req->output.error = qdb_remove(qdb_req->handle(), qdb_req->input.alias.c_str()); },
+            processVoidResult, &ArgsEaterBinder::none);
     }
 
 public:
@@ -166,73 +166,78 @@ public:
     // tag management function
     //:desc: Attaches the Entity to the specified tag. Errors if the tag is already assigned.
     //:args: tagName (String) - The name of the tag.
-    //callback(err) (function) - A callback or anonymous function with error parameter.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void attachTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(args,
-                   [](qdb_request * qdb_req) //
-                   {
-                       qdb_req->output.error = qdb_attach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                              qdb_req->input.content.str.c_str());
-                   },
-                   processVoidResult, &ArgsEaterBinder::string);
+        queue_work(
+            args,
+            [](qdb_request * qdb_req) //
+            {
+                qdb_req->output.error =
+                    qdb_attach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+            },
+            processVoidResult, &ArgsEaterBinder::string);
     }
 
     //:desc: Attaches the Entity to the specified tags. Errors if any of the tags is already assigned.
     //:args: tagNames (String[]) - Array of names of the tags (Array of Strings).
-    //callback(err) (function) - A callback or anonymous function with error parameter.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void attachTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(args,
-                   [](qdb_request * qdb_req) //
-                   {
-                       std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
+        queue_work(
+            args,
+            [](qdb_request * qdb_req) //
+            {
+                std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
 
-                       qdb_req->output.error =
-                           qdb_attach_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
-                   },
-                   processVoidResult, &ArgsEaterBinder::strings);
+                qdb_req->output.error =
+                    qdb_attach_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
+            },
+            processVoidResult, &ArgsEaterBinder::strings);
     }
 
     static void getMetadata(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(args,
-                   [](qdb_request * qdb_req) //
-                   {
-                       qdb_req->output.error = qdb_get_metadata(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                                &qdb_req->output.content.entry_metadata);
-                   },
-                   processEntryMetadataResult);
+        queue_work(
+            args,
+            [](qdb_request * qdb_req) //
+            {
+                qdb_req->output.error = qdb_get_metadata(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                         &qdb_req->output.content.entry_metadata);
+            },
+            processEntryMetadataResult);
     }
 
     //:desc: Detaches the Entity from the specified tag. Errors if the tag is not assigned.
     //:args: tagName (String) - The name of the tag.
-    //callback(err) (function) - A callback or anonymous function with error parameter.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void detachTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(args,
-                   [](qdb_request * qdb_req) //
-                   {
-                       qdb_req->output.error = qdb_detach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                              qdb_req->input.content.str.c_str());
-                   },
-                   processVoidResult, &ArgsEaterBinder::string);
+        queue_work(
+            args,
+            [](qdb_request * qdb_req) //
+            {
+                qdb_req->output.error =
+                    qdb_detach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+            },
+            processVoidResult, &ArgsEaterBinder::string);
     }
 
     //:desc: Detaches the Entity from the specified tags. Errors if any of the tags is not assigned.
     //:args: tagNames (String[]) - Array of names of the tags (Array of Strings).
-    //callback(err) (function) - A callback or anonymous function with error parameter.
+    // callback(err) (function) - A callback or anonymous function with error parameter.
     static void detachTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(args,
-                   [](qdb_request * qdb_req) //
-                   {
-                       std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
+        queue_work(
+            args,
+            [](qdb_request * qdb_req) //
+            {
+                std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
 
-                       qdb_req->output.error =
-                           qdb_detach_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
-                   },
-                   processVoidResult, &ArgsEaterBinder::strings);
+                qdb_req->output.error =
+                    qdb_detach_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
+            },
+            processVoidResult, &ArgsEaterBinder::strings);
     }
 
     //:desc: Determines if the Entity has the specified tag.
@@ -240,58 +245,62 @@ public:
     // callback(err) (function) - A callback or anonymous function with error parameter.
     static void hasTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(args,
-                   [](qdb_request * qdb_req) //
-                   {
-                       qdb_req->output.error = qdb_has_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                           qdb_req->input.content.str.c_str());
-                   },
-                   processVoidResult, &ArgsEaterBinder::string);
+        queue_work(
+            args,
+            [](qdb_request * qdb_req) //
+            {
+                qdb_req->output.error =
+                    qdb_has_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
+            },
+            processVoidResult, &ArgsEaterBinder::string);
     }
 
     //:desc: Determines if the Entity has the specified tags.
     //:args: tagNames (String[]) - Array of names of the tags (Array of Strings).
-    // callback(err, success_count, result) (function) - A callback or anonymous function with: error parameter, number of specified tags assigned to the Entity and query result. Result is an Object with as many fields as the length of tagNames array, each having a bool value true (tag assigned) or false (otherwise).
+    // callback(err, success_count, result) (function) - A callback or anonymous function with: error parameter, number
+    // of specified tags assigned to the Entity and query result. Result is an Object with as many fields as the length
+    // of tagNames array, each having a bool value true (tag assigned) or false (otherwise).
     static void hasTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(args,
-                   [](qdb_request * qdb_req) //
-                   {
-                       auto & tags = qdb_req->input.content.strs;
-                       auto & ops = qdb_req->output.batch.operations;
-                       ops.resize(tags.size());
+        queue_work(
+            args,
+            [](qdb_request * qdb_req) //
+            {
+                auto & tags = qdb_req->input.content.strs;
+                auto & ops = qdb_req->output.batch.operations;
+                ops.resize(tags.size());
 
-                       qdb_req->output.error = qdb_init_operations(ops.data(), ops.size());
-                       if (!QDB_SUCCESS(qdb_req->output.error)) return;
+                qdb_req->output.error = qdb_init_operations(ops.data(), ops.size());
+                if (!QDB_SUCCESS(qdb_req->output.error)) return;
 
-                       std::transform(tags.cbegin(), tags.cend(), ops.begin(), [qdb_req](const std::string & tag) {
-                           qdb_operation_t op;
-                           op.type = qdb_op_has_tag;
-                           op.alias = qdb_req->input.alias.c_str();
-                           op.has_tag.tag = tag.c_str();
-                           return op;
-                       });
+                std::transform(tags.cbegin(), tags.cend(), ops.begin(), [qdb_req](const std::string & tag) {
+                    qdb_operation_t op;
+                    op.type = qdb_op_has_tag;
+                    op.alias = qdb_req->input.alias.c_str();
+                    op.has_tag.tag = tag.c_str();
+                    return op;
+                });
 
-                       qdb_req->output.batch.success_count = qdb_run_batch(qdb_req->handle(), ops.data(), ops.size());
-                       qdb_req->output.error = qdb_e_ok;
-                   },
-                   processBatchHasTagResult, &ArgsEaterBinder::strings);
+                qdb_req->output.batch.success_count = qdb_run_batch(qdb_req->handle(), ops.data(), ops.size());
+                qdb_req->output.error = qdb_e_ok;
+            },
+            processBatchHasTagResult, &ArgsEaterBinder::strings);
     }
 
     //:desc: Gets an array of tag objects associated with the Entity.
     //:args: callback(err, tags) (function) - A callback or anonymous function with error and array of tags parameters.
     static void getTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(args,
-                   [](qdb_request * qdb_req) //
-                   {
-                       auto buffer_begin = reinterpret_cast<const char ***>(
-                           const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
-                       qdb_req->output.error = qdb_get_tags(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                            buffer_begin, &(qdb_req->output.content.buffer.size));
-
-                   },
-                   processArrayStringResult, &ArgsEaterBinder::none);
+        queue_work(
+            args,
+            [](qdb_request * qdb_req) //
+            {
+                auto buffer_begin =
+                    reinterpret_cast<const char ***>(const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+                qdb_req->output.error = qdb_get_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), buffer_begin,
+                                                     &(qdb_req->output.content.buffer.size));
+            },
+            processArrayStringResult, &ArgsEaterBinder::none);
     }
 
 public:
@@ -351,8 +360,16 @@ private:
                                       unsigned int argc,
                                       v8::Local<v8::Value> argv[])
     {
-        const qdb_error_t err =
-            (argc > 0) ? static_cast<qdb_error_t>(static_cast<unsigned int>(argv[0]->NumberValue())) : qdb_e_ok;
+        qdb_error_t err = qdb_e_ok;
+
+        if (argc > 0)
+        {
+            auto maybe_err = argv[0]->NumberValue(isolate->GetCurrentContext());
+            if (maybe_err.IsJust())
+            {
+                err = static_cast<qdb_error_t>(static_cast<unsigned int>(maybe_err.FromJust()));
+            }
+        }
 
         if (QDB_SUCCESS(err))
         {

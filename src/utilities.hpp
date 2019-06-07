@@ -294,7 +294,14 @@ private:
 public:
     v8::Local<v8::Object> argObject(int i) const
     {
-        return _args[i]->ToObject();
+        auto maybe_arg = _args[i]->ToObject(_args.GetIsolate()->GetCurrentContext());
+        if (maybe_arg.IsEmpty())
+        {
+            // FIXME(Marek): What should we do here?
+            return {};
+        }
+
+        return maybe_arg.ToLocalChecked();
     }
 
     // std::optional not available in VS 2013
@@ -311,8 +318,8 @@ public:
 
     std::pair<v8::Local<v8::Function>, bool> checkedArgCallback(int i) const
     {
-        return checkArg<v8::Local<v8::Function>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsFunction(); },
-                                                 &MethodMan::argCallback);
+        return checkArg<v8::Local<v8::Function>>(
+            i, [](v8::Local<v8::Value> v) -> bool { return v->IsFunction(); }, &MethodMan::argCallback);
     }
 
     v8::Local<v8::String> argString(int i) const
@@ -322,8 +329,8 @@ public:
 
     std::pair<v8::Local<v8::String>, bool> checkedArgString(int i) const
     {
-        return checkArg<v8::Local<v8::String>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsString(); },
-                                               &MethodMan::argString);
+        return checkArg<v8::Local<v8::String>>(
+            i, [](v8::Local<v8::Value> v) -> bool { return v->IsString(); }, &MethodMan::argString);
     }
 
     v8::Local<v8::Array> argArray(int i) const
@@ -333,18 +340,26 @@ public:
 
     std::pair<v8::Local<v8::Array>, bool> checkedArgArray(int i) const
     {
-        return checkArg<v8::Local<v8::Array>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsArray(); },
-                                              &MethodMan::argArray);
+        return checkArg<v8::Local<v8::Array>>(
+            i, [](v8::Local<v8::Value> v) -> bool { return v->IsArray(); }, &MethodMan::argArray);
     }
 
     double argNumber(int i) const
     {
-        return _args[i]->NumberValue();
+        auto maybe_arg = _args[i]->NumberValue(_args.GetIsolate()->GetCurrentContext());
+        if (maybe_arg.IsNothing())
+        {
+            // FIXME(Marek): What should we do here?
+            return {};
+        }
+
+        return maybe_arg.FromJust();
     }
 
     std::pair<double, bool> checkedArgNumber(int i) const
     {
-        return checkArg<double>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsNumber(); }, &MethodMan::argNumber);
+        return checkArg<double>(
+            i, [](v8::Local<v8::Value> v) -> bool { return v->IsNumber(); }, &MethodMan::argNumber);
     }
 
     v8::Local<v8::Date> argDate(int i) const
@@ -354,8 +369,8 @@ public:
 
     std::pair<v8::Local<v8::Date>, bool> checkedArgDate(int i) const
     {
-        return checkArg<v8::Local<v8::Date>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsDate(); },
-                                             &MethodMan::argDate);
+        return checkArg<v8::Local<v8::Date>>(
+            i, [](v8::Local<v8::Value> v) -> bool { return v->IsDate(); }, &MethodMan::argDate);
     }
 
     const v8::FunctionCallbackInfo<v8::Value> & args(void) const
@@ -479,7 +494,7 @@ public:
 
     std::string convertString(const v8::Local<v8::String> & s)
     {
-        v8::String::Utf8Value val(s);
+        v8::String::Utf8Value val(v8::Isolate::GetCurrent(), s);
         return std::string(*val, val.length());
     }
 
@@ -508,7 +523,7 @@ public:
                 auto vi = arr.first->Get(i);
                 if (!vi->IsString()) return string_vector();
 
-                v8::String::Utf8Value val(vi->ToString());
+                v8::String::Utf8Value val(v8::Isolate::GetCurrent(), vi->ToString());
                 res.push_back(std::string(*val, val.length()));
             }
         }
@@ -531,22 +546,39 @@ public:
             auto len = arr.first->Length();
             res.reserve(len);
 
-            auto nameProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "name");
-            auto typeProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "type");
+            auto isolate = v8::Isolate::GetCurrent();
+
+            auto nameProp = v8::String::NewFromUtf8(isolate, "name");
+            auto typeProp = v8::String::NewFromUtf8(isolate, "type");
 
             for (auto i = 0u; i < len; ++i)
             {
                 auto vi = arr.first->Get(i);
                 if (!vi->IsObject()) return column_vector();
 
-                auto obj = vi->ToObject();
+                auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
+                if (maybe_obj.IsEmpty())
+                {
+                    return column_vector();
+                }
+                auto obj = maybe_obj.ToLocalChecked();
                 auto name = obj->Get(nameProp);
                 auto type = obj->Get(typeProp);
 
-                if (!name->IsString() || !type->IsNumber()) return column_vector();
+                if (!name->IsString() || !type->IsNumber())
+                {
+                    return column_vector();
+                }
 
-                v8::String::Utf8Value sval(name->ToString());
-                res.emplace_back(std::string(*sval, sval.length()), qdb_ts_column_type_t(type->Int32Value()));
+                v8::String::Utf8Value sval(isolate, name->ToString());
+
+                auto maybe_type = type->Int32Value(isolate->GetCurrentContext());
+                if (maybe_type.IsNothing())
+                {
+                    return column_vector();
+                }
+
+                res.emplace_back(std::string(*sval, sval.length()), qdb_ts_column_type_t(maybe_type.FromJust()));
             }
         }
 
@@ -568,12 +600,17 @@ public:
             auto tsProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "timestamp");
             auto valueProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "value");
 
+            auto isolate = v8::Isolate::GetCurrent();
+
             for (auto i = 0u; i < len; ++i)
             {
                 auto vi = arr.first->Get(i);
                 if (!vi->IsObject()) return point_vector();
 
-                auto obj = vi->ToObject();
+                auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
+                if (maybe_obj.IsEmpty()) return point_vector();
+
+                auto obj = maybe_obj.ToLocalChecked();
                 auto date = obj->Get(tsProp);
                 auto value = obj->Get(valueProp);
 
@@ -597,8 +634,17 @@ public:
 
             if (!value->IsNumber()) return std::make_pair(p, false);
 
+            auto isolate = v8::Isolate::GetCurrent();
+
             p.timestamp = ts;
-            p.value = value->NumberValue();
+
+            auto maybe_value = value->NumberValue(isolate->GetCurrentContext());
+            if (maybe_value.IsNothing())
+            {
+                return std::make_pair(p, false);
+            }
+
+            p.value = maybe_value.FromJust();
             return std::make_pair(p, true);
         });
     }
@@ -624,8 +670,17 @@ public:
 
             if (!value->IsNumber()) return std::make_pair(p, false);
 
+            auto isolate = v8::Isolate::GetCurrent();
+
             p.timestamp = ts;
-            p.value = value->IntegerValue();
+
+            auto maybe_value = value->IntegerValue(isolate->GetCurrentContext());
+            if (maybe_value.IsNothing())
+            {
+                return std::make_pair(p, false);
+            }
+
+            p.value = maybe_value.FromJust();
             return std::make_pair(p, true);
         });
     }
@@ -639,7 +694,14 @@ public:
 
             p.timestamp = ts;
 
-            const qdb_time_t ms_since_epoch = static_cast<qdb_time_t>(v8::Date::Cast(*value)->NumberValue());
+            auto isolate = v8::Isolate::GetCurrent();
+            auto maybe_value = v8::Date::Cast(*value)->NumberValue(isolate->GetCurrentContext());
+            if (maybe_value.IsNothing())
+            {
+                return std::make_pair(p, false);
+            }
+
+            const qdb_time_t ms_since_epoch = static_cast<qdb_time_t>(maybe_value.FromJust());
 
             p.value.tv_sec = ms_since_epoch / 1000;
             p.value.tv_nsec = (ms_since_epoch % 1000) * 1000;
@@ -659,12 +721,17 @@ public:
             auto len = arr.first->Length();
             res.reserve(len);
 
+            auto isolate = v8::Isolate::GetCurrent();
+
             for (auto i = 0u; i < len; ++i)
             {
                 auto vi = arr.first->Get(i);
                 if (!vi->IsObject()) return range_vector();
 
-                auto obj = node::ObjectWrap::Unwrap<TsRange>(vi->ToObject());
+                auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
+                if (maybe_obj.IsEmpty()) return range_vector();
+
+                auto obj = node::ObjectWrap::Unwrap<TsRange>(maybe_obj.ToLocalChecked());
                 assert(obj);
 
                 res.push_back(obj->nativeRange());
@@ -686,12 +753,17 @@ public:
             auto len = arr.first->Length();
             res.reserve(len);
 
+            auto isolate = v8::Isolate::GetCurrent();
+
             for (auto i = 0u; i < len; ++i)
             {
                 auto vi = arr.first->Get(i);
                 if (!vi->IsObject()) return aggr_vector();
 
-                auto obj = vi->ToObject();
+                auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
+                if (maybe_obj.IsEmpty()) return aggr_vector();
+
+                auto obj = maybe_obj.ToLocalChecked();
 
                 auto aggr = node::ObjectWrap::Unwrap<Aggregation>(obj);
                 assert(aggr);

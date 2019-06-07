@@ -33,7 +33,6 @@ public:
     static void Init(v8::Local<v8::Object> exports, const char * className, F init)
     {
         InitConstructorOnly(exports, className, [init](v8::Local<v8::FunctionTemplate> tpl) {
-
             auto isolate = v8::Isolate::GetCurrent();
             auto s = v8::Signature::New(isolate, tpl);
             auto proto = tpl->PrototypeTemplate();
@@ -154,8 +153,24 @@ private:
                 return;
             }
 
-            auto ms = args[0]->NumberValue();
-            auto value = args[1]->NumberValue();
+            auto isolate = args.GetIsolate();
+
+            auto maybe_ms = args[0]->NumberValue(isolate->GetCurrentContext());
+            if (maybe_ms.IsNothing())
+            {
+                call.throwException("Invalid 'ms' parameter supplied to object");
+                return;
+            }
+
+            auto maybe_value = args[1]->NumberValue(isolate->GetCurrentContext());
+            if (maybe_value.IsNothing())
+            {
+                call.throwException("Invalid 'value' parameter supplied to object");
+                return;
+            }
+
+            auto ms = maybe_ms.FromJust();
+            auto value = maybe_value.FromJust();
             auto obj = new DoublePoint(ms_to_qdb_timespec(ms), value);
 
             obj->Wrap(args.This());
@@ -253,8 +268,24 @@ private:
                 return;
             }
 
-            auto ms = args[0]->NumberValue();
-            auto obj = new BlobPoint(ms_to_qdb_timespec(ms), args.GetIsolate(), args[1]->ToObject());
+            auto isolate = args.GetIsolate();
+
+            auto maybe_ms = args[0]->NumberValue(isolate->GetCurrentContext());
+            if (maybe_ms.IsNothing())
+            {
+                call.throwException("Invalid 'ms' parameter supplied to object");
+                return;
+            }
+
+            auto ms = maybe_ms.FromJust();
+
+            auto maybe_obj = args[1]->ToObject(isolate->GetCurrentContext());
+            if (maybe_obj.IsEmpty())
+            {
+                return;
+            }
+
+            auto obj = new BlobPoint(ms_to_qdb_timespec(ms), args.GetIsolate(), maybe_obj.ToLocalChecked());
 
             obj->Wrap(args.This());
             args.GetReturnValue().Set(args.This());

@@ -99,7 +99,7 @@ private:
                 return;
             }
 
-            v8::String::Utf8Value utf8str(str.first);
+            v8::String::Utf8Value utf8str(args.GetIsolate(), str.first);
 
             // the cluster only owns the uri
             // when we will connect we will create a reference counted cluster_data
@@ -193,7 +193,7 @@ private:
                 return;
             }
 
-            v8::String::Utf8Value utf8str(str.first);
+            v8::String::Utf8Value utf8str(args.GetIsolate(), str.first);
             auto b = new Object(data, *utf8str);
             assert(b);
 

@@ -121,10 +121,26 @@ private:
                 return;
             }
 
-            auto type = static_cast<qdb_ts_aggregation_type_t>(args[0]->Int32Value());
+            auto context = args.GetIsolate()->GetCurrentContext();
+
+            auto maybe_type = args[0]->Int32Value(context);
+            if (maybe_type.IsNothing())
+            {
+                throwException(args, "Missing type argument");
+                return;
+            }
+
+            auto type = static_cast<qdb_ts_aggregation_type_t>(maybe_type.FromJust());
+
+            auto maybe_range = args[1]->ToObject(context);
+            if (maybe_range.IsEmpty())
+            {
+                throwException(args, "Missing range argument");
+                return;
+            }
 
             // TODO: Check that type of the class was TsRange
-            auto obj = new Aggregation(type, args.GetIsolate(), args[1]->ToObject());
+            auto obj = new Aggregation(type, args.GetIsolate(), maybe_range.ToLocalChecked());
 
             obj->Wrap(args.This());
             args.GetReturnValue().Set(args.This());

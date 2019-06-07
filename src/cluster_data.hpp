@@ -112,8 +112,9 @@ public:
         const char ** results = NULL;
         size_t result_count = 0u;
 
-        return !_handle ? qdb_e_ok : qdb_prefix_get(static_cast<qdb_handle_t>(_handle.get()), prefix.c_str(), max_count,
-                                                    &results, &result_count);
+        return !_handle ? qdb_e_ok
+                        : qdb_prefix_get(static_cast<qdb_handle_t>(_handle.get()), prefix.c_str(), max_count, &results,
+                                         &result_count);
     }
 
 private:
@@ -132,4 +133,4 @@ private:
 };
 
 using cluster_data_ptr = std::shared_ptr<cluster_data>;
-}
+} // namespace quasardb
