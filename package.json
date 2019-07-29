@@ -20,12 +20,12 @@
     "url": "https://github.com/bureau14/qdb-api-nodejs"
   },
   "dependencies": {
-    "node-pre-gyp": "^0.6.29"
+    "node-pre-gyp": "^0.13.0"
   },
   "devDependencies": {
     "bluebird": "^3.4.3",
-    "mocha": "^3.0.2",
-    "unit.js": "^2.0.0"
+    "mocha": "^6.2.0",
+    "unit.js": "^2.1.0"
   },
   "bundledDependencies": [
     "node-pre-gyp"
