@@ -35,7 +35,8 @@ node_modules
 /.vs
 db/
 lib/
-deps
+qdb/
 tags
 *.swp
 .vscode/
+package-lock.json

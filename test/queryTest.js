@@ -2,7 +2,7 @@ var test = require('unit.js');
 var qdb = require('..');
 var config = require('./config');
 
-var cluster = new qdb.Cluster(config.cluster_uri);
+var cluster = new qdb.Cluster(config.insecure_cluster_uri);
 var my_tag1 = 'my_tag1';
 var my_tag2 = 'my_tag2';
 var blob_name = 'blob_query_test';
