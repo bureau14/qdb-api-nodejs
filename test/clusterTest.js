@@ -3,7 +3,7 @@ var qdb = require('..');
 var config = require('./config');
 
 describe('Cluster', function() {
-    var cluster = new qdb.Cluster(config.cluster_uri);
+    var cluster = new qdb.Cluster(config.insecure_cluster_uri);
 
     // tests for race condition in connect
     describe('connect', function () {

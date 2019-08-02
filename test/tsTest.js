@@ -2,7 +2,7 @@ var test = require('unit.js');
 var qdb = require('..');
 var config = require('./config')
 
-var cluster = new qdb.Cluster(config.cluster_uri);
+var cluster = new qdb.Cluster(config.insecure_cluster_uri);
 
 describe('TimeSeries', function () {
     var ts

@@ -3,7 +3,7 @@ var qdb = require('..');
 var config = require('./config');
 var Promise = require('bluebird'); // Using default Node.js Promise is very slow
 
-var cluster = new qdb.Cluster(config.cluster_uri);
+var cluster = new qdb.Cluster(config.insecure_cluster_uri);
 
 function put_blob(alias)
 {

@@ -55,10 +55,10 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "<(module_root_dir)/deps/qdb/include"
+              "<(module_root_dir)/qdb/include"
             ],
             "libraries": [
-              "-L<(module_root_dir)/deps/qdb/lib",
+              "-L<(module_root_dir)/qdb/lib",
               "-lqdb_api",
               "-Wl,-rpath,@loader_path"
             ],
@@ -77,11 +77,11 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "<(module_root_dir)/deps/qdb/include"
+              "<(module_root_dir)/qdb/include"
             ],
             "libraries": [
               "-L/usr/local/lib",
-              "-L<(module_root_dir)/deps/qdb/lib",
+              "-L<(module_root_dir)/qdb/lib",
               "-lqdb_api",
               "-Wl,-rpath=\'$$ORIGIN\'"
             ],
@@ -99,11 +99,11 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "<(module_root_dir)/deps/qdb/include"
+              "<(module_root_dir)/qdb/include"
             ],
             "libraries": [
               "-L/usr/local/lib",
-              "-L<(module_root_dir)/deps/qdb/lib",
+              "-L<(module_root_dir)/qdb/lib",
               "-lqdb_api",
               "-Wl,-rpath=\'$$ORIGIN\'"
             ],
@@ -117,7 +117,7 @@
           "OS=='win'",
           {
             "include_dirs": [
-              "<(module_root_dir)/deps/qdb/include"
+              "<(module_root_dir)/qdb/include"
             ],
             "msvs_settings": {
               "VCCLCompilerTool": {
@@ -129,7 +129,7 @@
             },
             "link_settings": {
               "libraries": [
-                "<(module_root_dir)/deps/qdb/lib/qdb_api.lib"
+                "<(module_root_dir)/qdb/lib/qdb_api.lib"
               ]
             }
           }
@@ -151,7 +151,7 @@
                 "destination": "<(module_path)",
                 "files": [
                   "<(PRODUCT_DIR)/<(module_name).node",
-                  "<(module_root_dir)/deps/qdb/lib/libqdb_api.dylib"
+                  "<(module_root_dir)/qdb/lib/libqdb_api.dylib"
                 ]
               }
             ]
@@ -165,7 +165,7 @@
                 "destination": "<(module_path)",
                 "files": [
                   "<(PRODUCT_DIR)/<(module_name).node",
-                  "<(module_root_dir)/deps/qdb/lib/libqdb_api.so"
+                  "<(module_root_dir)/qdb/lib/libqdb_api.so"
                 ]
               }
             ]
@@ -179,7 +179,7 @@
                 "destination": "<(module_path)",
                 "files": [
                   "<(PRODUCT_DIR)/<(module_name).node",
-                  "<(module_root_dir)/deps/qdb/bin/qdb_api.dll"
+                  "<(module_root_dir)/qdb/bin/qdb_api.dll"
                 ]
               }
             ]
