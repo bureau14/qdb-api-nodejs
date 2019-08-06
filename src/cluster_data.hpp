@@ -91,7 +91,7 @@ public:
 
         if (!_cluster_public_key_file.empty() && !_user_private_key_file.empty())
         {
-            qdb_error_t res = qdb_option_set_security(static_cast<qdb_handle_t>(_handle.get()), _cluster_public_key_file.c_str(), _user_private_key_file.c_str());
+            qdb_error_t res = qdb_option_load_security_files(static_cast<qdb_handle_t>(_handle.get()), _cluster_public_key_file.c_str(), _user_private_key_file.c_str());
             if (res) return res;
         }
 
