@@ -256,6 +256,78 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
+
+class Int64Column : public Column<Int64Column>
+{
+    friend class Column<Int64Column>;
+    friend class Entry<Int64Column>;
+
+    Int64Column(cluster_data_ptr cd, const char * name, const char * ts)
+        : Column<Int64Column>(cd, name, ts, qdb_ts_column_int64)
+
+    {
+    }
+    virtual ~Int64Column(void)
+    {
+    }
+
+public:
+    static void Init(v8::Local<v8::Object> exports)
+    {
+        Column<Int64Column>::Init(exports, "Int64Column", [](v8::Local<v8::FunctionTemplate> tpl) {
+            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", Int64Column::insert);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", Int64Column::ranges);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", Int64Column::aggregate);
+        });
+    }
+
+private:
+    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void ranges(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void aggregate(const v8::FunctionCallbackInfo<v8::Value> & args);
+
+    static void processInt64PointArrayResult(uv_work_t * req, int status);
+    static void processInt64AggregateResult(uv_work_t * req, int status);
+
+    static v8::Persistent<v8::Function> constructor;
+};
+
+
+class TimestampColumn : public Column<TimestampColumn>
+{
+    friend class Column<TimestampColumn>;
+    friend class Entry<TimestampColumn>;
+
+    TimestampColumn(cluster_data_ptr cd, const char * name, const char * ts)
+        : Column<TimestampColumn>(cd, name, ts, qdb_ts_column_timestamp)
+
+    {
+    }
+    virtual ~TimestampColumn(void)
+    {
+    }
+
+public:
+    static void Init(v8::Local<v8::Object> exports)
+    {
+        Column<TimestampColumn>::Init(exports, "TimestampColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
+            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", TimestampColumn::insert);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", TimestampColumn::ranges);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", TimestampColumn::aggregate);
+        });
+    }
+
+private:
+    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void ranges(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void aggregate(const v8::FunctionCallbackInfo<v8::Value> & args);
+
+    static void processTimestampPointArrayResult(uv_work_t * req, int status);
+    static void processTimestampAggregateResult(uv_work_t * req, int status);
+
+    static v8::Persistent<v8::Function> constructor;
+};
+
 std::pair<v8::Local<v8::Object>, bool>
 CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type);
 

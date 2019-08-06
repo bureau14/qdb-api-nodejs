@@ -40,9 +40,13 @@ public:
             // Export to global namespace
             NODE_SET_METHOD(exports, "DoubleColumnInfo", columnInfoTpl<qdb_ts_column_double>);
             NODE_SET_METHOD(exports, "BlobColumnInfo", columnInfoTpl<qdb_ts_column_blob>);
+            NODE_SET_METHOD(exports, "Int64ColumnInfo", columnInfoTpl<qdb_ts_column_int64>);
+            NODE_SET_METHOD(exports, "TimestampColumnInfo", columnInfoTpl<qdb_ts_column_timestamp>);
 
-            AddTsType(exports, "TS_COLUMN_BLOB", qdb_ts_column_blob);
             AddTsType(exports, "TS_COLUMN_DOUBLE", qdb_ts_column_double);
+            AddTsType(exports, "TS_COLUMN_BLOB", qdb_ts_column_blob);
+            AddTsType(exports, "TS_COLUMN_INT64", qdb_ts_column_int64);
+            AddTsType(exports, "TS_COLUMN_TIMESTAMP", qdb_ts_column_timestamp);
         });
     }
 

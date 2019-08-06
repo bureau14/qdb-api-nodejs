@@ -7,6 +7,7 @@
 #include <qdb/batch.h>
 #include <qdb/client.h>
 #include <qdb/integer.h>
+#include <qdb/query.h>
 #include <qdb/ts.h>
 #include <node.h>
 #include <node_buffer.h>
@@ -52,6 +53,18 @@ struct NewObject<v8::String>
     {
         // strings don't use new, they use newfromutf8
         return v8::String::NewFromUtf8(i, std::forward<P>(p));
+    }
+};
+
+template <>
+struct NewObject<v8::Date>
+{
+
+    template <typename P>
+    v8::Local<v8::Value> operator()(v8::Isolate * i, P && p)
+    {
+        // strings don't use new, they use newfromutf8
+        return v8::Date::New(i, qdb_timespec_to_ms(std::forward<P>(p)));
     }
 };
 
@@ -148,6 +161,8 @@ struct qdb_request
             std::vector<qdb_operation_t> operations;
             qdb_size_t success_count;
         } batch;
+
+        qdb_query_result_t * query_result;
 
         qdb_error_t error;
     };
