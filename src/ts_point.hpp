@@ -324,4 +324,214 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
+class Int64Point : public Point<Int64Point>
+{
+    friend class Point<Int64Point>;
+
+    static const size_t ParametersCount = 2;
+
+    Int64Point(qdb_timespec_t ts, qdb_int_t v) : Point<Int64Point>(ts), value(v)
+    {
+    }
+
+    virtual ~Int64Point()
+    {
+    }
+
+public:
+    static void Init(v8::Local<v8::Object> exports)
+    {
+        Point<Int64Point>::Init(exports, "Int64Point", [](v8::Local<v8::FunctionTemplate> tpl) {});
+    }
+
+    static v8::Local<v8::Object> MakePoint(v8::Isolate * isolate, qdb_timespec_t ts, qdb_int_t value)
+    {
+        static const size_t argc = ParametersCount;
+
+        auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), qdb_timespec_to_ms(ts));
+        if (maybe_date.IsEmpty())
+        {
+            assert("Cannot create new date");
+            return {};
+        }
+
+        v8::Local<v8::Value> argv[argc] = {
+            maybe_date.ToLocalChecked(),
+            v8::Number::New(isolate, value),
+        };
+
+        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
+        assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
+        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+    }
+
+private:
+    static void New(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        if (args.IsConstructCall())
+        {
+            MethodMan call(args);
+            if (args.Length() != ParametersCount)
+            {
+                call.throwException("Wrong number of arguments");
+                return;
+            }
+
+            if (!args[0]->IsDate() || !args[1]->IsNumber())
+            {
+                call.throwException("Invalid parameter supplied to object");
+                return;
+            }
+
+            auto isolate = args.GetIsolate();
+
+            auto maybe_ms = args[0]->NumberValue(isolate->GetCurrentContext());
+            if (maybe_ms.IsNothing())
+            {
+                call.throwException("Invalid 'ms' parameter supplied to object");
+                return;
+            }
+
+            auto maybe_value = args[1]->NumberValue(isolate->GetCurrentContext());
+            if (maybe_value.IsNothing())
+            {
+                call.throwException("Invalid 'value' parameter supplied to object");
+                return;
+            }
+
+            auto ms = maybe_ms.FromJust();
+            auto value = maybe_value.FromJust();
+            auto obj = new Int64Point(ms_to_qdb_timespec(ms), value);
+
+            obj->Wrap(args.This());
+            args.GetReturnValue().Set(args.This());
+        }
+        else
+        {
+            NewInstance(args);
+        }
+    }
+
+    static void getValue(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        MethodMan call(args);
+
+        Int64Point * pthis = call.nativeHolder<Int64Point>();
+
+        assert(pthis);
+
+        call.template setReturnValue<v8::Number>(pthis->value);
+    }
+
+private:
+    qdb_int_t value;
+
+    static v8::Persistent<v8::Function> constructor;
+};
+
+class TimestampPoint : public Point<TimestampPoint>
+{
+    friend class Point<TimestampPoint>;
+
+    static const size_t ParametersCount = 2;
+
+    TimestampPoint(qdb_timespec_t ts, qdb_timespec_t v) : Point<TimestampPoint>(ts), value(v)
+    {
+    }
+
+    virtual ~TimestampPoint()
+    {
+    }
+
+public:
+    static void Init(v8::Local<v8::Object> exports)
+    {
+        Point<TimestampPoint>::Init(exports, "TimestampPoint", [](v8::Local<v8::FunctionTemplate> tpl) {});
+    }
+    
+    static v8::Local<v8::Object> MakePoint(v8::Isolate * isolate, qdb_timespec_t ts, qdb_timespec_t value)
+    {
+        static const size_t argc = ParametersCount;
+
+        auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), qdb_timespec_to_ms(ts));
+        if (maybe_date.IsEmpty())
+        {
+            assert("Cannot create new date");
+            return {};
+        }
+
+        v8::Local<v8::Value> argv[argc] = {
+            maybe_date.ToLocalChecked(),
+            v8::Date::New(isolate->GetCurrentContext(), qdb_timespec_to_ms(value)).ToLocalChecked(),
+        };
+
+        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
+        assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
+        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+    }
+
+private:
+    static void New(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        if (args.IsConstructCall())
+        {
+            MethodMan call(args);
+            if (args.Length() != ParametersCount)
+            {
+                call.throwException("Wrong number of arguments");
+                return;
+            }
+
+            if (!args[0]->IsDate() || !args[1]->IsDate())
+            {
+                call.throwException("Invalid parameter supplied to object");
+                return;
+            }
+
+            auto isolate = args.GetIsolate();
+
+            auto maybe_ms = args[0]->NumberValue(isolate->GetCurrentContext());
+            if (maybe_ms.IsNothing())
+            {
+                call.throwException("Invalid 'ms' parameter supplied to object");
+                return;
+            }
+
+            auto maybe_value = args[1]->NumberValue(isolate->GetCurrentContext());
+            if (maybe_value.IsNothing())
+            {
+                call.throwException("Invalid 'value' parameter supplied to object");
+                return;
+            }
+
+            auto ms = maybe_ms.FromJust();
+            auto value = maybe_value.FromJust();
+            auto obj = new TimestampPoint(ms_to_qdb_timespec(ms), ms_to_qdb_timespec(value));
+
+            obj->Wrap(args.This());
+            args.GetReturnValue().Set(args.This());
+        }
+        else
+        {
+            NewInstance(args);
+        }
+    }
+
+    static void getValue(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        MethodMan call(args);
+
+        TimestampPoint * pthis = call.nativeHolder<TimestampPoint>();
+
+        assert(pthis);
+
+        call.template setReturnValue<v8::Date>(pthis->value);
+    }
+
+private:
+    qdb_timespec_t value;
+
+    static v8::Persistent<v8::Function> constructor;
+};
+
 } // namespace quasardb

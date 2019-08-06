@@ -32,6 +32,7 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::Integer::Init(exports);
     quasardb::Prefix::Init(exports);
     quasardb::QueryFind::Init(exports);
+    quasardb::Query::Init(exports);
     quasardb::Range::Init(exports);
     quasardb::Suffix::Init(exports);
     quasardb::Tag::Init(exports);
@@ -39,8 +40,12 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::TimeSeries::Init(exports);
     quasardb::DoublePoint::Init(exports);
     quasardb::BlobPoint::Init(exports);
+    quasardb::Int64Point::Init(exports);
+    quasardb::TimestampPoint::Init(exports);
     quasardb::DoubleColumn::Init(exports);
     quasardb::BlobColumn::Init(exports);
+    quasardb::Int64Column::Init(exports);
+    quasardb::TimestampColumn::Init(exports);
     quasardb::Aggregation::Init(exports);
 
     InitConstants(exports);

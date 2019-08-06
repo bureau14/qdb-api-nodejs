@@ -18,6 +18,8 @@
         "src/prefix.hpp",
         "src/query_find.cpp",
         "src/query_find.hpp",
+        "src/query.cpp",
+        "src/query.hpp",
         "src/range.cpp",
         "src/range.hpp",
         "src/suffix.cpp",

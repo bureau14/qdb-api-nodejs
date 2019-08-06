@@ -10,6 +10,8 @@ namespace quasardb
 
 v8::Persistent<v8::Function> BlobColumn::constructor;
 v8::Persistent<v8::Function> DoubleColumn::constructor;
+v8::Persistent<v8::Function> Int64Column::constructor;
+v8::Persistent<v8::Function> TimestampColumn::constructor;
 
 void BlobColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
@@ -273,6 +275,263 @@ void DoubleColumn::processDoubleAggregateResult(uv_work_t * req, int status)
     });
 }
 
+void Int64Column::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    Column<Int64Column>::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            const auto & points = qdb_req->input.content.int64_points;
+
+            qdb_req->output.error = qdb_ts_int64_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+        },
+        Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::int64Points);
+}
+
+void Int64Column::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    Int64Column::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            auto & ranges = qdb_req->input.content.ranges;
+            auto bufp =
+                reinterpret_cast<qdb_ts_int64_point **>(const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+            auto count = &(qdb_req->output.content.buffer.size);
+
+            qdb_req->output.error =
+                qdb_ts_int64_get_ranges(qdb_req->handle(), ts, alias, ranges.data(), ranges.size(), bufp, count);
+        },
+        Int64Column::processInt64PointArrayResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::ranges);
+}
+
+void Int64Column::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    Int64Column::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            qdb_ts_int64_aggregation_t * aggrs = qdb_req->input.content.int64_aggrs.data();
+            const qdb_size_t count = qdb_req->input.content.int64_aggrs.size();
+
+            qdb_req->output.error = qdb_ts_int64_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
+        },
+        Int64Column::processInt64AggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::int64Aggregations);
+}
+
+void Int64Column::processInt64PointArrayResult(uv_work_t * req, int status)
+{
+    processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+        v8::Local<v8::Array> array;
+
+        auto error_code = processErrorCode(isolate, status, qdb_req);
+        if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+        {
+            qdb_ts_int64_point * entries =
+                reinterpret_cast<qdb_ts_int64_point *>(const_cast<void *>(qdb_req->output.content.buffer.begin));
+            const size_t entries_count = qdb_req->output.content.buffer.size;
+
+            array = v8::Array::New(isolate, static_cast<int>(entries_count));
+            if (array.IsEmpty())
+            {
+                error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
+            }
+            else
+            {
+                for (size_t i = 0; i < entries_count; ++i)
+                {
+                    auto obj = Int64Point::MakePoint(isolate, entries[i].timestamp, entries[i].value);
+                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                }
+            }
+
+            // safe to call even on null/invalid buffers
+            qdb_release(qdb_req->handle(), entries);
+        }
+        else
+        {
+            // provide an empty array
+            array = v8::Array::New(isolate, 0);
+        }
+
+        return make_value_array(error_code, array);
+    });
+}
+
+void Int64Column::processInt64AggregateResult(uv_work_t * req, int status)
+{
+    processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+        v8::Local<v8::Array> array;
+
+        auto error_code = processErrorCode(isolate, status, qdb_req);
+        if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+        {
+            const auto & aggrs = qdb_req->input.content.int64_aggrs;
+            array = v8::Array::New(isolate, static_cast<int>(aggrs.size()));
+            if (array.IsEmpty())
+            {
+                error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
+            }
+            else
+            {
+                auto resprop = v8::String::NewFromUtf8(isolate, "result");
+                auto cntprop = v8::String::NewFromUtf8(isolate, "count");
+
+                for (size_t i = 0; i < aggrs.size(); ++i)
+                {
+                    const auto & point = aggrs[i].result;
+                    auto result = Int64Point::MakePoint(isolate, point.timestamp, point.value);
+
+                    auto obj = v8::Object::New(isolate);
+                    obj->Set(resprop, result);
+                    obj->Set(cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+
+                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                }
+            }
+        }
+        else
+        {
+            // provide an empty array
+            array = v8::Array::New(isolate, 0);
+        }
+
+        return make_value_array(error_code, array);
+    });
+}
+
+
+void TimestampColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    Column<TimestampColumn>::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            const auto & points = qdb_req->input.content.timestamp_points;
+
+            qdb_req->output.error = qdb_ts_timestamp_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+        },
+        Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::timestampPoints);
+}
+
+void TimestampColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    TimestampColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            auto & ranges = qdb_req->input.content.ranges;
+            auto bufp =
+                reinterpret_cast<qdb_ts_timestamp_point **>(const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+            auto count = &(qdb_req->output.content.buffer.size);
+
+            qdb_req->output.error =
+                qdb_ts_timestamp_get_ranges(qdb_req->handle(), ts, alias, ranges.data(), ranges.size(), bufp, count);
+        },
+        TimestampColumn::processTimestampPointArrayResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::ranges);
+}
+
+void TimestampColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    TimestampColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            qdb_ts_timestamp_aggregation_t * aggrs = qdb_req->input.content.timestamp_aggrs.data();
+            const qdb_size_t count = qdb_req->input.content.timestamp_aggrs.size();
+
+            qdb_req->output.error = qdb_ts_timestamp_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
+        },
+        TimestampColumn::processTimestampAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::timestampAggregations);
+}
+
+void TimestampColumn::processTimestampPointArrayResult(uv_work_t * req, int status)
+{
+    processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+        v8::Local<v8::Array> array;
+
+        auto error_code = processErrorCode(isolate, status, qdb_req);
+        if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+        {
+            qdb_ts_timestamp_point * entries =
+                reinterpret_cast<qdb_ts_timestamp_point *>(const_cast<void *>(qdb_req->output.content.buffer.begin));
+            const size_t entries_count = qdb_req->output.content.buffer.size;
+
+            array = v8::Array::New(isolate, static_cast<int>(entries_count));
+            if (array.IsEmpty())
+            {
+                error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
+            }
+            else
+            {
+                for (size_t i = 0; i < entries_count; ++i)
+                {
+                    auto obj = TimestampPoint::MakePoint(isolate, entries[i].timestamp, entries[i].value);
+                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                }
+            }
+
+            // safe to call even on null/invalid buffers
+            qdb_release(qdb_req->handle(), entries);
+        }
+        else
+        {
+            // provide an empty array
+            array = v8::Array::New(isolate, 0);
+        }
+
+        return make_value_array(error_code, array);
+    });
+}
+
+void TimestampColumn::processTimestampAggregateResult(uv_work_t * req, int status)
+{
+    processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+        v8::Local<v8::Array> array;
+
+        auto error_code = processErrorCode(isolate, status, qdb_req);
+        if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+        {
+            const auto & aggrs = qdb_req->input.content.timestamp_aggrs;
+            array = v8::Array::New(isolate, static_cast<int>(aggrs.size()));
+            if (array.IsEmpty())
+            {
+                error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
+            }
+            else
+            {
+                auto resprop = v8::String::NewFromUtf8(isolate, "result");
+                auto cntprop = v8::String::NewFromUtf8(isolate, "count");
+
+                for (size_t i = 0; i < aggrs.size(); ++i)
+                {
+                    const auto & point = aggrs[i].result;
+                    auto result = TimestampPoint::MakePoint(isolate, point.timestamp, point.value);
+
+                    auto obj = v8::Object::New(isolate);
+                    obj->Set(resprop, result);
+                    obj->Set(cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+
+                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                }
+            }
+        }
+        else
+        {
+            // provide an empty array
+            array = v8::Array::New(isolate, 0);
+        }
+
+        return make_value_array(error_code, array);
+    });
+}
+
 std::pair<v8::Local<v8::Object>, bool>
 CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type)
 {
@@ -283,9 +542,9 @@ CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * na
     case qdb_ts_column_double:
         return std::make_pair(DoubleColumn::MakeColumn(isolate, owner, name), true);
     case qdb_ts_column_timestamp:
-        return std::make_pair(Error::MakeError(isolate, qdb_e_not_implemented), false);
+        return std::make_pair(TimestampColumn::MakeColumn(isolate, owner, name), true);
     case qdb_ts_column_int64:
-        return std::make_pair(Error::MakeError(isolate, qdb_e_not_implemented), false);
+        return std::make_pair(Int64Column::MakeColumn(isolate, owner, name), true);
     case qdb_ts_column_uninitialized:
         return std::make_pair(Error::MakeError(isolate, qdb_e_uninitialized), false);
     }

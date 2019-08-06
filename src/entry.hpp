@@ -482,6 +482,136 @@ public:
             return make_value_array(error_code, array);
         });
     }
+    
+    static void query_set_rows(v8::Isolate * isolate, const qdb_table_result_t & table_result, v8::Local<v8::Object> & table)
+    {
+        auto rows_prop = v8::String::NewFromUtf8(isolate, "rows");
+        auto rows_count_prop = v8::String::NewFromUtf8(isolate, "rows_count");
+
+        const auto columns_count = table_result.columns_count;
+        const auto rows_count = table_result.rows_count;
+        v8::Local<v8::Array> rows = v8::Array::New(isolate, static_cast<int>(rows_count));
+        for (size_t i = 0 ; i < rows_count ; ++i)
+        {
+            v8::Local<v8::Array> columns = v8::Array::New(isolate, static_cast<int>(columns_count));
+            for (size_t j = 0 ; j < columns_count ; ++j)
+            {
+                auto pt = table_result.rows[i][j];
+                switch (pt.type)
+                {
+                    case qdb_query_result_double:
+                        columns->Set(j, v8::Number::New(isolate, pt.payload.double_.value));
+                        break;
+                    case qdb_query_result_blob:
+                    {
+                        std::string blob{reinterpret_cast<const char *>(pt.payload.blob.content), pt.payload.blob.content_length};
+                        columns->Set(j, v8::String::NewFromUtf8(isolate, blob.c_str()));
+                        break;
+                    }
+                    case qdb_query_result_int64:
+                        columns->Set(j, v8::Number::New(isolate, pt.payload.int64_.value));
+                        break;
+                    case qdb_query_result_timestamp:
+                    {
+                        // const auto secs = std::chrono::duration<double>{pt.payload.timestamp.value.tv_sec};
+                        // const auto nsecs =  std::chrono::duration<double, std::nano>{pt.payload.timestamp.value.tv_nsec};
+                        // const auto ms = std::chrono::duration_cast<std::chrono::milliseconds, double>(secs + nsecs).count();
+                        auto ms = qdb_timespec_to_ms(pt.payload.timestamp.value);
+                        columns->Set(j, v8::Date::New(isolate, ms));
+                        break;
+                    }
+                }
+            }
+            rows->Set(i, columns);
+        }
+        table->Set(rows_prop, rows);
+        table->Set(rows_count_prop, v8::Number::New(isolate, rows_count));
+    }
+
+    static void query_set_columns_names(v8::Isolate * isolate, const qdb_table_result_t & table_result, v8::Local<v8::Object> & table)
+    {
+        auto columns_names_prop = v8::String::NewFromUtf8(isolate, "columns_names");
+        auto columns_count_prop = v8::String::NewFromUtf8(isolate, "columns_count");
+
+        const auto columns_count = table_result.columns_count;
+        v8::Local<v8::Array> columns_names = v8::Array::New(isolate, static_cast<int>(columns_count));
+        for (size_t i = 0; i < columns_count ; ++i)
+        {
+            std::string name{table_result.columns_names[i].data, table_result.columns_names[i].length};
+            columns_names->Set(i, v8::String::NewFromUtf8(isolate, name.c_str()));
+        }
+        table->Set(columns_count_prop, v8::Number::New(isolate, columns_count));
+        table->Set(columns_names_prop, columns_names);
+    }
+
+    static void query_make_one_table(v8::Isolate * isolate, const qdb_table_result_t & table_result, v8::Local<v8::Object> & table)
+    {
+        auto table_name_prop = v8::String::NewFromUtf8(isolate, "table_name");
+
+        std::string table_name{table_result.table_name.data, table_result.table_name.length};
+        table->Set(table_name_prop, v8::String::NewFromUtf8(isolate, table_name.c_str()));
+        query_set_columns_names(isolate, table_result, table);
+        query_set_rows(isolate, table_result, table);
+
+    }
+
+    static v8::Local<v8::Object> query_make_tables_array(v8::Isolate * isolate, qdb_query_result_t * result, v8::Local<v8::Array> & tables)
+    {
+        if (tables.IsEmpty())
+        {
+            return Error::MakeError(isolate, qdb_e_no_memory_local);
+        }
+        for (size_t i = 0; i < result->tables_count ; ++i)
+        {
+            v8::Local<v8::Object> table = v8::Object::New(isolate);
+            query_make_one_table(isolate, result->tables[i], table);
+            tables->Set(i, table);
+        }
+        return {};
+    }
+    
+    static v8::Local<v8::Object> query_make_result(v8::Isolate * isolate, qdb_query_result_t * result, v8::Local<v8::Object> & final_result)
+    {
+        auto tables_prop = v8::String::NewFromUtf8(isolate, "tables");
+        auto tables_count_prop = v8::String::NewFromUtf8(isolate, "tables_count");
+        auto scanned_point_count_prop = v8::String::NewFromUtf8(isolate, "scanned_point_count");
+        auto error_msg_prop = v8::String::NewFromUtf8(isolate, "error_message");
+
+        const auto tables_count = result->tables_count;
+        v8::Local<v8::Array> tables_array = v8::Array::New(isolate, static_cast<int>(tables_count));
+        std::string err_msg{result->error_message.data, result->error_message.length};
+
+        auto err = query_make_tables_array(isolate, result, tables_array);
+
+        final_result->Set(tables_prop, tables_array);
+        final_result->Set(tables_count_prop, v8::Number::New(isolate, tables_count));
+        final_result->Set(scanned_point_count_prop, v8::Number::New(isolate, result->scanned_point_count));
+        final_result->Set(error_msg_prop, v8::String::NewFromUtf8(isolate, err_msg.c_str()));
+        return err;
+    }
+
+    // build an array out of the buffer
+    static void processQueryResult(uv_work_t * req, int status)
+    {
+        processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+            v8::Local<v8::Object> final_result = v8::Object::New(isolate);
+
+            auto error_code = processErrorCode(isolate, status, qdb_req);
+            if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+            {
+                auto err = query_make_result(isolate, qdb_req->output.query_result, final_result);
+                if (!err.IsEmpty())
+                {
+                    error_code = err;
+                }
+
+                // safe to call even on null/invalid buffers
+                qdb_release(qdb_req->handle(), qdb_req->output.query_result);
+            }
+
+            return make_value_array(error_code, final_result);
+        });
+    }
 
     static void processIntegerResult(uv_work_t * req, int status)
     {
