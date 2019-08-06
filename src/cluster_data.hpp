@@ -26,8 +26,11 @@ private:
     }
 
 public:
-    cluster_data(std::string uri, int timeout, v8::Local<v8::Function> os, v8::Local<v8::Function> oe)
-        : _uri(uri), _timeout(timeout)
+    cluster_data(std::string uri, std::string user_private_key_file, std::string cluster_public_key_file, int timeout, v8::Local<v8::Function> os, v8::Local<v8::Function> oe)
+        : _uri{std::move(uri)}
+        , _user_private_key_file{std::move(user_private_key_file)}
+        , _cluster_public_key_file{std::move(cluster_public_key_file)}
+        , _timeout{timeout}
     {
         bindCallbacks(os, oe);
     }
@@ -86,6 +89,12 @@ public:
             return qdb_e_no_memory_local;
         }
 
+        if (!_cluster_public_key_file.empty() && !_user_private_key_file.empty())
+        {
+            qdb_error_t res = qdb_option_set_security(static_cast<qdb_handle_t>(_handle.get()), _cluster_public_key_file.c_str(), _user_private_key_file.c_str());
+            if (res) return res;
+        }
+
         qdb_error_t res = qdb_connect(static_cast<qdb_handle_t>(_handle.get()), _uri.c_str());
         if (res != qdb_e_ok)
         {
@@ -119,6 +128,8 @@ public:
 
 private:
     const std::string _uri;
+    const std::string _user_private_key_file;
+    const std::string _cluster_public_key_file;
     int _timeout;
     v8::Persistent<v8::Function> _on_success;
     v8::Persistent<v8::Function> _on_error;

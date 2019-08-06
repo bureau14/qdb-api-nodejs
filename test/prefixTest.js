@@ -3,12 +3,12 @@ var qdb = require('..');
 var config = require('./config')
 var Promise = require('bluebird'); // Using default Node.js Promise is very slow
 
-var cluster = new qdb.Cluster(config.insecure_cluster_uri);
+var insecureCluster = new qdb.Cluster(config.insecure_cluster_uri);
 
 function put_blob(alias) {
     const content = new Buffer('prefix_blob_content');
     return new Promise(function(resolve, reject) {
-        cluster.blob(alias).update(content, function(err) {
+        insecureCluster.blob(alias).update(content, function(err) {
             if (err) reject(err);
             else resolve();
         });
@@ -21,11 +21,11 @@ describe('Prefix', function () {
     var matchingAliases = [ prefix + '1', prefix + '2', prefix + '3', prefix + '4' ];
 
     before('connect', function(done) {
-        cluster.connect(done, done);
+        insecureCluster.connect(done, done);
     });
 
     before('init', function() {
-        p = cluster.prefix(prefix);
+        p = insecureCluster.prefix(prefix);
     });
 
     it('should be of correct type', function() {
@@ -66,7 +66,7 @@ describe('Prefix', function () {
         });
 
         it('should return E_ALIAS_NOT_FOUND and an empty list', function(done) {
-            var p = cluster.prefix('not matching');
+            var p = insecureCluster.prefix('not matching');
             p.getEntries(10, function(err, aliases) {
                 test.must(err.message).not.be.empty();
                 test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);

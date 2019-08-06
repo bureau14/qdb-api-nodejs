@@ -2,17 +2,17 @@ var test = require('unit.js');
 var qdb = require('..');
 var config = require('./config')
 
-var cluster = new qdb.Cluster(config.insecure_cluster_uri);
+var insecureCluster = new qdb.Cluster(config.insecure_cluster_uri);
 
 describe('Integer', function () {
     var i;
 
     before('connect', function(done) {
-        cluster.connect(done, done);
+        insecureCluster.connect(done, done);
     });
 
     before('init', function() {
-        i = cluster.integer('int_test');
+        i = insecureCluster.integer('int_test');
     });
 
     it('should be of correct type', function() {
@@ -108,7 +108,7 @@ describe('Integer', function () {
         var i;
 
         before('init', function() {
-            i = cluster.integer('expiry_int');
+            i = insecureCluster.integer('expiry_int');
         });
 
         it('should update with an expiry in 2s without error', function(done) {

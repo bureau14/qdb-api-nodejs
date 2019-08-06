@@ -3,7 +3,7 @@ var qdb = require('..');
 var config = require('./config');
 
 describe('Cluster', function() {
-    var cluster = new qdb.Cluster(config.insecure_cluster_uri);
+    var insecureCluster = new qdb.Cluster(config.insecure_cluster_uri);
 
     // tests for race condition in connect
     describe('connect', function () {
@@ -36,27 +36,47 @@ describe('Cluster', function() {
             });
         });
     }); // connect
-
-    describe('setTimeout', function() {
+    
+      
+    describe('connect on secure cluster', function () {
+        var secureCluster = new qdb.Cluster(config.secure_cluster_uri, config.cluster_public_key_file, config.user_credentials_file);
+  
+        it('should connect on insecure cluster', function(done) {
+            secureCluster.connect(function(){}, function(err) {
+                done();
+            })
+        });
         it('should set the timeout to 5 seconds', function() {
-            cluster.setTimeout(5000);
+            secureCluster.setTimeout(5000);
         });
 
         it('should refuse to set the timeout to 400 ms', function() {
             test.exception(function() {
-                cluster.setTimeout(400);
+                secureCluster.setTimeout(400);
+            });
+        });
+    });
+
+    describe('setTimeout', function() {
+        it('should set the timeout to 5 seconds', function() {
+            insecureCluster.setTimeout(5000);
+        });
+
+        it('should refuse to set the timeout to 400 ms', function() {
+            test.exception(function() {
+                insecureCluster.setTimeout(400);
             });
         });
     }); // setTimeout
 
     describe('getTimeout', function() {
         it('should return the default timeout of 5 seconds', function(done) {
-            test.must(cluster.getTimeout()).be.equal(5000);
+            test.must(insecureCluster.getTimeout()).be.equal(5000);
             done();
         });
         it('should return the new timeout after changing the default timeout', function(done) {
-            cluster.setTimeout(3000);
-            test.must(cluster.getTimeout()).be.equal(3000);
+            insecureCluster.setTimeout(3000);
+            test.must(insecureCluster.getTimeout()).be.equal(3000);
             done();
         });
     }); // getTimeout

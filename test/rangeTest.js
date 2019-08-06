@@ -4,12 +4,12 @@ var Promise = require('bluebird'); // Using default Node.js Promise is very slow
 var qdb = require('..');
 var config = require('./config')
 
-var cluster = new qdb.Cluster(config.insecure_cluster_uri);
+var insecureCluster = new qdb.Cluster(config.insecure_cluster_uri);
 
 function put_blob(alias) {
     const content = new Buffer('prefix_blob_content');
     return new Promise(function(resolve, reject) {
-        cluster.blob(alias).update(content, function(err) {
+        insecureCluster.blob(alias).update(content, function(err) {
             if (err) reject(err);
             else resolve();
         });
@@ -23,17 +23,17 @@ describe('Range', function() {
     var matchingAliases = [ prefix + '1', prefix + '2', prefix + '3', prefix + '4' ];
 
     before('connect', function(done) {
-        cluster.connect(done, done);
+        insecureCluster.connect(done, done);
     });
 
     before('init', function() {
-        r = cluster.range();
+        r = insecureCluster.range();
     });
 
     before('put blobs', function() {
         var promises = matchingAliases.map(function(a) {
             return new Promise(function(resolve, reject) {
-                cluster.blob(a).update(new Buffer(content + a), function(err) {
+                insecureCluster.blob(a).update(new Buffer(content + a), function(err) {
                     if (err) reject(err);
                     else resolve();
                 });
