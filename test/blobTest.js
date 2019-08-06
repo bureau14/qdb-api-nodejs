@@ -2,17 +2,17 @@ var test = require('unit.js');
 var qdb = require('..');
 var config = require('./config')
 
-var cluster = new qdb.Cluster(config.insecure_cluster_uri);
+var insecureCluster = new qdb.Cluster(config.insecure_cluster_uri);
 
 describe('Blob', function () {
     var b = null;
 
     before('connect', function(done) {
-        cluster.connect(done, done);
+        insecureCluster.connect(done, done);
     });
 
     before('init', function () {
-        b = cluster.blob('bam');
+        b = insecureCluster.blob('bam');
     });
 
     it('should be of correct type', function () {
@@ -268,11 +268,11 @@ describe('blob', function() {
     var b = null;
 
     before('connect', function(done) {
-        cluster.connect(done, done);
+        insecureCluster.connect(done, done);
     });
 
     before('init', function() {
-        b = cluster.blob('expiry_bam');
+        b = insecureCluster.blob('expiry_bam');
     });
 
     describe('expiry', function()

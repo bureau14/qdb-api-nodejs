@@ -2,7 +2,7 @@ var test = require('unit.js');
 var qdb = require('..');
 var config = require('./config')
 
-var cluster = new qdb.Cluster(config.insecure_cluster_uri);
+var insecureCluster = new qdb.Cluster(config.insecure_cluster_uri);
 
 
 describe('Tag', function () {
@@ -10,11 +10,11 @@ describe('Tag', function () {
     var t = null;
 
     before('connect', function (done) {
-        cluster.connect(done, done);
+        insecureCluster.connect(done, done);
     });
 
     before('init', function () {
-        t = cluster.tag(dasTag);
+        t = insecureCluster.tag(dasTag);
     });
 
     it('should be of correct type', function () {
@@ -31,9 +31,9 @@ describe('Tag', function () {
         var b, i, q, s, ts;
 
         before('init', function (done) {
-            b = cluster.blob('blob_tag_test');
-            i = cluster.integer('int_tag_test');
-            ts = cluster.ts('time_series_tag_test');
+            b = insecureCluster.blob('blob_tag_test');
+            i = insecureCluster.integer('int_tag_test');
+            ts = insecureCluster.ts('time_series_tag_test');
             done()
         });
 
@@ -185,9 +185,9 @@ describe('Tag', function () {
         var ts = null;
 
         before('init', function (done) {
-            b = cluster.blob('blob_tag_test');
+            b = insecureCluster.blob('blob_tag_test');
             ts = tags.map(function (t) {
-                return cluster.tag(t);
+                return insecureCluster.tag(t);
             });
             done();
         });

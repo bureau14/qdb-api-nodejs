@@ -26,7 +26,11 @@ public:
     // this makes sure we can keep things alive in asynchronous operations
 
 public:
-    explicit Cluster(const char * uri) : _uri(uri), _timeout(60000)
+    explicit Cluster(const char * uri, const char * cluster_public_key_file = "", const char * user_private_key_file = "")
+        : _uri{uri}
+        , _user_private_key_file{user_private_key_file}
+        , _cluster_public_key_file{cluster_public_key_file}
+        , _timeout{60000}
     {
     }
 
@@ -92,32 +96,59 @@ private:
         {
             MethodMan call(args);
 
-            if (args.Length() != 1)
+            if (args.Length() != 1 && args.Length() != 3)
             {
-                call.throwException("Expected exactly one argument");
+                call.throwException("Expected either 1 or 3 argument(s)");
                 return;
             }
 
             ArgsEater argsEater(call);
 
-            auto str = argsEater.eatString();
-            if (!str.second)
+            auto uri = argsEater.eatString();
+            if (!uri.second)
             {
                 call.throwException("Expected a connection string as first argument");
                 return;
             }
 
-            v8::String::Utf8Value utf8str(args.GetIsolate(), str.first);
+            v8::String::Utf8Value uri_utf8(args.GetIsolate(), uri.first);
+            
+            if (args.Length() == 3)
+            {
+                auto cluster_public_key_file = argsEater.eatString();
+                if (!cluster_public_key_file.second)
+                {
+                    call.throwException("Expected a cluster public key filepath string as second argument");
+                    return;
+                }
+                auto user_credentials_file = argsEater.eatString();
+                if (!cluster_public_key_file.second)
+                {
+                    call.throwException("Expected a user credentials filepath string as third argument");
+                }
 
-            // the cluster only owns the uri
-            // when we will connect we will create a reference counted cluster_data
-            // with a handle
-            // because the cluster_data is reference counted and transmitted to every
-            // callback we are sure it is kept alive for as long as needed
-            Cluster * cl = new Cluster(*utf8str);
+                v8::String::Utf8Value cluster_public_key_file_utf8{args.GetIsolate(), cluster_public_key_file.first};
+                v8::String::Utf8Value user_credentials_file_utf8{args.GetIsolate(), user_credentials_file.first};
+                
+                Cluster * cl = new Cluster(*uri_utf8, *cluster_public_key_file_utf8, *user_credentials_file_utf8);
 
-            cl->Wrap(args.This());
-            args.GetReturnValue().Set(args.This());
+                cl->Wrap(args.This());
+                args.GetReturnValue().Set(args.This());
+            }
+            else
+            {
+                // the cluster only owns the uri
+                // when we will connect we will create a reference counted cluster_data
+                // with a handle
+                // because the cluster_data is reference counted and transmitted to every
+                // callback we are sure it is kept alive for as long as needed
+                Cluster * cl = new Cluster(*uri_utf8);
+
+                cl->Wrap(args.This());
+                args.GetReturnValue().Set(args.This());
+            }
+
+
         }
         else
         {
@@ -550,7 +581,7 @@ private:
 
         {
             std::unique_lock<std::mutex> lock(_data_mutex);
-            res = _data = std::make_shared<cluster_data>(_uri, _timeout, on_success, on_error);
+            res = _data = std::make_shared<cluster_data>(_uri, _user_private_key_file, _cluster_public_key_file, _timeout, on_success, on_error);
         }
 
         return res;
@@ -558,6 +589,8 @@ private:
 
 private:
     const std::string _uri;
+    const std::string _user_private_key_file;
+    const std::string _cluster_public_key_file;
 
     mutable std::mutex _data_mutex;
 

@@ -2,16 +2,16 @@ var test = require('unit.js');
 var qdb = require('..');
 var config = require('./config')
 
-var cluster = new qdb.Cluster(config.insecure_cluster_uri);
+var insecureCluster = new qdb.Cluster(config.insecure_cluster_uri);
 
 describe('TimeSeries', function () {
     var ts
     before('connect', function (done) {
-        cluster.connect(done, done);
+        insecureCluster.connect(done, done);
     });
 
     before('init', function () {
-        ts = cluster.ts("time_series");
+        ts = insecureCluster.ts("time_series");
     });
 
     it('should be of correct type', function () {
@@ -71,7 +71,7 @@ describe('TimeSeries', function () {
         });
 
         it('should create with empty columns', function (done) {
-            emptyTs = cluster.ts("empty-ts")
+            emptyTs = insecureCluster.ts("empty-ts")
             emptyTs.create([], function (err, columns) {
                 test.must(err).be.equal(null);
                 test.must(columns).be.empty()
@@ -168,7 +168,7 @@ describe('TimeSeries', function () {
 
         before('init', function (done) {
             columnInfo = [qdb.DoubleColumnInfo('Col1'), qdb.DoubleColumnInfo("Col2"), qdb.BlobColumnInfo("Col3")]
-            ts = cluster.ts("list")
+            ts = insecureCluster.ts("list")
 
             ts.create([], function (err, columns) {
                 test.must(err).be.equal(null);
@@ -238,7 +238,7 @@ describe('TimeSeries', function () {
 
         before('init', function (done) {
             var columnInfo = [qdb.DoubleColumnInfo('Col1'), qdb.BlobColumnInfo("Col2")]
-            ts = cluster.ts("points")
+            ts = insecureCluster.ts("points")
 
             ts.create(columnInfo, function (err, cols) {
                 test.must(err).be.equal(null);
@@ -353,7 +353,7 @@ describe('TimeSeries', function () {
 
         before('init', function (done) {
             var columnInfo = [qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")]
-            ts = cluster.ts("ranges")
+            ts = insecureCluster.ts("ranges")
 
             ts.create(columnInfo, function (err, cols) {
                 test.must(err).be.equal(null);
@@ -594,7 +594,7 @@ describe('TimeSeries', function () {
         var range = null
 
         before('init', function (done) {
-            ts = cluster.ts("aggregations")
+            ts = insecureCluster.ts("aggregations")
             range = qdb.TsRange(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
 
             ts.create([qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")], function (err, cols) {
