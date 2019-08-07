@@ -516,8 +516,8 @@ public:
                         // const auto secs = std::chrono::duration<double>{pt.payload.timestamp.value.tv_sec};
                         // const auto nsecs =  std::chrono::duration<double, std::nano>{pt.payload.timestamp.value.tv_nsec};
                         // const auto ms = std::chrono::duration_cast<std::chrono::milliseconds, double>(secs + nsecs).count();
-                        auto ms = qdb_timespec_to_ms(pt.payload.timestamp.value);
-                        columns->Set(j, v8::Date::New(isolate, ms));
+                        double ms = qdb_timespec_to_ms(pt.payload.timestamp.value);
+                        columns->Set(j, v8::Date::New(isolate->GetCurrentContext(), ms).ToLocalChecked());
                         break;
                     }
                 }
