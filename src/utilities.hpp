@@ -64,7 +64,7 @@ struct NewObject<v8::Date>
     v8::Local<v8::Value> operator()(v8::Isolate * i, P && p)
     {
         // strings don't use new, they use newfromutf8
-        return v8::Date::New(i, qdb_timespec_to_ms(std::forward<P>(p)));
+        return v8::Date::New(i->GetCurrentContext(), qdb_timespec_to_ms(std::forward<P>(p))).ToLocalChecked();
     }
 };
 
