@@ -92,15 +92,9 @@ private:
 
         assert(pthis);
 
-        auto ms = qdb_timespec_to_ms(pthis->timestamp);
-        auto maybe_date = v8::Date::New(args.GetIsolate()->GetCurrentContext(), ms);
-        if (maybe_date.IsEmpty())
-        {
-            assert("Cannot create new date");
-            return;
-        }
+        auto qdb_timestamp = Timestamp::NewFromTimespec(args.GetIsolate(), pthis->timestamp);
 
-        args.GetReturnValue().Set(maybe_date.ToLocalChecked());
+        args.GetReturnValue().Set(qdb_timestamp);
     }
 
 private:
@@ -133,15 +127,8 @@ public:
     {
         static const size_t argc = ParametersCount;
 
-        auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), qdb_timespec_to_ms(ts));
-        if (maybe_date.IsEmpty())
-        {
-            assert("Cannot create new date");
-            return {};
-        }
-
         v8::Local<v8::Value> argv[argc] = {
-            maybe_date.ToLocalChecked(),
+            Timestamp::NewFromTimespec(isolate, ts),
             v8::Number::New(isolate, value),
         };
 
@@ -156,26 +143,28 @@ private:
         if (args.IsConstructCall())
         {
             MethodMan call(args);
+            auto isolate = args.GetIsolate();
+            auto context = isolate->GetCurrentContext();
             if (args.Length() != ParametersCount)
             {
                 call.throwException("Wrong number of arguments");
                 return;
             }
 
-            if (!args[0]->IsDate() || !args[1]->IsNumber())
+            if (!Timestamp::InstanceOf(isolate, args[0]) || !args[1]->IsNumber())
             {
                 call.throwException("Invalid parameter supplied to object");
                 return;
             }
 
-            auto isolate = args.GetIsolate();
-
-            auto maybe_ms = args[0]->NumberValue(isolate->GetCurrentContext());
-            if (maybe_ms.IsNothing())
+            auto maybe_timestamp = args[0]->ToObject(context);
+            if (maybe_timestamp.IsEmpty())
             {
-                call.throwException("Invalid 'ms' parameter supplied to object");
+                call.throwException("Invalid 'timestamp' parameter supplied to object");
                 return;
             }
+
+            auto timestamp = ObjectWrap::Unwrap<Timestamp>(maybe_timestamp.ToLocalChecked());
 
             auto maybe_value = args[1]->NumberValue(isolate->GetCurrentContext());
             if (maybe_value.IsNothing())
@@ -184,9 +173,8 @@ private:
                 return;
             }
 
-            auto ms = maybe_ms.FromJust();
             auto value = maybe_value.FromJust();
-            auto obj = new DoublePoint(ms_to_qdb_timespec(ms), value);
+            auto obj = new DoublePoint(timestamp->getTimespec(), value);
 
             obj->Wrap(args.This());
             args.GetReturnValue().Set(args.This());
@@ -241,16 +229,9 @@ public:
     {
         static const size_t argc = ParametersCount;
 
-        auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), qdb_timespec_to_ms(ts));
-        if (maybe_date.IsEmpty())
-        {
-            assert("Cannot create new date");
-            return {};
-        }
-
         auto bufp = static_cast<const char *>(content);
         v8::Local<v8::Value> argv[argc] = {
-            maybe_date.ToLocalChecked(),
+            Timestamp::NewFromTimespec(isolate, ts),
             node::Buffer::Copy(isolate, bufp, size).ToLocalChecked(),
         };
 
@@ -278,28 +259,27 @@ private:
         if (args.IsConstructCall())
         {
             MethodMan call(args);
+            auto isolate = args.GetIsolate();
+            auto context = isolate->GetCurrentContext();
             if (args.Length() != ParametersCount)
             {
                 call.throwException("Wrong number of arguments");
                 return;
             }
 
-            if (!args[0]->IsDate() || !args[1]->IsObject())
+            if (!Timestamp::InstanceOf(isolate, args[0]) || !args[1]->IsObject())
             {
                 call.throwException("Invalid parameter supplied to object");
                 return;
             }
 
-            auto isolate = args.GetIsolate();
-
-            auto maybe_ms = args[0]->NumberValue(isolate->GetCurrentContext());
-            if (maybe_ms.IsNothing())
+            auto maybe_timestamp = args[0]->ToObject(context);
+            if (maybe_timestamp.IsEmpty())
             {
-                call.throwException("Invalid 'ms' parameter supplied to object");
                 return;
             }
 
-            auto ms = maybe_ms.FromJust();
+            auto timestamp = ObjectWrap::Unwrap<Timestamp>(maybe_timestamp.ToLocalChecked());
 
             auto maybe_obj = args[1]->ToObject(isolate->GetCurrentContext());
             if (maybe_obj.IsEmpty())
@@ -307,7 +287,7 @@ private:
                 return;
             }
 
-            auto obj = new BlobPoint(ms_to_qdb_timespec(ms), args.GetIsolate(), maybe_obj.ToLocalChecked());
+            auto obj = new BlobPoint(timestamp->getTimespec(), args.GetIsolate(), maybe_obj.ToLocalChecked());
 
             obj->Wrap(args.This());
             args.GetReturnValue().Set(args.This());
@@ -348,15 +328,8 @@ public:
     {
         static const size_t argc = ParametersCount;
 
-        auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), qdb_timespec_to_ms(ts));
-        if (maybe_date.IsEmpty())
-        {
-            assert("Cannot create new date");
-            return {};
-        }
-
         v8::Local<v8::Value> argv[argc] = {
-            maybe_date.ToLocalChecked(),
+            Timestamp::NewFromTimespec(isolate, ts),
             v8::Number::New(isolate, value),
         };
 
@@ -371,26 +344,28 @@ private:
         if (args.IsConstructCall())
         {
             MethodMan call(args);
+            auto isolate = args.GetIsolate();
+            auto context = isolate->GetCurrentContext();
             if (args.Length() != ParametersCount)
             {
                 call.throwException("Wrong number of arguments");
                 return;
             }
 
-            if (!args[0]->IsDate() || !args[1]->IsNumber())
+            if (!Timestamp::InstanceOf(isolate, args[0]) || !args[1]->IsNumber())
             {
                 call.throwException("Invalid parameter supplied to object");
                 return;
             }
 
-            auto isolate = args.GetIsolate();
-
-            auto maybe_ms = args[0]->NumberValue(isolate->GetCurrentContext());
-            if (maybe_ms.IsNothing())
+            auto maybe_timestamp = args[0]->ToObject(context);
+            if (maybe_timestamp.IsEmpty())
             {
-                call.throwException("Invalid 'ms' parameter supplied to object");
+                call.throwException("Invalid 'timestamp' parameter supplied to object");
                 return;
             }
+
+            auto timestamp = ObjectWrap::Unwrap<Timestamp>(maybe_timestamp.ToLocalChecked());
 
             auto maybe_value = args[1]->NumberValue(isolate->GetCurrentContext());
             if (maybe_value.IsNothing())
@@ -399,9 +374,8 @@ private:
                 return;
             }
 
-            auto ms = maybe_ms.FromJust();
             auto value = maybe_value.FromJust();
-            auto obj = new Int64Point(ms_to_qdb_timespec(ms), value);
+            auto obj = new Int64Point(timestamp->getTimespec(), value);
 
             obj->Wrap(args.This());
             args.GetReturnValue().Set(args.This());
@@ -448,22 +422,13 @@ public:
     {
         Point<TimestampPoint>::Init(exports, "TimestampPoint", [](v8::Local<v8::FunctionTemplate> tpl) {});
     }
-    
+
     static v8::Local<v8::Object> MakePoint(v8::Isolate * isolate, qdb_timespec_t ts, qdb_timespec_t value)
     {
         static const size_t argc = ParametersCount;
 
-        auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), qdb_timespec_to_ms(ts));
-        if (maybe_date.IsEmpty())
-        {
-            assert("Cannot create new date");
-            return {};
-        }
-
-        v8::Local<v8::Value> argv[argc] = {
-            maybe_date.ToLocalChecked(),
-            v8::Date::New(isolate->GetCurrentContext(), qdb_timespec_to_ms(value)).ToLocalChecked(),
-        };
+        v8::Local<v8::Value> argv[argc] = {Timestamp::NewFromTimespec(isolate, ts),
+                                           Timestamp::NewFromTimespec(isolate, value)};
 
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
@@ -476,37 +441,34 @@ private:
         if (args.IsConstructCall())
         {
             MethodMan call(args);
+            auto isolate = args.GetIsolate();
+            auto context = isolate->GetCurrentContext();
+
             if (args.Length() != ParametersCount)
             {
                 call.throwException("Wrong number of arguments");
                 return;
             }
 
-            if (!args[0]->IsDate() || !args[1]->IsDate())
+            if (!Timestamp::InstanceOf(isolate, args[0]) || !Timestamp::InstanceOf(isolate, args[1]))
             {
                 call.throwException("Invalid parameter supplied to object");
                 return;
             }
 
-            auto isolate = args.GetIsolate();
+            auto maybe_timestamp = args[0]->ToObject(context);
+            auto maybe_timestamp_value = args[1]->ToObject(context);
 
-            auto maybe_ms = args[0]->NumberValue(isolate->GetCurrentContext());
-            if (maybe_ms.IsNothing())
+            if (maybe_timestamp.IsEmpty() || maybe_timestamp_value.IsEmpty())
             {
-                call.throwException("Invalid 'ms' parameter supplied to object");
+                call.throwException("Invalid timestamp objects supplied as arguments");
                 return;
             }
 
-            auto maybe_value = args[1]->NumberValue(isolate->GetCurrentContext());
-            if (maybe_value.IsNothing())
-            {
-                call.throwException("Invalid 'value' parameter supplied to object");
-                return;
-            }
+            auto timestamp = ObjectWrap::Unwrap<Timestamp>(maybe_timestamp.ToLocalChecked());
+            auto timestamp_value = ObjectWrap::Unwrap<Timestamp>(maybe_timestamp_value.ToLocalChecked());
 
-            auto ms = maybe_ms.FromJust();
-            auto value = maybe_value.FromJust();
-            auto obj = new TimestampPoint(ms_to_qdb_timespec(ms), ms_to_qdb_timespec(value));
+            auto obj = new TimestampPoint(timestamp->getTimespec(), timestamp_value->getTimespec());
 
             obj->Wrap(args.This());
             args.GetReturnValue().Set(args.This());
@@ -525,7 +487,7 @@ private:
 
         assert(pthis);
 
-        call.template setReturnValue<v8::Date>(pthis->value);
+        call.template setReturnValue<Timestamp>(pthis->value);
     }
 
 private:

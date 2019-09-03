@@ -74,6 +74,9 @@ public:
 private:
     static void New(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
+        auto isolate = args.GetIsolate();
+        auto context = isolate->GetCurrentContext();
+
         if (args.IsConstructCall())
         {
             // Can only be a range with 2 dates
@@ -83,18 +86,26 @@ private:
                 return;
             }
 
-            if (!args[0]->IsDate() || !args[1]->IsDate())
+            if (!Timestamp::InstanceOf(isolate, args[0]) || !Timestamp::InstanceOf(isolate, args[1]))
             {
                 throwException(args, "Wrong type of arguments");
                 return;
             }
 
-            auto beginMs = v8::Local<v8::Date>::Cast(args[0])->ValueOf();
-            auto endMs = v8::Local<v8::Date>::Cast(args[1])->ValueOf();
+            auto maybe_begin_timestamp = args[0]->ToObject(context);
+            auto maybe_end_timestamp = args[1]->ToObject(context);
+            if (maybe_begin_timestamp.IsEmpty() || maybe_end_timestamp.IsEmpty())
+            {
+                throwException(args, "Invalid timestamp object arguments");
+                return;
+            }
+
+            auto begin_timestamp = node::ObjectWrap::Unwrap<Timestamp>(maybe_begin_timestamp.ToLocalChecked());
+            auto end_timestamp = node::ObjectWrap::Unwrap<Timestamp>(maybe_end_timestamp.ToLocalChecked());
 
             qdb_ts_range_t range;
-            range.begin = ms_to_qdb_timespec(beginMs);
-            range.end = ms_to_qdb_timespec(endMs);
+            range.begin = begin_timestamp->getTimespec();
+            range.end = end_timestamp->getTimespec();
 
             TsRange * obj = new TsRange(range);
 
@@ -132,24 +143,18 @@ private:
     static void begin(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         TsRange::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr) {
-            v8::Isolate * isolate = args.GetIsolate();
-            auto ms = qdb_timespec_to_ms(fr->range.begin);
-            auto maybe_value = v8::Date::New(isolate->GetCurrentContext(), ms);
-            if (maybe_value.IsEmpty()) return;
-
-            args.GetReturnValue().Set(maybe_value.ToLocalChecked());
+            auto isolate = args.GetIsolate();
+            auto timestamp = Timestamp::NewFromTimespec(isolate, fr->range.begin);
+            args.GetReturnValue().Set(timestamp);
         });
     }
 
     static void end(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         TsRange::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr) {
-            v8::Isolate * isolate = args.GetIsolate();
-            auto ms = qdb_timespec_to_ms(fr->range.end);
-            auto maybe_value = v8::Date::New(isolate->GetCurrentContext(), ms);
-            if (maybe_value.IsEmpty()) return;
-
-            args.GetReturnValue().Set(maybe_value.ToLocalChecked());
+            auto isolate = args.GetIsolate();
+            auto timestamp = Timestamp::NewFromTimespec(isolate, fr->range.end);
+            args.GetReturnValue().Set(timestamp);
         });
     }
 
