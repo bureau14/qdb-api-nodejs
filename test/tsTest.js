@@ -240,13 +240,15 @@ describe('TimeSeries', function () {
             var columnInfo = [qdb.DoubleColumnInfo('Col1'), qdb.BlobColumnInfo("Col2")]
             ts = insecureCluster.ts("points")
 
-            ts.create(columnInfo, function (err, cols) {
-                test.must(err).be.equal(null);
-                test.should(cols.length).eql(columnInfo.length);
+            ts.remove(function (err) {
+                ts.create(columnInfo, function (err, cols) {
+                    test.must(err).be.equal(null);
+                    test.should(cols.length).eql(columnInfo.length);
 
-                columns = cols;
-                done();
-            });
+                    columns = cols;
+                    done();
+                });
+            })
         });
 
         it('should create points', function () {
@@ -355,12 +357,14 @@ describe('TimeSeries', function () {
             var columnInfo = [qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")]
             ts = insecureCluster.ts("ranges")
 
-            ts.create(columnInfo, function (err, cols) {
-                test.must(err).be.equal(null);
-                test.should(cols.length).eql(columnInfo.length);
+            ts.remove(function (err) {
+                ts.create(columnInfo, function (err, cols) {
+                    test.must(err).be.equal(null);
+                    test.should(cols.length).eql(columnInfo.length);
 
-                columns = cols;
-                done();
+                    columns = cols;
+                    done();
+                });
             });
         });
 
@@ -596,14 +600,15 @@ describe('TimeSeries', function () {
         before('init', function (done) {
             ts = insecureCluster.ts("aggregations")
             range = qdb.TsRange(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
+            ts.remove(function (err) {
+                ts.create([qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")], function (err, cols) {
+                    test.should(err).be.equal(null);
+                    test.should(cols.length).eql(2);
 
-            ts.create([qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")], function (err, cols) {
-                test.should(err).be.equal(null);
-                test.should(cols.length).eql(2);
-
-                columns = cols;
-                done();
-            });
+                    columns = cols;
+                    done();
+                });
+            })
         });
 
         it('should insert double points', function (done) {

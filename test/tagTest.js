@@ -47,12 +47,15 @@ describe('Tag', function () {
             });
         });
 
-        it('should create the blob for tag test', function (done) {
-            b.put(new Buffer('untz'), function (err) {
-                test.must(err).be.equal(null);
 
-                done();
-            });
+        it('should create the blob for tag test', function (done) {
+            b.remove(function (err) {
+                b.put(new Buffer('untz'), function (err) {
+                    test.must(err).be.equal(null);
+
+                    done();
+                });
+            })
         });
 
         it('should create the integer for tag test', function (done) {
