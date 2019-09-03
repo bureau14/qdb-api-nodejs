@@ -25,10 +25,10 @@ describe('QueryFind', function (done) {
             });
         });
     });
-    after('QueryFind', function(done) {
+    after('QueryFind', function (done) {
         b.remove(function (err) {
             test.must(err).be.equal(null);
-            
+
             done();
         });
     })

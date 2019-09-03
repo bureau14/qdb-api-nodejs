@@ -7,8 +7,8 @@ var insecureCluster = new qdb.Cluster(config.insecure_cluster_uri);
 
 function put_blob(alias) {
     const content = new Buffer('prefix_blob_content');
-    return new Promise(function(resolve, reject) {
-        insecureCluster.blob(alias).update(content, function(err) {
+    return new Promise(function (resolve, reject) {
+        insecureCluster.blob(alias).update(content, function (err) {
             if (err) reject(err);
             else resolve();
         });
@@ -18,17 +18,17 @@ function put_blob(alias) {
 describe('Prefix', function () {
     var prefix = 'prefix';
     var p = null;
-    var matchingAliases = [ prefix + '1', prefix + '2', prefix + '3', prefix + '4' ];
+    var matchingAliases = [prefix + '1', prefix + '2', prefix + '3', prefix + '4'];
 
-    before('connect', function(done) {
+    before('connect', function (done) {
         insecureCluster.connect(done, done);
     });
 
-    before('init', function() {
+    before('init', function () {
         p = insecureCluster.prefix(prefix);
     });
 
-    it('should be of correct type', function() {
+    it('should be of correct type', function () {
         test.object(p).isInstanceOf(qdb.Prefix);
     });
 
@@ -36,25 +36,25 @@ describe('Prefix', function () {
         test.object(p).hasNotProperty('alias');
     });
 
-    it("should have a 'prefix' property", function() {
+    it("should have a 'prefix' property", function () {
         test.object(p).hasProperty('prefix');
         test.must(p.prefix()).be.a.string();
         test.must(p.prefix()).be.equal(prefix);
     });
 
-    it("should have 'getEntries' method", function() {
+    it("should have 'getEntries' method", function () {
         test.object(p).hasProperty('getEntries');
         test.must(p.getEntries).be.a.function();
     });
 
-    describe("getEntries()", function() {
+    describe("getEntries()", function () {
 
-        before('put samples', function() {
+        before('put samples', function () {
             return Promise.all(matchingAliases.map(put_blob));
         });
 
-        it('should say E_INVALID_ARGUMENT when maxCount is missing', function(done) {
-            p.getEntries(function(err, aliases) {
+        it('should say E_INVALID_ARGUMENT when maxCount is missing', function (done) {
+            p.getEntries(function (err, aliases) {
                 test.must(err.message).not.be.empty();
                 test.must(err.code).be.equal(qdb.E_INVALID_ARGUMENT);
                 test.must(err.informational).be.false();
@@ -65,9 +65,9 @@ describe('Prefix', function () {
             });
         });
 
-        it('should return E_ALIAS_NOT_FOUND and an empty list', function(done) {
+        it('should return E_ALIAS_NOT_FOUND and an empty list', function (done) {
             var p = insecureCluster.prefix('not matching');
-            p.getEntries(10, function(err, aliases) {
+            p.getEntries(10, function (err, aliases) {
                 test.must(err.message).not.be.empty();
                 test.must(err.code).be.equal(qdb.E_ALIAS_NOT_FOUND);
                 test.must(err.informational).be.false();
@@ -80,8 +80,8 @@ describe('Prefix', function () {
             });
         });
 
-        it('should return an alias list', function(done) {
-            p.getEntries(/*maxCount=*/100, function(err, aliases) {
+        it('should return an alias list', function (done) {
+            p.getEntries(/*maxCount=*/100, function (err, aliases) {
                 test.must(err).be.equal(null);
 
                 test.array(aliases).isNotEmpty();
@@ -93,8 +93,8 @@ describe('Prefix', function () {
             });
         });
 
-        it('should truncate list when maxCount is too small', function(done) {
-            p.getEntries(/*maxCount=*/2, function(err, aliases) {
+        it('should truncate list when maxCount is too small', function (done) {
+            p.getEntries(/*maxCount=*/2, function (err, aliases) {
                 test.must(err).be.equal(null);
 
                 test.array(aliases).isNotEmpty();
@@ -104,5 +104,5 @@ describe('Prefix', function () {
                 done();
             });
         });
-     }); // getEntries
+    }); // getEntries
 });

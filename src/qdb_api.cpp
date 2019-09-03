@@ -47,6 +47,7 @@ void InitAll(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
     quasardb::Int64Column::Init(exports);
     quasardb::TimestampColumn::Init(exports);
     quasardb::Aggregation::Init(exports);
+    quasardb::Timestamp::Init(exports);
 
     InitConstants(exports);
 }

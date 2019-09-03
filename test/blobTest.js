@@ -7,7 +7,7 @@ var insecureCluster = new qdb.Cluster(config.insecure_cluster_uri);
 describe('Blob', function () {
     var b = null;
 
-    before('connect', function(done) {
+    before('connect', function (done) {
         insecureCluster.connect(done, done);
     });
 
@@ -25,7 +25,7 @@ describe('Blob', function () {
         test.must(b.alias()).be.equal('bam');
     });
 
-    describe('update/get/delete/put/get/delete', function() {
+    describe('update/get/delete/put/get/delete', function () {
         var tagName = 'myTag';
 
         it('should say entry not found and get an empty tag list', function (done) {
@@ -45,7 +45,7 @@ describe('Blob', function () {
         });
 
         it('should update without error', function (done) {
-            b.update(new Buffer('bam_content'), function (err) {
+            b.update(Buffer.from('bam_content', "utf8"), function (err) {
                 test.must(err).be.equal(null);
 
                 done();
@@ -66,30 +66,30 @@ describe('Blob', function () {
             b.getMetadata(function (err, meta) {
                 test.must(err).be.equal(null);
 
-                describe('reference', function() {
+                describe('reference', function () {
                     test.object(meta).hasProperty('reference');
                     test.object(meta.reference).isInstanceOf(Array);
                     test.must(meta.reference.length).be.equal(4);
                 });
 
-                describe('size', function() {
+                describe('size', function () {
                     test.object(meta).hasProperty('size');
                     test.must(meta.size).be.a.number();
                     test.must(meta.size).be.equal('bam_content'.length);
                 });
 
-                describe('type', function() {
+                describe('type', function () {
                     test.object(meta).hasProperty('type');
                     test.must(meta.type).be.a.number();
                     test.must(meta.type).be.equal(qdb.ENTRY_BLOB);
                 });
 
-                describe('modification_time', function() {
+                describe('modification_time', function () {
                     test.object(meta).hasProperty('modification_time');
                     test.object(meta.modification_time).isInstanceOf(Date);
                 });
 
-                describe('expiry_time', function() {
+                describe('expiry_time', function () {
                     test.object(meta).hasProperty('expiry_time');
                     if (meta.expiry_time != undefined) test.object(meta.expiry_time).isInstanceOf(Date);
                 });
@@ -117,7 +117,7 @@ describe('Blob', function () {
         });
 
         it('should put again without an error', function (done) {
-            b.put(new Buffer('boom_content'), function (err) {
+            b.put(Buffer.from('boom_content', 'utf8'), function (err) {
                 test.must(err).be.equal(null);
 
                 done();
@@ -264,39 +264,33 @@ describe('Blob', function () {
 });
 
 // work on a different blob
-describe('blob', function() {
+describe('blob', function () {
     var b = null;
 
-    before('connect', function(done) {
+    before('connect', function (done) {
         insecureCluster.connect(done, done);
     });
 
-    before('init', function() {
+    before('init', function () {
         b = insecureCluster.blob('expiry_bam');
     });
 
-    describe('expiry', function()
-    {
-        it('constants should be defined', function()
-        {
+    describe('expiry', function () {
+        it('constants should be defined', function () {
             test.must(qdb.NEVER_EXPIRES).be.a.number();
             test.must(qdb.PRESERVE_EXPIRATION).be.a.number();
         });
 
-        it('should put without expiry', function(done)
-        {
-            b.put(new Buffer('bam_content'), function(err)
-            {
+        it('should put without expiry', function (done) {
+            b.put(Buffer.from('bam_content', 'utf8'), function (err) {
                 test.must(err).be.equal(null);
 
                 done();
             });
         });
 
-        it('should return undefined expiry', function(done)
-        {
-            b.getExpiry(function(err, entry_expiry)
-            {
+        it('should return undefined expiry', function (done) {
+            b.getExpiry(function (err, entry_expiry) {
                 test.must(err).be.equal(null);
                 test.must(entry_expiry).be.equal(undefined);
 
@@ -304,29 +298,24 @@ describe('blob', function() {
             });
         });
 
-        it('should update with an expiry in 2s without error', function(done)
-        {
+        it('should update with an expiry in 2s without error', function (done) {
             var test_exp = new Date();
             test_exp.setSeconds(test_exp.getSeconds() + 2);
 
-            b.update(new Buffer('bam_content'), test_exp, function(err)
-            {
+            b.update(Buffer.from('bam_content', 'utf8'), test_exp, function (err) {
                 test.must(err).be.equal(null);
 
                 done();
             });
         });
 
-        it('should wait three seconds', function(done)
-        {
+        it('should wait three seconds', function (done) {
             this.timeout(5000);
             setTimeout(done, 3000);
         });
 
-        it('should expire after more than 2s', function(done)
-        {
-            b.get(function(err, data)
-            {
+        it('should expire after more than 2s', function (done) {
+            b.get(function (err, data) {
                 err.message.must.be.a.string();
                 err.message.must.not.be.empty();
                 err.code.must.be.equal(qdb.E_ALIAS_NOT_FOUND);
@@ -338,12 +327,10 @@ describe('blob', function() {
             });
         });
 
-        it('should put with an expiry in 2030', function(done)
-        {
+        it('should put with an expiry in 2030', function (done) {
             var test_exp = new Date(2030, 1, 1, 10, 50, 0, 0);
 
-            b.put(new Buffer('bam_content'), test_exp, function(err)
-            {
+            b.put(Buffer.from('bam_content', 'utf8'), test_exp, function (err) {
                 test.must(err).be.equal(null);
 
                 done();
@@ -351,12 +338,10 @@ describe('blob', function() {
 
         });
 
-        it('should return the exact supplied expiry', function(done)
-        {
+        it('should return the exact supplied expiry', function (done) {
             var test_exp = new Date(2030, 1, 1, 10, 50, 0, 0);
 
-            b.getExpiry(function(err, entry_expiry)
-            {
+            b.getExpiry(function (err, entry_expiry) {
                 test.must(err).be.equal(null);
 
                 test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
@@ -365,22 +350,18 @@ describe('blob', function() {
             });
         });
 
-        it('should leave the expiry untouched', function(done)
-        {
-            b.update(new Buffer('bim_content'), qdb.PRESERVE_EXPIRATION, function(err)
-            {
+        it('should leave the expiry untouched', function (done) {
+            b.update(Buffer.from('bim_content', 'utf8'), qdb.PRESERVE_EXPIRATION, function (err) {
                 test.must(err).be.equal(null);
                 done();
             });
 
         });
 
-        it('should return the untouched expiry', function(done)
-        {
+        it('should return the untouched expiry', function (done) {
             var test_exp = new Date(2030, 1, 1, 10, 50, 0, 0);
 
-            b.getExpiry(function(err, entry_expiry)
-            {
+            b.getExpiry(function (err, entry_expiry) {
                 test.must(err).be.equal(null);
 
                 test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
@@ -389,20 +370,16 @@ describe('blob', function() {
             });
         });
 
-        it('should update without expiry', function(done)
-        {
-            b.update(new Buffer('bam_content'), qdb.NEVER_EXPIRES, function(err)
-            {
+        it('should update without expiry', function (done) {
+            b.update(Buffer.from('bam_content', 'utf8'), qdb.NEVER_EXPIRES, function (err) {
                 test.must(err).be.equal(null);
 
                 done();
             });
         });
 
-        it('should return undefined expiry', function(done)
-        {
-            b.getExpiry(function(err, entry_expiry)
-            {
+        it('should return undefined expiry', function (done) {
+            b.getExpiry(function (err, entry_expiry) {
                 test.must(err).be.equal(null);
                 test.must(entry_expiry).be.equal(undefined);
 
@@ -410,12 +387,10 @@ describe('blob', function() {
             });
         });
 
-        it('should set the expiry to 2040', function(done)
-        {
+        it('should set the expiry to 2040', function (done) {
             var test_exp = new Date(2040, 1, 1, 10, 50, 0, 0);
 
-            b.expiresAt(test_exp, function(err)
-            {
+            b.expiresAt(test_exp, function (err) {
                 test.must(err).be.equal(null);
 
                 done();
@@ -423,12 +398,10 @@ describe('blob', function() {
 
         });
 
-        it('should return the new supplied expiry', function(done)
-        {
+        it('should return the new supplied expiry', function (done) {
             var test_exp = new Date(2040, 1, 1, 10, 50, 0, 0);
 
-            b.getExpiry(function(err, entry_expiry)
-            {
+            b.getExpiry(function (err, entry_expiry) {
                 test.must(err).be.equal(null);
 
                 test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
@@ -437,26 +410,21 @@ describe('blob', function() {
             });
         });
 
-        it('should expire in 2 seconds from now', function(done)
-        {
-            b.expiresFromNow(2, function(err)
-            {
+        it('should expire in 2 seconds from now', function (done) {
+            b.expiresFromNow(2, function (err) {
                 test.must(err).be.equal(null);
 
                 done();
             });
         });
 
-        it('should wait three seconds', function(done)
-        {
+        it('should wait three seconds', function (done) {
             this.timeout(5000);
             setTimeout(done, 3000);
         });
 
-        it('should expire after more than 3s', function(done)
-        {
-            b.get(function(err, data)
-            {
+        it('should expire after more than 3s', function (done) {
+            b.get(function (err, data) {
                 err.message.must.be.a.string();
                 err.message.must.not.be.empty();
                 err.code.must.be.equal(qdb.E_ALIAS_NOT_FOUND);
