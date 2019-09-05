@@ -256,16 +256,16 @@ describe('TimeSeries', function () {
             var d2 = new Date(2049, 10, 5, 4);
 
             var v1 = 0.1
-            var v2 = new Buffer("Hello there");
+            var v2 = Buffer.from("Hello there", 'utf8');
 
-            var p1 = qdb.DoublePoint(d1, v1);
-            var p2 = qdb.BlobPoint(d2, v2);
+            var p1 = qdb.DoublePoint(qdb.Timestamp.fromDate(d1), v1);
+            var p2 = qdb.BlobPoint(qdb.Timestamp.fromDate(d2), v2);
 
             test.object(p1).hasProperty('timestamp');
             test.object(p2).hasProperty('timestamp');
 
-            test.must(p1.timestamp.getTime()).be.equal(d1.getTime());
-            test.must(p2.timestamp.getTime()).be.equal(d2.getTime());
+            test.must(p1.timestamp.toDate().getTime()).be.equal(d1.getTime());
+            test.must(p2.timestamp.toDate().getTime()).be.equal(d2.getTime());
 
             test.object(p1).hasProperty('value')
             test.object(p2).hasProperty('value')
@@ -277,14 +277,14 @@ describe('TimeSeries', function () {
 
         it('should hold blob Buffer', function () {
             var d = new Date(2049, 10, 5, 4);
-            var v = new Buffer("Hello there");
-            var p = qdb.BlobPoint(d, v);
+            var v = new Buffer.from("Hello there", "utf8");
+            var p = qdb.BlobPoint(qdb.Timestamp.fromDate(d), v);
 
             test.must(p.value.compare(v)).be.equal(0)
         });
 
         it('should insert double point', function (done) {
-            var p = qdb.DoublePoint(new Date(2049, 10, 5), 0.4);
+            var p = qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5)), 0.4);
             columns[0].insert([p], function (err) {
                 test.must(err).be.equal(null);
 
@@ -294,8 +294,9 @@ describe('TimeSeries', function () {
 
         it('should insert multiple double points', function (done) {
             var points = [
-                qdb.DoublePoint(new Date(2049, 10, 5, 1), 0.4), qdb.DoublePoint(new Date(2049, 10, 5, 2), 0.5),
-                qdb.DoublePoint(new Date(2049, 10, 5, 3), 0.6)
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)), 0.4),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), 0.5),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), 0.6)
             ];
 
             columns[0].insert(points, function (err) {
@@ -305,8 +306,9 @@ describe('TimeSeries', function () {
             });
         });
 
+
         it('should not insert double point into blob column', function (done) {
-            var p = qdb.BlobPoint(new Date(2049, 10, 5, 4), new Buffer("Hello"));
+            var p = qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), Buffer.from("Hello", 'utf8'));
             columns[1].insert([p], function (err) {
                 test.must(err).be.equal(null);
 
@@ -315,7 +317,7 @@ describe('TimeSeries', function () {
         });
 
         it('should insert blob point', function (done) {
-            var p = qdb.BlobPoint(new Date(2049, 10, 6, 4), new Buffer("Well "));
+            var p = qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 6, 4)), Buffer.from("Well ", "utf8"));
             columns[1].insert([p], function (err) {
                 test.must(err).be.equal(null);
 
@@ -325,9 +327,9 @@ describe('TimeSeries', function () {
 
         it('should insert multiple blob points', function (done) {
             var points = [
-                qdb.BlobPoint(new Date(2049, 10, 6, 4), new Buffer("hello ")),
-                qdb.BlobPoint(new Date(2049, 10, 6, 4), new Buffer("there ")),
-                qdb.BlobPoint(new Date(2049, 10, 6, 4), new Buffer("Decard"))
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 6, 4)), Buffer.from("hello ", "utf8")),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 6, 4)), Buffer.from("there ", "utf8")),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 6, 4)), Buffer.from("Decard", "utf8"))
             ];
 
             columns[1].insert(points, function (err) {
@@ -338,7 +340,7 @@ describe('TimeSeries', function () {
         });
 
         it('should not insert blob point into double column', function (done) {
-            var p = qdb.DoublePoint(new Date(2049, 10, 7, 4), 13.37);
+            var p = qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 7, 4)), 13.37);
             columns[1].insert([p], function (err) {
                 test.must(err).not.be.equal(null);
 
@@ -370,15 +372,14 @@ describe('TimeSeries', function () {
 
         it('should insert double points', function (done) {
             doublePoints = [
-                qdb.DoublePoint(new Date(2030, 10, 5, 6), 0.1),
-                qdb.DoublePoint(new Date(2030, 10, 5, 7), 0.2),
-                qdb.DoublePoint(new Date(2030, 10, 5, 8), 0.3),
-
-                qdb.DoublePoint(new Date(2049, 10, 5, 1), 0.4),
-                qdb.DoublePoint(new Date(2049, 10, 5, 2), 0.5),
-                qdb.DoublePoint(new Date(2049, 10, 5, 3), 0.6),
-                qdb.DoublePoint(new Date(2049, 10, 5, 4), 0.7),
-                qdb.DoublePoint(new Date(2049, 10, 5, 5), 0.8),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2030, 10, 5, 6)), 0.1),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2030, 10, 5, 7)), 0.2),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2030, 10, 5, 8)), 0.3),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)), 0.4),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), 0.5),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), 0.6),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), 0.7),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 5)), 0.8),
             ];
 
             columns[0].insert(doublePoints, function (err) {
@@ -389,15 +390,15 @@ describe('TimeSeries', function () {
 
         it('should insert blob points', function (done) {
             blobPoints = [
-                qdb.BlobPoint(new Date(2030, 10, 5, 6), new Buffer("#6")),
-                qdb.BlobPoint(new Date(2030, 10, 5, 7), new Buffer("#7")),
-                qdb.BlobPoint(new Date(2030, 10, 5, 8), new Buffer("#8")),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2030, 10, 5, 6)), Buffer.from("#6", "utf8")),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2030, 10, 5, 7)), Buffer.from("#7", "utf8")),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2030, 10, 5, 8)), Buffer.from("#8", "utf8")),
 
-                qdb.BlobPoint(new Date(2049, 10, 5, 1), new Buffer("#1")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 2), new Buffer("#2")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 3), new Buffer("#3")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 4), new Buffer("#4")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 5), new Buffer("#5")),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)), Buffer.from("#1", "utf8")),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), Buffer.from("#2", "utf8")),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), Buffer.from("#3", "utf8")),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), Buffer.from("#4", "utf8")),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 5)), Buffer.from("#5", "utf8")),
             ];
 
             columns[1].insert(blobPoints, function (err) {
@@ -409,19 +410,19 @@ describe('TimeSeries', function () {
         it('should create valid range', function () {
             var begin = new Date(2049, 10, 5, 1);
             var end = new Date(2049, 10, 5, 3);
-            var range = qdb.TsRange(begin, end);
+            var range = qdb.TsRange(qdb.Timestamp.fromDate(begin), qdb.Timestamp.fromDate(end));
 
             test.object(range).hasProperty('begin');
             test.object(range).hasProperty('end');
 
-            test.must(range.begin.getTime()).be.equal(begin.getTime());
-            test.must(range.end.getTime()).be.equal(end.getTime());
+            test.must(range.begin.toDate().getTime()).be.equal(begin.getTime());
+            test.must(range.end.toDate().getTime()).be.equal(end.getTime());
         });
 
         it('should retrieve nothing', function (done) {
             var begin = new Date(2000, 10, 5, 2);
             var end = new Date(2020, 10, 5, 4);
-            var range = qdb.TsRange(begin, end);
+            var range = qdb.TsRange(qdb.Timestamp.fromDate(begin), qdb.Timestamp.fromDate(end));
 
             columns[0].ranges([range], function (err, points) {
                 test.must(err).be.equal(null);
@@ -434,7 +435,7 @@ describe('TimeSeries', function () {
         it('should retrieve double points in range', function (done) {
             var begin = new Date(2049, 10, 5, 2);
             var end = new Date(2049, 10, 5, 4);
-            var range = qdb.TsRange(begin, end);
+            var range = qdb.TsRange(qdb.Timestamp.fromDate(begin), qdb.Timestamp.fromDate(end));
 
             columns[0].ranges([range], function (err, points) {
                 test.must(err).be.equal(null);
@@ -450,7 +451,10 @@ describe('TimeSeries', function () {
             var e1 = new Date(2049, 10, 5, 4);
             var b2 = new Date(2030, 10, 5, 7);
             var e2 = new Date(2030, 10, 5, 8);
-            var ranges = [qdb.TsRange(b1, e1), qdb.TsRange(b2, e2)];
+            var ranges = [
+                qdb.TsRange(qdb.Timestamp.fromDate(b1), qdb.Timestamp.fromDate(e1)),
+                qdb.TsRange(qdb.Timestamp.fromDate(b2), qdb.Timestamp.fromDate(e2))
+            ];
 
             columns[0].ranges(ranges, function (err, points) {
                 test.must(err).be.equal(null);
@@ -464,7 +468,7 @@ describe('TimeSeries', function () {
         it('should retrieve all double points', function (done) {
             var begin = new Date(2000, 10, 5, 2);
             var end = new Date(2049, 10, 5, 10);
-            var range = qdb.TsRange(begin, end);
+            var range = qdb.TsRange(qdb.Timestamp.fromDate(begin), qdb.Timestamp.fromDate(end));
 
             columns[0].ranges([range], function (err, points) {
                 test.must(err).be.equal(null);
@@ -481,7 +485,7 @@ describe('TimeSeries', function () {
                 for (var i = 0; i < act.length; i++) {
                     e = exp[i];
                     a = act[i];
-                    test.must(e.timestamp.getTime()).be.equal(a.timestamp.getTime());
+                    test.must(e.timestamp.toDate().getTime()).be.equal(a.timestamp.toDate().getTime());
                     test.must(e.value.compare(a.value)).be.equal(0);
                 }
             }
@@ -489,7 +493,7 @@ describe('TimeSeries', function () {
         it('should retrieve blob points in range', function (done) {
             var begin = new Date(2049, 10, 5, 2);
             var end = new Date(2049, 10, 5, 4);
-            var range = qdb.TsRange(begin, end);
+            var range = qdb.TsRange(qdb.Timestamp.fromDate(begin), qdb.Timestamp.fromDate(end));
 
             columns[1].ranges([range], function (err, points) {
                 test.must(err).be.equal(null);
@@ -505,7 +509,10 @@ describe('TimeSeries', function () {
             var e1 = new Date(2049, 10, 5, 4);
             var b2 = new Date(2030, 10, 5, 7);
             var e2 = new Date(2030, 10, 5, 8);
-            var ranges = [qdb.TsRange(b1, e1), qdb.TsRange(b2, e2)];
+            var ranges = [
+                qdb.TsRange(qdb.Timestamp.fromDate(b1), qdb.Timestamp.fromDate(e1)),
+                qdb.TsRange(qdb.Timestamp.fromDate(b2), qdb.Timestamp.fromDate(e2))
+            ];
 
             columns[1].ranges(ranges, function (err, points) {
                 test.must(err).be.equal(null);
@@ -516,10 +523,11 @@ describe('TimeSeries', function () {
             });
         });
 
+
         it('should retrieve all blob points', function (done) {
             var begin = new Date(2000, 10, 5, 2);
             var end = new Date(2049, 10, 5, 10);
-            var range = qdb.TsRange(begin, end);
+            var range = qdb.TsRange(qdb.Timestamp.fromDate(begin), qdb.Timestamp.fromDate(end));
 
             columns[1].ranges([range], function (err, points) {
                 test.must(err).be.equal(null);
@@ -534,7 +542,10 @@ describe('TimeSeries', function () {
             var e1 = new Date(2030, 10, 5, 10);
             var b2 = new Date(2049, 10, 5, 5);
             var e2 = new Date(2049, 10, 5, 6);
-            var ranges = [qdb.TsRange(b1, e1), qdb.TsRange(b2, e2)];
+            var ranges = [
+                qdb.TsRange(qdb.Timestamp.fromDate(b1), qdb.Timestamp.fromDate(e1)),
+                qdb.TsRange(qdb.Timestamp.fromDate(b2), qdb.Timestamp.fromDate(e2))
+            ];
 
             columns[0].erase(ranges, function (err, erased) {
                 test.must(err).be.equal(null);
@@ -549,7 +560,10 @@ describe('TimeSeries', function () {
             var e1 = new Date(2030, 10, 5, 10);
             var b2 = new Date(2049, 10, 5, 5);
             var e2 = new Date(2049, 10, 5, 6);
-            var ranges = [qdb.TsRange(b1, e1), qdb.TsRange(b2, e2)];
+            var ranges = [
+                qdb.TsRange(qdb.Timestamp.fromDate(b1), qdb.Timestamp.fromDate(e1)),
+                qdb.TsRange(qdb.Timestamp.fromDate(b2), qdb.Timestamp.fromDate(e2))
+            ];
 
             columns[1].erase(ranges, function (err, erased) {
                 test.must(err).be.equal(null);
@@ -562,7 +576,7 @@ describe('TimeSeries', function () {
         it('should retrieve all remaining double points', function (done) {
             var begin = new Date(2000, 10, 5, 2);
             var end = new Date(2049, 10, 5, 10);
-            var range = qdb.TsRange(begin, end);
+            var range = qdb.TsRange(qdb.Timestamp.fromDate(begin), qdb.Timestamp.fromDate(end));
 
             columns[0].ranges([range], function (err, points) {
                 test.must(err).be.equal(null);
@@ -577,7 +591,7 @@ describe('TimeSeries', function () {
         it('should retrieve all remaining blob points', function (done) {
             var begin = new Date(2000, 10, 5, 2);
             var end = new Date(2049, 10, 5, 10);
-            var range = qdb.TsRange(begin, end);
+            var range = qdb.TsRange(qdb.Timestamp.fromDate(begin), qdb.Timestamp.fromDate(end));
 
             columns[1].ranges([range], function (err, points) {
                 test.must(err).be.equal(null);
@@ -599,7 +613,10 @@ describe('TimeSeries', function () {
 
         before('init', function (done) {
             ts = insecureCluster.ts("aggregations")
-            range = qdb.TsRange(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
+            range = qdb.TsRange(
+                qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)),
+                qdb.Timestamp.fromDate(new Date(2049, 10, 5, 12))
+            );
             ts.remove(function (err) {
                 ts.create([qdb.DoubleColumnInfo('doubles'), qdb.BlobColumnInfo("blobs")], function (err, cols) {
                     test.should(err).be.equal(null);
@@ -613,14 +630,14 @@ describe('TimeSeries', function () {
 
         it('should insert double points', function (done) {
             doublePoints = [
-                qdb.DoublePoint(new Date(2049, 10, 5, 1), 0.1),
-                qdb.DoublePoint(new Date(2049, 10, 5, 2), 0.2),
-                qdb.DoublePoint(new Date(2049, 10, 5, 3), 0.3),
-                qdb.DoublePoint(new Date(2049, 10, 5, 4), 0.4),
-                qdb.DoublePoint(new Date(2049, 10, 5, 5), 0.5),
-                qdb.DoublePoint(new Date(2049, 10, 5, 6), 0.1),
-                qdb.DoublePoint(new Date(2049, 10, 5, 7), 0.2),
-                qdb.DoublePoint(new Date(2049, 10, 5, 8), 0.3),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)), 0.1),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), 0.2),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), 0.3),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), 0.4),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 5)), 0.5),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 6)), 0.1),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 7)), 0.2),
+                qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 8)), 0.3),
             ];
 
             columns[0].insert(doublePoints, function (err) {
@@ -631,15 +648,14 @@ describe('TimeSeries', function () {
 
         it('should insert blob points', function (done) {
             blobPoints = [
-                qdb.BlobPoint(new Date(2049, 10, 5, 1), new Buffer("#1")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 2), new Buffer("#2")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 3), new Buffer("#3")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 4), new Buffer("#4")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 5), new Buffer("#5")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 6), new Buffer("#6")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 7), new Buffer("#7")),
-                qdb.BlobPoint(new Date(2049, 10, 5, 8), new Buffer("#8")),
-
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)), Buffer.from("#1", 'utf8')),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), Buffer.from("#2", 'utf8')),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), Buffer.from("#3", 'utf8')),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), Buffer.from("#4", 'utf8')),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 5)), Buffer.from("#5", 'utf8')),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 6)), Buffer.from("#6", 'utf8')),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 7)), Buffer.from("#7", 'utf8')),
+                qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 8)), Buffer.from("#8", 'utf8')),
             ];
 
             columns[1].insert(blobPoints, function (err) {
@@ -649,7 +665,10 @@ describe('TimeSeries', function () {
         });
 
         it('should create valid aggregation', function () {
-            var range = qdb.TsRange(new Date(2049, 10, 5, 1), new Date(2049, 10, 5, 12));
+            var range = qdb.TsRange(
+                qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)),
+                qdb.Timestamp.fromDate(new Date(2049, 10, 5, 12))
+            );
             var agg = qdb.Aggregation(qdb.AggFirst, range)
 
             test.object(agg).hasProperty('type');

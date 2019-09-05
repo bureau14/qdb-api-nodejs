@@ -68,6 +68,17 @@ struct NewObject<v8::Date>
     }
 };
 
+template <>
+struct NewObject<Timestamp>
+{
+
+    template <typename P>
+    v8::Local<v8::Value> operator()(v8::Isolate * i, P && p)
+    {
+        return Timestamp::NewFromTimespec(i, std::forward<P>(p));
+    }
+};
+
 inline void release_node_buffer(char * data, void * hint)
 {
     if (data && hint)
@@ -333,8 +344,8 @@ public:
 
     std::pair<v8::Local<v8::Function>, bool> checkedArgCallback(int i) const
     {
-        return checkArg<v8::Local<v8::Function>>(
-            i, [](v8::Local<v8::Value> v) -> bool { return v->IsFunction(); }, &MethodMan::argCallback);
+        return checkArg<v8::Local<v8::Function>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsFunction(); },
+                                                 &MethodMan::argCallback);
     }
 
     v8::Local<v8::String> argString(int i) const
@@ -344,8 +355,8 @@ public:
 
     std::pair<v8::Local<v8::String>, bool> checkedArgString(int i) const
     {
-        return checkArg<v8::Local<v8::String>>(
-            i, [](v8::Local<v8::Value> v) -> bool { return v->IsString(); }, &MethodMan::argString);
+        return checkArg<v8::Local<v8::String>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsString(); },
+                                               &MethodMan::argString);
     }
 
     v8::Local<v8::Array> argArray(int i) const
@@ -355,8 +366,8 @@ public:
 
     std::pair<v8::Local<v8::Array>, bool> checkedArgArray(int i) const
     {
-        return checkArg<v8::Local<v8::Array>>(
-            i, [](v8::Local<v8::Value> v) -> bool { return v->IsArray(); }, &MethodMan::argArray);
+        return checkArg<v8::Local<v8::Array>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsArray(); },
+                                              &MethodMan::argArray);
     }
 
     double argNumber(int i) const
@@ -373,8 +384,7 @@ public:
 
     std::pair<double, bool> checkedArgNumber(int i) const
     {
-        return checkArg<double>(
-            i, [](v8::Local<v8::Value> v) -> bool { return v->IsNumber(); }, &MethodMan::argNumber);
+        return checkArg<double>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsNumber(); }, &MethodMan::argNumber);
     }
 
     v8::Local<v8::Date> argDate(int i) const
@@ -384,8 +394,8 @@ public:
 
     std::pair<v8::Local<v8::Date>, bool> checkedArgDate(int i) const
     {
-        return checkArg<v8::Local<v8::Date>>(
-            i, [](v8::Local<v8::Value> v) -> bool { return v->IsDate(); }, &MethodMan::argDate);
+        return checkArg<v8::Local<v8::Date>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsDate(); },
+                                             &MethodMan::argDate);
     }
 
     const v8::FunctionCallbackInfo<v8::Value> & args(void) const
@@ -631,10 +641,10 @@ public:
                 auto date = obj->Get(tsProp);
                 auto value = obj->Get(valueProp);
 
-                if (!date->IsDate()) return point_vector();
+                if (!Timestamp::InstanceOf(isolate, date->ToObject())) return point_vector();
 
-                auto ms = v8::Local<v8::Date>::Cast(date)->ValueOf();
-                auto point = f(ms_to_qdb_timespec(ms), value);
+                auto timestamp = node::ObjectWrap::Unwrap<Timestamp>(date->ToObject());
+                auto point = f(timestamp->getTimespec(), value);
 
                 if (!point.second) return point_vector();
                 res.push_back(point.first);
@@ -706,22 +716,14 @@ public:
     {
         return eatAndConvertPointsArray<qdb_ts_timestamp_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
             qdb_ts_timestamp_point p;
+            auto isolate = v8::Isolate::GetCurrent();
 
-            if (!value->IsDate()) return std::make_pair(p, false);
+            if (!Timestamp::InstanceOf(isolate, value->ToObject())) return std::make_pair(p, false);
+
+            auto timestamp_value = node::ObjectWrap::Unwrap<Timestamp>(value->ToObject());
 
             p.timestamp = ts;
-
-            auto isolate = v8::Isolate::GetCurrent();
-            auto maybe_value = v8::Date::Cast(*value)->NumberValue(isolate->GetCurrentContext());
-            if (maybe_value.IsNothing())
-            {
-                return std::make_pair(p, false);
-            }
-
-            const qdb_time_t ms_since_epoch = static_cast<qdb_time_t>(maybe_value.FromJust());
-
-            p.value.tv_sec = ms_since_epoch / 1000;
-            p.value.tv_nsec = (ms_since_epoch % 1000) * 1000;
+            p.value = timestamp_value->getTimespec();
 
             return std::make_pair(p, true);
         });
