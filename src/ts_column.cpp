@@ -1,7 +1,7 @@
-#include "ts_column.hpp"
 #include "entry.hpp"
 #include "error.hpp"
 #include "time_series.hpp"
+#include "ts_column.hpp"
 #include "ts_point.hpp"
 #include <qdb/ts.h>
 
@@ -403,6 +403,7 @@ void Int64Column::processInt64AggregateResult(uv_work_t * req, int status)
     });
 }
 
+
 void TimestampColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
     Column<TimestampColumn>::queue_work(
@@ -425,8 +426,8 @@ void TimestampColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
             const auto alias = qdb_req->input.alias.c_str();
             const auto ts = qdb_req->input.content.str.c_str();
             auto & ranges = qdb_req->input.content.ranges;
-            auto bufp = reinterpret_cast<qdb_ts_timestamp_point **>(
-                const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+            auto bufp =
+                reinterpret_cast<qdb_ts_timestamp_point **>(const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
             auto count = &(qdb_req->output.content.buffer.size);
 
             qdb_req->output.error =
@@ -437,19 +438,17 @@ void TimestampColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
 
 void TimestampColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    TimestampColumn::queue_work(args,
-                                [](qdb_request * qdb_req) {
-                                    const auto alias = qdb_req->input.alias.c_str();
-                                    const auto ts = qdb_req->input.content.str.c_str();
-                                    qdb_ts_timestamp_aggregation_t * aggrs =
-                                        qdb_req->input.content.timestamp_aggrs.data();
-                                    const qdb_size_t count = qdb_req->input.content.timestamp_aggrs.size();
+    TimestampColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            qdb_ts_timestamp_aggregation_t * aggrs = qdb_req->input.content.timestamp_aggrs.data();
+            const qdb_size_t count = qdb_req->input.content.timestamp_aggrs.size();
 
-                                    qdb_req->output.error =
-                                        qdb_ts_timestamp_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
-                                },
-                                TimestampColumn::processTimestampAggregateResult, &ArgsEaterBinder::tsAlias,
-                                &ArgsEaterBinder::timestampAggregations);
+            qdb_req->output.error = qdb_ts_timestamp_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
+        },
+        TimestampColumn::processTimestampAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::timestampAggregations);
 }
 
 void TimestampColumn::processTimestampPointArrayResult(uv_work_t * req, int status)

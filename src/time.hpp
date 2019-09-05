@@ -5,9 +5,14 @@
 #include <qdb/client.h>
 #include <node.h>
 #include <node_object_wrap.h>
+#include <chrono>
 
 namespace quasardb
 {
+
+typedef std::chrono::duration<double, std::nano> nanoseconds;
+typedef std::chrono::duration<double, std::milli> milliseconds;
+typedef std::chrono::duration<double> seconds;
 
 inline qdb_timespec_t ms_to_qdb_timespec(double ms)
 {
@@ -71,8 +76,8 @@ public:
     qdb_timespec_t getTimespec()
     {
         qdb_timespec_t ts;
-        ts.tv_sec = static_cast<qdb_time_t>(seconds_);
-        ts.tv_nsec = static_cast<qdb_time_t>(nanoseconds_);
+        ts.tv_sec = static_cast<qdb_time_t>(seconds_.count());
+        ts.tv_nsec = static_cast<qdb_time_t>(nanoseconds_.count());
         return ts;
     }
 
@@ -115,11 +120,11 @@ private:
 
         if (str == "seconds")
         {
-            info.GetReturnValue().Set(v8::Number::New(isolate, obj->seconds_));
+            info.GetReturnValue().Set(v8::Number::New(isolate, obj->seconds_.count()));
         }
         else if (str == "nanoseconds")
         {
-            info.GetReturnValue().Set(v8::Number::New(isolate, static_cast<double>(obj->nanoseconds_)));
+            info.GetReturnValue().Set(v8::Number::New(isolate, obj->nanoseconds_.count()));
         }
     }
 
@@ -132,14 +137,12 @@ private:
             isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "Expected a Date")));
         }
 
-        auto ms = args[0]->ToNumber(isolate)->Value();
-        auto ns = ms * 1000000ull;
-
-        auto seconds = static_cast<double>(ns / 1000000000ull);
-        auto nanoseconds = static_cast<double>(ns - seconds * 1000000000ull);
+        nanoseconds epoch_ns = milliseconds{args[0]->ToNumber(isolate)->Value()};
+        seconds s = epoch_ns;
+        nanoseconds ns = epoch_ns - s;
 
         const int argc = 2;
-        v8::Local<v8::Value> argv[argc] = {v8::Number::New(isolate, seconds), v8::Number::New(isolate, nanoseconds)};
+        v8::Local<v8::Value> argv[argc] = {v8::Number::New(isolate, s.count()), v8::Number::New(isolate, ns.count())};
         auto cons = v8::Local<v8::Function>::New(isolate, constructor);
         args.GetReturnValue().Set(cons->NewInstance(isolate->GetCurrentContext(), argc, argv).ToLocalChecked());
     }
@@ -148,15 +151,18 @@ private:
     {
         auto isolate = args.GetIsolate();
         auto obj = ObjectWrap::Unwrap<Timestamp>(args.Holder());
-        auto epoch_ms = obj->seconds_ * 1000.0 + static_cast<double>(obj->nanoseconds_ / 1000000ull);
-        auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), epoch_ms);
+
+        milliseconds epoch_ms = obj->seconds_ + obj->nanoseconds_;
+
+        auto maybe_date = v8::Date::New(isolate->GetCurrentContext(), epoch_ms.count());
         args.GetReturnValue().Set(maybe_date.ToLocalChecked());
     }
 
     static v8::Persistent<v8::Function> constructor;
     static v8::Persistent<v8::FunctionTemplate> tmpl;
-    double seconds_;
-    double nanoseconds_;
+
+    seconds seconds_;
+    nanoseconds nanoseconds_;
 };
 
 } // namespace quasardb
