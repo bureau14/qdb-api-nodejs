@@ -41,6 +41,7 @@
         "src/ts_aggregation.hpp",
         "src/cluster_data.hpp",
         "src/utilities.hpp",
+        "src/time.cpp",
         "src/time.hpp",
         "test/blobTest.js",
         "test/clusterTest.js",

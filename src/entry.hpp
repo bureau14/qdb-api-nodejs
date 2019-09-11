@@ -101,11 +101,10 @@ public:
     //:returns: A string representing the alias of the Entity
     static void remove(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(
-            args,
-            [](qdb_request * qdb_req) //
-            { qdb_req->output.error = qdb_remove(qdb_req->handle(), qdb_req->input.alias.c_str()); },
-            processVoidResult, &ArgsEaterBinder::none);
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   { qdb_req->output.error = qdb_remove(qdb_req->handle(), qdb_req->input.alias.c_str()); },
+                   processVoidResult, &ArgsEaterBinder::none);
     }
 
 public:
@@ -169,14 +168,13 @@ public:
     // callback(err) (function) - A callback or anonymous function with error parameter.
     static void attachTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(
-            args,
-            [](qdb_request * qdb_req) //
-            {
-                qdb_req->output.error =
-                    qdb_attach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
-            },
-            processVoidResult, &ArgsEaterBinder::string);
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       qdb_req->output.error = qdb_attach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                              qdb_req->input.content.str.c_str());
+                   },
+                   processVoidResult, &ArgsEaterBinder::string);
     }
 
     //:desc: Attaches the Entity to the specified tags. Errors if any of the tags is already assigned.
@@ -184,28 +182,26 @@ public:
     // callback(err) (function) - A callback or anonymous function with error parameter.
     static void attachTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(
-            args,
-            [](qdb_request * qdb_req) //
-            {
-                std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
 
-                qdb_req->output.error =
-                    qdb_attach_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
-            },
-            processVoidResult, &ArgsEaterBinder::strings);
+                       qdb_req->output.error =
+                           qdb_attach_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
+                   },
+                   processVoidResult, &ArgsEaterBinder::strings);
     }
 
     static void getMetadata(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(
-            args,
-            [](qdb_request * qdb_req) //
-            {
-                qdb_req->output.error = qdb_get_metadata(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                         &qdb_req->output.content.entry_metadata);
-            },
-            processEntryMetadataResult);
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       qdb_req->output.error = qdb_get_metadata(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                                &qdb_req->output.content.entry_metadata);
+                   },
+                   processEntryMetadataResult);
     }
 
     //:desc: Detaches the Entity from the specified tag. Errors if the tag is not assigned.
@@ -213,14 +209,13 @@ public:
     // callback(err) (function) - A callback or anonymous function with error parameter.
     static void detachTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(
-            args,
-            [](qdb_request * qdb_req) //
-            {
-                qdb_req->output.error =
-                    qdb_detach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
-            },
-            processVoidResult, &ArgsEaterBinder::string);
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       qdb_req->output.error = qdb_detach_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                              qdb_req->input.content.str.c_str());
+                   },
+                   processVoidResult, &ArgsEaterBinder::string);
     }
 
     //:desc: Detaches the Entity from the specified tags. Errors if any of the tags is not assigned.
@@ -228,16 +223,15 @@ public:
     // callback(err) (function) - A callback or anonymous function with error parameter.
     static void detachTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(
-            args,
-            [](qdb_request * qdb_req) //
-            {
-                std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       std::vector<const char *> tags = convertStrings(qdb_req->input.content.strs);
 
-                qdb_req->output.error =
-                    qdb_detach_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
-            },
-            processVoidResult, &ArgsEaterBinder::strings);
+                       qdb_req->output.error =
+                           qdb_detach_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), tags.data(), tags.size());
+                   },
+                   processVoidResult, &ArgsEaterBinder::strings);
     }
 
     //:desc: Determines if the Entity has the specified tag.
@@ -245,60 +239,59 @@ public:
     // callback(err) (function) - A callback or anonymous function with error parameter.
     static void hasTag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(
-            args,
-            [](qdb_request * qdb_req) //
-            {
-                qdb_req->output.error =
-                    qdb_has_tag(qdb_req->handle(), qdb_req->input.alias.c_str(), qdb_req->input.content.str.c_str());
-            },
-            processVoidResult, &ArgsEaterBinder::string);
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       qdb_req->output.error = qdb_has_tag(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                           qdb_req->input.content.str.c_str());
+                   },
+                   processVoidResult, &ArgsEaterBinder::string);
     }
 
     //:desc: Determines if the Entity has the specified tags.
     //:args: tagNames (String[]) - Array of names of the tags (Array of Strings).
-    // callback(err, success_count, result) (function) - A callback or anonymous function with: error parameter, number of specified tags assigned to the Entity and query result. Result is an Object with as many fields as the length of tagNames array, each having a bool value true (tag assigned) or false (otherwise).
+    // callback(err, success_count, result) (function) - A callback or anonymous function with: error parameter, number
+    // of specified tags assigned to the Entity and query result. Result is an Object with as many fields as the length
+    // of tagNames array, each having a bool value true (tag assigned) or false (otherwise).
     static void hasTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(
-            args,
-            [](qdb_request * qdb_req) //
-            {
-                auto & tags = qdb_req->input.content.strs;
-                auto & ops = qdb_req->output.batch.operations;
-                ops.resize(tags.size());
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       auto & tags = qdb_req->input.content.strs;
+                       auto & ops = qdb_req->output.batch.operations;
+                       ops.resize(tags.size());
 
-                qdb_req->output.error = qdb_init_operations(ops.data(), ops.size());
-                if (!QDB_SUCCESS(qdb_req->output.error)) return;
+                       qdb_req->output.error = qdb_init_operations(ops.data(), ops.size());
+                       if (!QDB_SUCCESS(qdb_req->output.error)) return;
 
-                std::transform(tags.cbegin(), tags.cend(), ops.begin(), [qdb_req](const std::string & tag) {
-                    qdb_operation_t op;
-                    op.type = qdb_op_has_tag;
-                    op.alias = qdb_req->input.alias.c_str();
-                    op.has_tag.tag = tag.c_str();
-                    return op;
-                });
+                       std::transform(tags.cbegin(), tags.cend(), ops.begin(), [qdb_req](const std::string & tag) {
+                           qdb_operation_t op;
+                           op.type = qdb_op_has_tag;
+                           op.alias = qdb_req->input.alias.c_str();
+                           op.has_tag.tag = tag.c_str();
+                           return op;
+                       });
 
-                qdb_req->output.batch.success_count = qdb_run_batch(qdb_req->handle(), ops.data(), ops.size());
-                qdb_req->output.error = qdb_e_ok;
-            },
-            processBatchHasTagResult, &ArgsEaterBinder::strings);
+                       qdb_req->output.batch.success_count = qdb_run_batch(qdb_req->handle(), ops.data(), ops.size());
+                       qdb_req->output.error = qdb_e_ok;
+                   },
+                   processBatchHasTagResult, &ArgsEaterBinder::strings);
     }
 
     //:desc: Gets an array of tag objects associated with the Entity.
     //:args: callback(err, tags) (function) - A callback or anonymous function with error and array of tags parameters.
     static void getTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        queue_work(
-            args,
-            [](qdb_request * qdb_req) //
-            {
-                auto buffer_begin =
-                    reinterpret_cast<const char ***>(const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
-                qdb_req->output.error = qdb_get_tags(qdb_req->handle(), qdb_req->input.alias.c_str(), buffer_begin,
-                                                     &(qdb_req->output.content.buffer.size));
-            },
-            processArrayStringResult, &ArgsEaterBinder::none);
+        queue_work(args,
+                   [](qdb_request * qdb_req) //
+                   {
+                       auto buffer_begin = reinterpret_cast<const char ***>(
+                           const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+                       qdb_req->output.error = qdb_get_tags(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                                                            buffer_begin, &(qdb_req->output.content.buffer.size));
+                   },
+                   processArrayStringResult, &ArgsEaterBinder::none);
     }
 
 public:
@@ -482,8 +475,9 @@ public:
             return make_value_array(error_code, array);
         });
     }
-    
-    static void query_set_rows(v8::Isolate * isolate, const qdb_table_result_t & table_result, v8::Local<v8::Object> & table)
+
+    static void
+    query_set_rows(v8::Isolate * isolate, const qdb_table_result_t & table_result, v8::Local<v8::Object> & table)
     {
         auto rows_prop = v8::String::NewFromUtf8(isolate, "rows");
         auto rows_count_prop = v8::String::NewFromUtf8(isolate, "rows_count");
@@ -491,35 +485,38 @@ public:
         const auto columns_count = table_result.columns_count;
         const auto rows_count = table_result.rows_count;
         v8::Local<v8::Array> rows = v8::Array::New(isolate, static_cast<int>(rows_count));
-        for (size_t i = 0 ; i < rows_count ; ++i)
+        for (size_t i = 0; i < rows_count; ++i)
         {
             v8::Local<v8::Array> columns = v8::Array::New(isolate, static_cast<int>(columns_count));
-            for (size_t j = 0 ; j < columns_count ; ++j)
+            for (size_t j = 0; j < columns_count; ++j)
             {
                 auto pt = table_result.rows[i][j];
                 switch (pt.type)
                 {
-                    case qdb_query_result_double:
-                        columns->Set(j, v8::Number::New(isolate, pt.payload.double_.value));
-                        break;
-                    case qdb_query_result_blob:
-                    {
-                        std::string blob{reinterpret_cast<const char *>(pt.payload.blob.content), pt.payload.blob.content_length};
-                        columns->Set(j, v8::String::NewFromUtf8(isolate, blob.c_str()));
-                        break;
-                    }
-                    case qdb_query_result_int64:
-                        columns->Set(j, v8::Number::New(isolate, pt.payload.int64_.value));
-                        break;
-                    case qdb_query_result_timestamp:
-                    {
-                        // const auto secs = std::chrono::duration<double>{pt.payload.timestamp.value.tv_sec};
-                        // const auto nsecs =  std::chrono::duration<double, std::nano>{pt.payload.timestamp.value.tv_nsec};
-                        // const auto ms = std::chrono::duration_cast<std::chrono::milliseconds, double>(secs + nsecs).count();
-                        double ms = qdb_timespec_to_ms(pt.payload.timestamp.value);
-                        columns->Set(j, v8::Date::New(isolate->GetCurrentContext(), ms).ToLocalChecked());
-                        break;
-                    }
+                case qdb_query_result_double:
+                    columns->Set(j, v8::Number::New(isolate, pt.payload.double_.value));
+                    break;
+                case qdb_query_result_blob:
+                {
+                    std::string blob{reinterpret_cast<const char *>(pt.payload.blob.content),
+                                     pt.payload.blob.content_length};
+                    columns->Set(j, v8::String::NewFromUtf8(isolate, blob.c_str()));
+                    break;
+                }
+                case qdb_query_result_int64:
+                    columns->Set(j, v8::Number::New(isolate, pt.payload.int64_.value));
+                    break;
+                case qdb_query_result_timestamp:
+                {
+                    // const auto secs = std::chrono::duration<double>{pt.payload.timestamp.value.tv_sec};
+                    // const auto nsecs =  std::chrono::duration<double, std::nano>{pt.payload.timestamp.value.tv_nsec};
+                    // const auto ms = std::chrono::duration_cast<std::chrono::milliseconds, double>(secs +
+                    // nsecs).count();
+                    auto timestamp = Timestamp::NewFromTimespec(isolate, pt.payload.timestamp.value);
+
+                    columns->Set(j, timestamp);
+                    break;
+                }
                 }
             }
             rows->Set(i, columns);
@@ -528,14 +525,16 @@ public:
         table->Set(rows_count_prop, v8::Number::New(isolate, rows_count));
     }
 
-    static void query_set_columns_names(v8::Isolate * isolate, const qdb_table_result_t & table_result, v8::Local<v8::Object> & table)
+    static void query_set_columns_names(v8::Isolate * isolate,
+                                        const qdb_table_result_t & table_result,
+                                        v8::Local<v8::Object> & table)
     {
         auto columns_names_prop = v8::String::NewFromUtf8(isolate, "columns_names");
         auto columns_count_prop = v8::String::NewFromUtf8(isolate, "columns_count");
 
         const auto columns_count = table_result.columns_count;
         v8::Local<v8::Array> columns_names = v8::Array::New(isolate, static_cast<int>(columns_count));
-        for (size_t i = 0; i < columns_count ; ++i)
+        for (size_t i = 0; i < columns_count; ++i)
         {
             std::string name{table_result.columns_names[i].data, table_result.columns_names[i].length};
             columns_names->Set(i, v8::String::NewFromUtf8(isolate, name.c_str()));
@@ -544,7 +543,8 @@ public:
         table->Set(columns_names_prop, columns_names);
     }
 
-    static void query_make_one_table(v8::Isolate * isolate, const qdb_table_result_t & table_result, v8::Local<v8::Object> & table)
+    static void
+    query_make_one_table(v8::Isolate * isolate, const qdb_table_result_t & table_result, v8::Local<v8::Object> & table)
     {
         auto table_name_prop = v8::String::NewFromUtf8(isolate, "table_name");
 
@@ -552,16 +552,16 @@ public:
         table->Set(table_name_prop, v8::String::NewFromUtf8(isolate, table_name.c_str()));
         query_set_columns_names(isolate, table_result, table);
         query_set_rows(isolate, table_result, table);
-
     }
 
-    static v8::Local<v8::Object> query_make_tables_array(v8::Isolate * isolate, qdb_query_result_t * result, v8::Local<v8::Array> & tables)
+    static v8::Local<v8::Object>
+    query_make_tables_array(v8::Isolate * isolate, qdb_query_result_t * result, v8::Local<v8::Array> & tables)
     {
         if (tables.IsEmpty())
         {
             return Error::MakeError(isolate, qdb_e_no_memory_local);
         }
-        for (size_t i = 0; i < result->tables_count ; ++i)
+        for (size_t i = 0; i < result->tables_count; ++i)
         {
             v8::Local<v8::Object> table = v8::Object::New(isolate);
             query_make_one_table(isolate, result->tables[i], table);
@@ -569,8 +569,9 @@ public:
         }
         return {};
     }
-    
-    static v8::Local<v8::Object> query_make_result(v8::Isolate * isolate, qdb_query_result_t * result, v8::Local<v8::Object> & final_result)
+
+    static v8::Local<v8::Object>
+    query_make_result(v8::Isolate * isolate, qdb_query_result_t * result, v8::Local<v8::Object> & final_result)
     {
         auto tables_prop = v8::String::NewFromUtf8(isolate, "tables");
         auto tables_count_prop = v8::String::NewFromUtf8(isolate, "tables_count");
