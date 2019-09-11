@@ -1,4 +1,7 @@
 {
+  "variables": {
+    "copy_c_api": "no"
+  },
   "targets": [
     {
       "target_name": "<(module_name)",
@@ -152,8 +155,17 @@
               {
                 "destination": "<(module_path)",
                 "files": [
-                  "<(PRODUCT_DIR)/<(module_name).node",
-                  "<(module_root_dir)/qdb/lib/libqdb_api.dylib"
+                  "<(PRODUCT_DIR)/<(module_name).node"
+                ],
+                "conditions": [
+                  [
+                    "copy_c_api=='yes'",
+                    {
+                      "files": [
+                        "<(module_root_dir)/qdb/lib/libqdb_api.dylib"
+                      ]
+                    }
+                  ]
                 ]
               }
             ]
@@ -166,8 +178,17 @@
               {
                 "destination": "<(module_path)",
                 "files": [
-                  "<(PRODUCT_DIR)/<(module_name).node",
-                  "<(module_root_dir)/qdb/lib/libqdb_api.so"
+                  "<(PRODUCT_DIR)/<(module_name).node"
+                ],
+                "conditions": [
+                  [
+                    "copy_c_api=='yes'",
+                    {
+                      "files": [
+                        "<(module_root_dir)/qdb/lib/libqdb_api.so"
+                      ]
+                    }
+                  ]
                 ]
               }
             ]
@@ -180,8 +201,17 @@
               {
                 "destination": "<(module_path)",
                 "files": [
-                  "<(PRODUCT_DIR)/<(module_name).node",
-                  "<(module_root_dir)/qdb/bin/qdb_api.dll"
+                  "<(PRODUCT_DIR)/<(module_name).node"
+                ],
+                "conditions": [
+                  [
+                    "copy_c_api=='yes'",
+                    {
+                      "files": [
+                        "<(module_root_dir)/qdb/bin/qdb_api.dll"
+                      ]
+                    }
+                  ]
                 ]
               }
             ]
