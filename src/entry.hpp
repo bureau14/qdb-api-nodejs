@@ -250,9 +250,7 @@ public:
 
     //:desc: Determines if the Entity has the specified tags.
     //:args: tagNames (String[]) - Array of names of the tags (Array of Strings).
-    // callback(err, success_count, result) (function) - A callback or anonymous function with: error parameter, number
-    // of specified tags assigned to the Entity and query result. Result is an Object with as many fields as the length
-    // of tagNames array, each having a bool value true (tag assigned) or false (otherwise).
+    // callback(err, success_count, result) (function) - A callback or anonymous function with: error parameter, number of specified tags assigned to the Entity and query result. Result is an Object with as many fields as the length of tagNames array, each having a bool value true (tag assigned) or false (otherwise).
     static void hasTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
