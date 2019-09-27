@@ -1,6 +1,7 @@
 {
   "variables": {
-    "copy_c_api": "no"
+    "copy_c_api": "no",
+    "c_api_path": "<(module_root_dir)/qdb",
   },
   "targets": [
     {
@@ -61,10 +62,10 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "<(module_root_dir)/qdb/include"
+              "<(c_api_path)/include"
             ],
             "libraries": [
-              "-L<(module_root_dir)/qdb/lib",
+              "-L<(c_api_path)/lib",
               "-lqdb_api",
               "-Wl,-rpath,@loader_path"
             ],
@@ -83,11 +84,11 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "<(module_root_dir)/qdb/include"
+              "<(c_api_path)/include"
             ],
             "libraries": [
               "-L/usr/local/lib",
-              "-L<(module_root_dir)/qdb/lib",
+              "-L<(c_api_path)/lib",
               "-lqdb_api",
               "-Wl,-rpath=\'$$ORIGIN\'"
             ],
@@ -105,11 +106,11 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "<(module_root_dir)/qdb/include"
+              "<(c_api_path)/include"
             ],
             "libraries": [
               "-L/usr/local/lib",
-              "-L<(module_root_dir)/qdb/lib",
+              "-L<(c_api_path)/lib",
               "-lqdb_api",
               "-Wl,-rpath=\'$$ORIGIN\'"
             ],
@@ -123,7 +124,7 @@
           "OS=='win'",
           {
             "include_dirs": [
-              "<(module_root_dir)/qdb/include"
+              "<(c_api_path)/include"
             ],
             "msvs_settings": {
               "VCCLCompilerTool": {
@@ -135,7 +136,7 @@
             },
             "link_settings": {
               "libraries": [
-                "<(module_root_dir)/qdb/lib/qdb_api.lib"
+                "<(c_api_path)/lib/qdb_api.lib"
               ]
             }
           }
@@ -163,7 +164,7 @@
                     "copy_c_api=='yes'",
                     {
                       "files": [
-                        "<(module_root_dir)/qdb/lib/libqdb_api.dylib"
+                        "<(c_api_path)/lib/libqdb_api.dylib"
                       ]
                     }
                   ]
@@ -209,7 +210,7 @@
                     "copy_c_api=='yes'",
                     {
                       "files": [
-                        "<(module_root_dir)/qdb/bin/qdb_api.dll"
+                        "<(c_api_path)/bin/qdb_api.dll"
                       ]
                     }
                   ]
