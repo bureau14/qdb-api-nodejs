@@ -187,7 +187,7 @@
                     "copy_c_api=='yes'",
                     {
                       "files": [
-                        "<(module_root_dir)/qdb/lib/libqdb_api.so"
+                        "<(c_api_path)/lib/libqdb_api.so"
                       ]
                     }
                   ]
