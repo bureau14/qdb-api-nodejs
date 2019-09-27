@@ -61,7 +61,7 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "qdb/include"
+              "<!(pwd)/qdb/include"
             ],
             "libraries": [
               "-L<!(pwd)/qdb/lib",
@@ -83,7 +83,7 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "qdb/include"
+              "<!(pwd)/qdb/include"
             ],
             "libraries": [
               "-L/usr/local/lib",
@@ -105,7 +105,7 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "qdb/include"
+              "<!(pwd)/qdb/include"
             ],
             "libraries": [
               "-L/usr/local/lib",
