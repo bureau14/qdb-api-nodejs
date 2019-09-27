@@ -61,10 +61,10 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "<(module_root_dir)/qdb/include"
+              "qdb/include"
             ],
             "libraries": [
-              "-L<(module_root_dir)/qdb/lib",
+              "-L<!(pwd)/qdb/lib",
               "-lqdb_api",
               "-Wl,-rpath,@loader_path"
             ],
@@ -83,11 +83,11 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "<(module_root_dir)/qdb/include"
+              "qdb/include"
             ],
             "libraries": [
               "-L/usr/local/lib",
-              "-L<(module_root_dir)/qdb/lib",
+              "-L<!(pwd)qdb/lib",
               "-lqdb_api",
               "-Wl,-rpath=\'$$ORIGIN\'"
             ],
@@ -105,11 +105,11 @@
           {
             "include_dirs": [
               "/usr/local/include",
-              "<(module_root_dir)/qdb/include"
+              "qdb/include"
             ],
             "libraries": [
               "-L/usr/local/lib",
-              "-L<(module_root_dir)/qdb/lib",
+              "-L<!(pwd)/qdb/lib",
               "-lqdb_api",
               "-Wl,-rpath=\'$$ORIGIN\'"
             ],
