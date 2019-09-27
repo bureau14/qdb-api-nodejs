@@ -1,34 +1,64 @@
+// import-start
 var qdb = require('quasardb')
+// import-end
+
 
 function connect(callback) {
-  console.log("connect")
+  // connect-start
   var cluster = new qdb.Cluster('qdb://127.0.0.1:2836')
 
   cluster.connect(function() {
-    // connected successfully
+    // Connected successfully
     return callback(null, cluster)
   }, function(err) { 
-    // connection error
+    // Connection error
     return callback(err, null)
   })
+  // connect-end
 }
 
 function secureConnect(callback) {
+  // secure-connect-start
+  var secureCluster = new qdb.Cluster(
+    'qdb://127.0.0.1:2836', 
+    '/path/to/cluster_public.key', 
+    '/path/to/user_private.key'
+  )
 
+  secureCluster.connect(function() {
+    // Connected successfully
+    return callback(null, cluster)
+  }, function(err) { 
+    // Connection error
+    return callback(err, null)
+  })
+  // secure-connect-end
 }
 
 function createTable(cluster, callback) {
+  // create-table-start
   var table = cluster.ts('stocks')
   table.create([
     qdb.DoubleColumnInfo('open'),
     qdb.DoubleColumnInfo('close'),
     qdb.Int64ColumnInfo('volume')
   ], function(err) {
-    if (err) { 
+    if (err) {
+      // Failed to create table
       return callback(err)
     }
+    // Successfully created table
+    // create-table-end
 
-    callback()
+    // tags-start
+    table.attachTag("nasdaq", function (err) {
+      if (err) {
+        callback(err)
+      }
+
+      callback()
+    })
+    // tags-end
   })
 }
 
@@ -41,6 +71,7 @@ function bulkRead(cluster, callback) {
 }
 
 function columnInsert(cluster, callback) {
+  // column-insert-start
   var table = cluster.ts('stocks')
   table.columns(function(err, columns) {
     if (err) {
@@ -78,9 +109,11 @@ function columnInsert(cluster, callback) {
       })
     })
   })
+  // column-insert-end
 }
 
 function columnRead(cluster, callback) {
+  // column-get-start
   var range = qdb.TsRange(
     qdb.Timestamp.fromDate(new Date(2000, 10, 5, 2)), 
     qdb.Timestamp.fromDate(new Date(2020, 10, 5, 5))
@@ -124,9 +157,11 @@ function columnRead(cluster, callback) {
       })
     })
   })
+  // column-get-end
 }
 
 function query(cluster, callback) {
+  // query-start
   cluster.query("SELECT SUM(volume) FROM stocks").run(function(err, result) {
     if (err) {
       return callback(err)
@@ -139,11 +174,20 @@ function query(cluster, callback) {
     }
     return callback()
   })
+  // query-end
 }
 
 function dropTable(cluster, callback) {
+  // drop-table-start
   table = cluster.ts("stocks")
-  table.remove(callback)
+  table.remove(function(err) {
+    if (err) {
+      callback(err)
+    }
+
+    callback()
+  })
+  // drop-table-end
 }
 
 connect(function(err, cluster) {
