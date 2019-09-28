@@ -1,0 +1,12 @@
+{
+  "name": "quasardb-node-api-tutorial",
+  "version": "1.0.0",
+  "description": "Example usage of the QuasarDB Node API",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "quasardb": "github:bureau14/qdb-api-nodejs"
+  }
+}
