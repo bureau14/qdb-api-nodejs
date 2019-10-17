@@ -70,40 +70,41 @@ describe('Query', function () {
         cluster.query('select * from query_test').run(function (err, output) {
             test.must(err).be.equal(null);
             test.must(output.scanned_point_count).be.equal(12);
-            test.must(output.tables_count).be.equal(1);
             test.must(output.error_message).be.empty();
 
-            test.must(output.tables[0].table_name).be.equal('query_test');
+            test.must(output.column_count).be.equal(6);
+            test.must(output.column_names[0]).be.equal('$timestamp');
+            test.must(output.column_names[1]).be.equal('$table');
+            test.must(output.column_names[2]).be.equal('double_col');
+            test.must(output.column_names[3]).be.equal('blob_col');
+            test.must(output.column_names[4]).be.equal('int64_col');
+            test.must(output.column_names[5]).be.equal('timestamp_col');
 
-            test.must(output.tables[0].columns_count).be.equal(5);
-            test.must(output.tables[0].columns_names[0]).be.equal('$timestamp');
-            test.must(output.tables[0].columns_names[1]).be.equal('double_col');
-            test.must(output.tables[0].columns_names[2]).be.equal('blob_col');
-            test.must(output.tables[0].columns_names[3]).be.equal('int64_col');
-            test.must(output.tables[0].columns_names[4]).be.equal('timestamp_col');
-
-            test.must(output.tables[0].rows_count).be.equal(3);
+            test.must(output.row_count).be.equal(3);
 
             // first row
-            test.must(output.tables[0].rows[0][0].toDate().getTime()).be.equal((new Date(2049, 10, 5, 1)).getTime());
-            test.must(output.tables[0].rows[0][1]).be.equal(0.1);
-            test.must(output.tables[0].rows[0][2]).be.equal('a');
-            test.must(output.tables[0].rows[0][3]).be.equal(1);
-            test.must(output.tables[0].rows[0][4].toDate().getTime()).be.equal((new Date(2049, 10, 5, 1)).getTime());
+            test.must(output.rows[0][0].toDate().getTime()).be.equal((new Date(2049, 10, 5, 1)).getTime());
+            test.must(output.rows[0][1]).be.equal('query_test');
+            test.must(output.rows[0][2]).be.equal(0.1);
+            test.must(output.rows[0][3]).be.equal('a');
+            test.must(output.rows[0][4]).be.equal(1);
+            test.must(output.rows[0][5].toDate().getTime()).be.equal((new Date(2049, 10, 5, 1)).getTime());
 
             // second row
-            test.must(output.tables[0].rows[1][0].toDate().getTime()).be.equal((new Date(2049, 10, 5, 2)).getTime());
-            test.must(output.tables[0].rows[1][1]).be.equal(0.2);
-            test.must(output.tables[0].rows[1][2]).be.equal('b');
-            test.must(output.tables[0].rows[1][3]).be.equal(2);
-            test.must(output.tables[0].rows[1][4].toDate().getTime()).be.equal((new Date(2049, 10, 5, 2)).getTime());
+            test.must(output.rows[1][0].toDate().getTime()).be.equal((new Date(2049, 10, 5, 2)).getTime());
+            test.must(output.rows[0][1]).be.equal('query_test');
+            test.must(output.rows[1][2]).be.equal(0.2);
+            test.must(output.rows[1][3]).be.equal('b');
+            test.must(output.rows[1][4]).be.equal(2);
+            test.must(output.rows[1][5].toDate().getTime()).be.equal((new Date(2049, 10, 5, 2)).getTime());
 
             // third row
-            test.must(output.tables[0].rows[2][0].toDate().getTime()).be.equal((new Date(2049, 10, 5, 3)).getTime());
-            test.must(output.tables[0].rows[2][1]).be.equal(0.3);
-            test.must(output.tables[0].rows[2][2]).be.equal('c');
-            test.must(output.tables[0].rows[2][3]).be.equal(3);
-            test.must(output.tables[0].rows[2][4].toDate().getTime()).be.equal((new Date(2049, 10, 5, 3)).getTime());
+            test.must(output.rows[2][0].toDate().getTime()).be.equal((new Date(2049, 10, 5, 3)).getTime());
+            test.must(output.rows[0][1]).be.equal('query_test');
+            test.must(output.rows[2][2]).be.equal(0.3);
+            test.must(output.rows[2][3]).be.equal('c');
+            test.must(output.rows[2][4]).be.equal(3);
+            test.must(output.rows[2][5].toDate().getTime()).be.equal((new Date(2049, 10, 5, 3)).getTime());
 
             done();
         });

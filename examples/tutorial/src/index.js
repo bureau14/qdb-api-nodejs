@@ -167,10 +167,8 @@ function query(cluster, callback) {
       return callback(err)
     }
 
-    table = result.tables[0]
-
-    for (var i = 0 ; i < table.rows.length; i++) {
-      console.log(`${table.rows[i][1]}`)
+    for (var i = 0 ; i < result.rows.length; i++) {
+      console.log(`${result.rows[i][1]}`)
     }
     return callback()
   })

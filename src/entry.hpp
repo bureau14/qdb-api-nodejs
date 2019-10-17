@@ -250,7 +250,9 @@ public:
 
     //:desc: Determines if the Entity has the specified tags.
     //:args: tagNames (String[]) - Array of names of the tags (Array of Strings).
-    // callback(err, success_count, result) (function) - A callback or anonymous function with: error parameter, number of specified tags assigned to the Entity and query result. Result is an Object with as many fields as the length of tagNames array, each having a bool value true (tag assigned) or false (otherwise).
+    // callback(err, success_count, result) (function) - A callback or anonymous function with: error parameter, number
+    // of specified tags assigned to the Entity and query result. Result is an Object with as many fields as the length
+    // of tagNames array, each having a bool value true (tag assigned) or false (otherwise).
     static void hasTags(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         queue_work(args,
@@ -475,20 +477,20 @@ public:
     }
 
     static void
-    query_set_rows(v8::Isolate * isolate, const qdb_table_result_t & table_result, v8::Local<v8::Object> & table)
+    query_set_rows(v8::Isolate * isolate, const qdb_query_result_t * result, v8::Local<v8::Object> & final_result)
     {
         auto rows_prop = v8::String::NewFromUtf8(isolate, "rows");
-        auto rows_count_prop = v8::String::NewFromUtf8(isolate, "rows_count");
+        auto rows_count_prop = v8::String::NewFromUtf8(isolate, "row_count");
 
-        const auto columns_count = table_result.columns_count;
-        const auto rows_count = table_result.rows_count;
-        v8::Local<v8::Array> rows = v8::Array::New(isolate, static_cast<int>(rows_count));
-        for (size_t i = 0; i < rows_count; ++i)
+        const auto column_count = result->column_count;
+        const auto row_count = result->row_count;
+        v8::Local<v8::Array> rows = v8::Array::New(isolate, static_cast<int>(row_count));
+        for (size_t i = 0; i < row_count; ++i)
         {
-            v8::Local<v8::Array> columns = v8::Array::New(isolate, static_cast<int>(columns_count));
-            for (size_t j = 0; j < columns_count; ++j)
+            v8::Local<v8::Array> columns = v8::Array::New(isolate, static_cast<int>(column_count));
+            for (size_t j = 0; j < column_count; ++j)
             {
-                auto pt = table_result.rows[i][j];
+                auto pt = result->rows[i][j];
                 switch (pt.type)
                 {
                 case qdb_query_result_double:
@@ -519,74 +521,42 @@ public:
             }
             rows->Set(i, columns);
         }
-        table->Set(rows_prop, rows);
-        table->Set(rows_count_prop, v8::Number::New(isolate, rows_count));
+        final_result->Set(rows_prop, rows);
+        final_result->Set(rows_count_prop, v8::Number::New(isolate, row_count));
     }
 
     static void query_set_columns_names(v8::Isolate * isolate,
-                                        const qdb_table_result_t & table_result,
-                                        v8::Local<v8::Object> & table)
+                                        const qdb_query_result_t * result,
+                                        v8::Local<v8::Object> & final_result)
     {
-        auto columns_names_prop = v8::String::NewFromUtf8(isolate, "columns_names");
-        auto columns_count_prop = v8::String::NewFromUtf8(isolate, "columns_count");
+        auto columns_names_prop = v8::String::NewFromUtf8(isolate, "column_names");
+        auto columns_count_prop = v8::String::NewFromUtf8(isolate, "column_count");
 
-        const auto columns_count = table_result.columns_count;
-        v8::Local<v8::Array> columns_names = v8::Array::New(isolate, static_cast<int>(columns_count));
-        for (size_t i = 0; i < columns_count; ++i)
+        const auto column_count = result->column_count;
+        v8::Local<v8::Array> column_names = v8::Array::New(isolate, static_cast<int>(column_count));
+        for (size_t i = 0; i < column_count; ++i)
         {
-            std::string name{table_result.columns_names[i].data, table_result.columns_names[i].length};
-            columns_names->Set(i, v8::String::NewFromUtf8(isolate, name.c_str()));
+            std::string name{result->column_names[i].data, result->column_names[i].length};
+            column_names->Set(i, v8::String::NewFromUtf8(isolate, name.c_str()));
         }
-        table->Set(columns_count_prop, v8::Number::New(isolate, columns_count));
-        table->Set(columns_names_prop, columns_names);
-    }
-
-    static void
-    query_make_one_table(v8::Isolate * isolate, const qdb_table_result_t & table_result, v8::Local<v8::Object> & table)
-    {
-        auto table_name_prop = v8::String::NewFromUtf8(isolate, "table_name");
-
-        std::string table_name{table_result.table_name.data, table_result.table_name.length};
-        table->Set(table_name_prop, v8::String::NewFromUtf8(isolate, table_name.c_str()));
-        query_set_columns_names(isolate, table_result, table);
-        query_set_rows(isolate, table_result, table);
-    }
-
-    static v8::Local<v8::Object>
-    query_make_tables_array(v8::Isolate * isolate, qdb_query_result_t * result, v8::Local<v8::Array> & tables)
-    {
-        if (tables.IsEmpty())
-        {
-            return Error::MakeError(isolate, qdb_e_no_memory_local);
-        }
-        for (size_t i = 0; i < result->tables_count; ++i)
-        {
-            v8::Local<v8::Object> table = v8::Object::New(isolate);
-            query_make_one_table(isolate, result->tables[i], table);
-            tables->Set(i, table);
-        }
-        return {};
+        final_result->Set(columns_count_prop, v8::Number::New(isolate, column_count));
+        final_result->Set(columns_names_prop, column_names);
     }
 
     static v8::Local<v8::Object>
     query_make_result(v8::Isolate * isolate, qdb_query_result_t * result, v8::Local<v8::Object> & final_result)
     {
-        auto tables_prop = v8::String::NewFromUtf8(isolate, "tables");
-        auto tables_count_prop = v8::String::NewFromUtf8(isolate, "tables_count");
         auto scanned_point_count_prop = v8::String::NewFromUtf8(isolate, "scanned_point_count");
         auto error_msg_prop = v8::String::NewFromUtf8(isolate, "error_message");
 
-        const auto tables_count = result->tables_count;
-        v8::Local<v8::Array> tables_array = v8::Array::New(isolate, static_cast<int>(tables_count));
-        std::string err_msg{result->error_message.data, result->error_message.length};
-
-        auto err = query_make_tables_array(isolate, result, tables_array);
-
-        final_result->Set(tables_prop, tables_array);
-        final_result->Set(tables_count_prop, v8::Number::New(isolate, tables_count));
         final_result->Set(scanned_point_count_prop, v8::Number::New(isolate, result->scanned_point_count));
+        std::string err_msg{result->error_message.data, result->error_message.length};
         final_result->Set(error_msg_prop, v8::String::NewFromUtf8(isolate, err_msg.c_str()));
-        return err;
+
+        query_set_columns_names(isolate, result, final_result);
+        query_set_rows(isolate, result, final_result);
+
+        return {};
     }
 
     // build an array out of the buffer
