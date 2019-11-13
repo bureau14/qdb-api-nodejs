@@ -506,13 +506,14 @@ public:
                     break;
                 case qdb_query_result_timestamp:
                 {
-                    // const auto secs = std::chrono::duration<double>{pt.payload.timestamp.value.tv_sec};
-                    // const auto nsecs =  std::chrono::duration<double, std::nano>{pt.payload.timestamp.value.tv_nsec};
-                    // const auto ms = std::chrono::duration_cast<std::chrono::milliseconds, double>(secs +
-                    // nsecs).count();
                     auto timestamp = Timestamp::NewFromTimespec(isolate, pt.payload.timestamp.value);
 
                     columns->Set(j, timestamp);
+                    break;
+                }
+                case qdb_query_result_count:
+                {
+                    columns->Set(j, v8::Number::New(isolate, pt.payload.count.value));
                     break;
                 }
                 }

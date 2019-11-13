@@ -109,4 +109,16 @@ describe('Query', function () {
             done();
         });
     });
+
+    it('should have a count query', function (done) {
+        cluster.query('select count(int64_col) from query_test').run(function (err, output) {
+            test.must(err).be.equal(null);
+            // 3 rows so count should be 3
+            expected_count = 3;
+            // first row, ignore timestamp
+            test.must(output.tables[0].rows[0][1]).be.equal(expected_count);
+
+            done();
+        });
+    });
 });
