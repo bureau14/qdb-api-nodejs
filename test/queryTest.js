@@ -116,7 +116,7 @@ describe('Query', function () {
             // 3 rows so count should be 3
             expected_count = 3;
             // first row, ignore timestamp
-            test.must(output.tables[0].rows[0][1]).be.equal(expected_count);
+            test.must(output.rows[0][0]).be.equal(expected_count);
 
             done();
         });
