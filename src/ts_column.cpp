@@ -131,7 +131,7 @@ void BlobColumn::processBlobPointArrayResult(uv_work_t * req, int status)
                     auto obj = BlobPoint::MakePointWithCopy(isolate, entries[i].timestamp, entries[i].content,
                                                             entries[i].content_length);
 
-                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
                 }
             }
 
@@ -165,8 +165,8 @@ void BlobColumn::processBlobAggregateResult(uv_work_t * req, int status)
             }
             else
             {
-                auto resprop = v8::String::NewFromUtf8(isolate, "result");
-                auto cntprop = v8::String::NewFromUtf8(isolate, "count");
+                auto resprop = v8::String::NewFromUtf8(isolate, "result", v8::NewStringType::kNormal).ToLocalChecked();
+                auto cntprop = v8::String::NewFromUtf8(isolate, "count", v8::NewStringType::kNormal).ToLocalChecked();
 
                 for (size_t i = 0; i < aggrs.size(); ++i)
                 {
@@ -175,9 +175,9 @@ void BlobColumn::processBlobAggregateResult(uv_work_t * req, int status)
                         BlobPoint::MakePointWithCopy(isolate, point.timestamp, point.content, point.content_length);
 
                     auto obj = v8::Object::New(isolate);
-                    obj->Set(resprop, result);
-                    obj->Set(cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
-                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                    obj->Set(isolate->GetCurrentContext(), resprop, result);
+                    obj->Set(isolate->GetCurrentContext(), cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
 
                     // safe to call even on null/invalid buffers
                     qdb_release(qdb_req->handle(), point.content);
@@ -216,7 +216,7 @@ void DoubleColumn::processDoublePointArrayResult(uv_work_t * req, int status)
                 for (size_t i = 0; i < entries_count; ++i)
                 {
                     auto obj = DoublePoint::MakePoint(isolate, entries[i].timestamp, entries[i].value);
-                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
                 }
             }
 
@@ -249,8 +249,8 @@ void DoubleColumn::processDoubleAggregateResult(uv_work_t * req, int status)
             }
             else
             {
-                auto resprop = v8::String::NewFromUtf8(isolate, "result");
-                auto cntprop = v8::String::NewFromUtf8(isolate, "count");
+                auto resprop = v8::String::NewFromUtf8(isolate, "result", v8::NewStringType::kNormal).ToLocalChecked();
+                auto cntprop = v8::String::NewFromUtf8(isolate, "count", v8::NewStringType::kNormal).ToLocalChecked();
 
                 for (size_t i = 0; i < aggrs.size(); ++i)
                 {
@@ -258,10 +258,10 @@ void DoubleColumn::processDoubleAggregateResult(uv_work_t * req, int status)
                     auto result = DoublePoint::MakePoint(isolate, point.timestamp, point.value);
 
                     auto obj = v8::Object::New(isolate);
-                    obj->Set(resprop, result);
-                    obj->Set(cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+                    obj->Set(isolate->GetCurrentContext(), resprop, result);
+                    obj->Set(isolate->GetCurrentContext(), cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
 
-                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
                 }
             }
         }
@@ -344,7 +344,7 @@ void Int64Column::processInt64PointArrayResult(uv_work_t * req, int status)
                 for (size_t i = 0; i < entries_count; ++i)
                 {
                     auto obj = Int64Point::MakePoint(isolate, entries[i].timestamp, entries[i].value);
-                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
                 }
             }
 
@@ -377,8 +377,8 @@ void Int64Column::processInt64AggregateResult(uv_work_t * req, int status)
             }
             else
             {
-                auto resprop = v8::String::NewFromUtf8(isolate, "result");
-                auto cntprop = v8::String::NewFromUtf8(isolate, "count");
+                auto resprop = v8::String::NewFromUtf8(isolate, "result", v8::NewStringType::kNormal).ToLocalChecked();
+                auto cntprop = v8::String::NewFromUtf8(isolate, "count", v8::NewStringType::kNormal).ToLocalChecked();
 
                 for (size_t i = 0; i < aggrs.size(); ++i)
                 {
@@ -386,10 +386,10 @@ void Int64Column::processInt64AggregateResult(uv_work_t * req, int status)
                     auto result = Int64Point::MakePoint(isolate, point.timestamp, point.value);
 
                     auto obj = v8::Object::New(isolate);
-                    obj->Set(resprop, result);
-                    obj->Set(cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+                    obj->Set(isolate->GetCurrentContext(), resprop, result);
+                    obj->Set(isolate->GetCurrentContext(), cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
 
-                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
                 }
             }
         }
@@ -473,7 +473,7 @@ void TimestampColumn::processTimestampPointArrayResult(uv_work_t * req, int stat
                 for (size_t i = 0; i < entries_count; ++i)
                 {
                     auto obj = TimestampPoint::MakePoint(isolate, entries[i].timestamp, entries[i].value);
-                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
                 }
             }
 
@@ -506,8 +506,8 @@ void TimestampColumn::processTimestampAggregateResult(uv_work_t * req, int statu
             }
             else
             {
-                auto resprop = v8::String::NewFromUtf8(isolate, "result");
-                auto cntprop = v8::String::NewFromUtf8(isolate, "count");
+                auto resprop = v8::String::NewFromUtf8(isolate, "result", v8::NewStringType::kNormal).ToLocalChecked();
+                auto cntprop = v8::String::NewFromUtf8(isolate, "count", v8::NewStringType::kNormal).ToLocalChecked();
 
                 for (size_t i = 0; i < aggrs.size(); ++i)
                 {
@@ -515,10 +515,10 @@ void TimestampColumn::processTimestampAggregateResult(uv_work_t * req, int statu
                     auto result = TimestampPoint::MakePoint(isolate, point.timestamp, point.value);
 
                     auto obj = v8::Object::New(isolate);
-                    obj->Set(resprop, result);
-                    obj->Set(cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+                    obj->Set(isolate->GetCurrentContext(), resprop, result);
+                    obj->Set(isolate->GetCurrentContext(), cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
 
-                    if (!obj.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj);
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
                 }
             }
         }

@@ -28,7 +28,7 @@ public:
 
         // Prepare constructor template
         v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, New);
-        tpl->SetClassName(v8::String::NewFromUtf8(isolate, "TsRange" /*, v8::NewStringType::kNormal*/));
+        tpl->SetClassName(v8::String::NewFromUtf8(isolate, "TsRange", v8::NewStringType::kNormal).ToLocalChecked());
         tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
         v8::HandleScope handle_scope(isolate);
@@ -36,10 +36,10 @@ public:
 
         auto proto = tpl->PrototypeTemplate();
 
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "begin"),
+        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "begin", v8::NewStringType::kNormal).ToLocalChecked(),
                                    v8::FunctionTemplate::New(isolate, TsRange::begin, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "end"),
+        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "end", v8::NewStringType::kNormal).ToLocalChecked(),
                                    v8::FunctionTemplate::New(isolate, TsRange::end, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
@@ -47,7 +47,7 @@ public:
         if (maybe_function.IsEmpty()) return;
 
         constructor.Reset(isolate, maybe_function.ToLocalChecked());
-        exports->Set(v8::String::NewFromUtf8(isolate, "TsRange"), maybe_function.ToLocalChecked());
+        exports->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "TsRange", v8::NewStringType::kNormal).ToLocalChecked(), maybe_function.ToLocalChecked());
     }
 
     // Two arguments for regular range
@@ -122,7 +122,7 @@ private:
     static void throwException(const v8::FunctionCallbackInfo<v8::Value> & args, const char * msg)
     {
         auto isolate = args.GetIsolate();
-        isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, msg)));
+        isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, msg, v8::NewStringType::kNormal).ToLocalChecked()));
     }
 
     template <typename F>

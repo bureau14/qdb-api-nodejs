@@ -86,7 +86,7 @@ public:
         if (maybe_function.IsEmpty()) return;
 
         constructor.Reset(isolate, maybe_function.ToLocalChecked());
-        exports->Set(v8::String::NewFromUtf8(isolate, "Cluster"), maybe_function.ToLocalChecked());
+        exports->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "Cluster", v8::NewStringType::kNormal).ToLocalChecked(), maybe_function.ToLocalChecked());
     }
 
 private:

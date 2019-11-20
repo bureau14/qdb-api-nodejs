@@ -44,7 +44,7 @@ void TimeSeries::processArrayColumnsInfoResult(uv_work_t * req, int status)
                         break;
                     }
 
-                    if (!obj.first.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj.first);
+                    if (!obj.first.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj.first);
                 }
             }
 
@@ -89,7 +89,7 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
                         break;
                     }
 
-                    if (!obj.first.IsEmpty()) array->Set(static_cast<uint32_t>(i), obj.first);
+                    if (!obj.first.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj.first);
                 }
             }
         }

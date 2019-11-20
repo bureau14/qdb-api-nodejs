@@ -50,12 +50,12 @@ public:
             auto proto = tpl->PrototypeTemplate();
 
             proto->SetAccessorProperty(
-                v8::String::NewFromUtf8(isolate, "timeseries"),
+                v8::String::NewFromUtf8(isolate, "timeseries", v8::NewStringType::kNormal).ToLocalChecked(),
                 v8::FunctionTemplate::New(isolate, Column<Derivate>::getTsAlias, v8::Local<v8::Value>(), s),
                 v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
             proto->SetAccessorProperty(
-                v8::String::NewFromUtf8(isolate, "type"),
+                v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked(),
                 v8::FunctionTemplate::New(isolate, Column<Derivate>::getType, v8::Local<v8::Value>(), s),
                 v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
         });
@@ -67,7 +67,7 @@ public:
 
         v8::Local<v8::Value> argv[argc] = {
             owner,
-            v8::String::NewFromUtf8(isolate, name),
+            v8::String::NewFromUtf8(isolate, name, v8::NewStringType::kNormal).ToLocalChecked(),
         };
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
@@ -169,7 +169,7 @@ private:
     {
         Column::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, const Column * c) {
             v8::Isolate * isolate = args.GetIsolate();
-            args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, c->ts.c_str()));
+            args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, c->ts.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
         });
     }
 

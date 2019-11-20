@@ -24,11 +24,11 @@ namespace detail
 static inline void
 AddConstantProperty(v8::Isolate * isolate, v8::Local<v8::Object> object, const char * key, v8::Local<v8::Value> value)
 {
-    // object->ForceSet(v8::String::NewFromUtf8(isolate, key), value,
+    // object->ForceSet(v8::String::NewFromUtf8(isolate, key, v8::NewStringType::kNormal).ToLocalChecked(), value,
     //                 static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
 
     v8::Maybe<bool> maybe =
-        object->DefineOwnProperty(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, key), value,
+        object->DefineOwnProperty(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, key, v8::NewStringType::kNormal).ToLocalChecked(), value,
                                   static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
     (void)maybe; // unused
     assert(maybe.IsJust() && maybe.FromJust());
@@ -52,7 +52,7 @@ struct NewObject<v8::String>
     v8::Local<v8::String> operator()(v8::Isolate * i, P && p)
     {
         // strings don't use new, they use newfromutf8
-        return v8::String::NewFromUtf8(i, std::forward<P>(p));
+        return v8::String::NewFromUtf8(i, std::forward<P>(p), v8::NewStringType::kNormal).ToLocalChecked();
     }
 };
 
@@ -350,7 +350,7 @@ public:
 
     v8::Local<v8::String> argString(int i) const
     {
-        return _args[i]->ToString(_args.GetIsolate());
+        return _args[i]->ToString(_args.GetIsolate()->GetCurrentContext()).ToLocalChecked();
     }
 
     std::pair<v8::Local<v8::String>, bool> checkedArgString(int i) const
@@ -405,7 +405,7 @@ public:
 
     void throwException(const char * message) const
     {
-        _isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(_isolate, message)));
+        _isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(_isolate, message, v8::NewStringType::kNormal).ToLocalChecked()));
     }
 
     int argc(void) const
@@ -547,10 +547,10 @@ public:
 
             for (auto i = 0u; i < len; ++i)
             {
-                auto vi = arr.first->Get(i);
+                auto vi = arr.first->Get(isolate->GetCurrentContext(), i).ToLocalChecked();
                 if (!vi->IsString()) return string_vector();
 
-                v8::String::Utf8Value val(v8::Isolate::GetCurrent(), vi->ToString(isolate));
+                v8::String::Utf8Value val(v8::Isolate::GetCurrent(), vi->ToString(isolate->GetCurrentContext()).ToLocalChecked());
                 res.push_back(std::string(*val, val.length()));
             }
         }
@@ -575,12 +575,12 @@ public:
 
             auto isolate = v8::Isolate::GetCurrent();
 
-            auto nameProp = v8::String::NewFromUtf8(isolate, "name");
-            auto typeProp = v8::String::NewFromUtf8(isolate, "type");
+            auto nameProp = v8::String::NewFromUtf8(isolate, "name", v8::NewStringType::kNormal).ToLocalChecked();
+            auto typeProp = v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked();
 
             for (auto i = 0u; i < len; ++i)
             {
-                auto vi = arr.first->Get(i);
+                auto vi = arr.first->Get(isolate->GetCurrentContext(), i).ToLocalChecked();
                 if (!vi->IsObject()) return column_vector();
 
                 auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
@@ -589,15 +589,15 @@ public:
                     return column_vector();
                 }
                 auto obj = maybe_obj.ToLocalChecked();
-                auto name = obj->Get(nameProp);
-                auto type = obj->Get(typeProp);
+                auto name = obj->Get(isolate->GetCurrentContext(), nameProp).ToLocalChecked();
+                auto type = obj->Get(isolate->GetCurrentContext(), typeProp).ToLocalChecked();
 
                 if (!name->IsString() || !type->IsNumber())
                 {
                     return column_vector();
                 }
 
-                v8::String::Utf8Value sval(isolate, name->ToString(isolate));
+                v8::String::Utf8Value sval(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
 
                 auto maybe_type = type->Int32Value(isolate->GetCurrentContext());
                 if (maybe_type.IsNothing())
@@ -624,23 +624,23 @@ public:
             auto len = arr.first->Length();
             res.reserve(len);
 
-            auto tsProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "timestamp");
-            auto valueProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "value");
-
             auto isolate = v8::Isolate::GetCurrent();
             auto context = isolate->GetCurrentContext();
 
+            auto tsProp = v8::String::NewFromUtf8(isolate, "timestamp", v8::NewStringType::kNormal).ToLocalChecked();
+            auto valueProp = v8::String::NewFromUtf8(isolate, "value", v8::NewStringType::kNormal).ToLocalChecked(); 
+
             for (auto i = 0u; i < len; ++i)
             {
-                auto vi = arr.first->Get(i);
+                auto vi = arr.first->Get(context, i).ToLocalChecked();
                 if (!vi->IsObject()) return point_vector();
 
                 auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
                 if (maybe_obj.IsEmpty()) return point_vector();
 
                 auto obj = maybe_obj.ToLocalChecked();
-                auto date = obj->Get(tsProp);
-                auto value = obj->Get(valueProp);
+                auto date = obj->Get(context, tsProp).ToLocalChecked();
+                auto value = obj->Get(context, valueProp).ToLocalChecked();
 
                 if (!Timestamp::InstanceOf(isolate, date)) return point_vector();
 
@@ -758,7 +758,7 @@ public:
 
             for (auto i = 0u; i < len; ++i)
             {
-                auto vi = arr.first->Get(i);
+                auto vi = arr.first->Get(isolate->GetCurrentContext(), i).ToLocalChecked();
                 if (!vi->IsObject()) return range_vector();
 
                 auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
@@ -790,7 +790,7 @@ public:
 
             for (auto i = 0u; i < len; ++i)
             {
-                auto vi = arr.first->Get(i);
+                auto vi = arr.first->Get(isolate->GetCurrentContext(), i).ToLocalChecked();
                 if (!vi->IsObject()) return aggr_vector();
 
                 auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
@@ -821,13 +821,13 @@ public:
     std::string eatAndConvertTsAlias(void)
     {
         auto holder = _method.holder();
-        auto tsProp = v8::String::NewFromUtf8(v8::Isolate::GetCurrent(), "timeseries");
+        auto isolate = v8::Isolate::GetCurrent();
+        auto tsProp = v8::String::NewFromUtf8(isolate, "timeseries", v8::NewStringType::kNormal).ToLocalChecked();
 
-        auto ts = holder->Get(tsProp);
+        auto ts = holder->Get(isolate->GetCurrentContext(), tsProp).ToLocalChecked();
         if (!ts->IsString()) return std::string();
 
-        auto isolate = v8::Isolate::GetCurrent();
-        return convertString(ts->ToString(isolate));
+        return convertString(ts->ToString(isolate->GetCurrentContext()).ToLocalChecked());
     }
 
     qdb_request::slice eatAndConvertBuffer(void)

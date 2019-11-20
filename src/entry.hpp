@@ -319,7 +319,8 @@ public:
 
         // Prepare constructor template
         v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, Derivate::New);
-        tpl->SetClassName(v8::String::NewFromUtf8(isolate, className));
+
+        tpl->SetClassName(v8::String::NewFromUtf8(isolate, className, v8::NewStringType::kNormal).ToLocalChecked());
         tpl->InstanceTemplate()->SetInternalFieldCount(Entry<Derivate>::FieldsCount);
 
         init(tpl);
@@ -328,7 +329,7 @@ public:
         if (maybe_function.IsEmpty()) return;
 
         Derivate::constructor.Reset(isolate, maybe_function.ToLocalChecked());
-        exports->Set(v8::String::NewFromUtf8(isolate, className), maybe_function.ToLocalChecked());
+        exports->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, className, v8::NewStringType::kNormal).ToLocalChecked(), maybe_function.ToLocalChecked());
     }
 
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -456,8 +457,8 @@ public:
                 {
                     for (size_t i = 0; i < entries_count; ++i)
                     {
-                        auto str = v8::String::NewFromUtf8(isolate, entries[i]);
-                        array->Set(static_cast<uint32_t>(i), str);
+                        auto str = v8::String::NewFromUtf8(isolate, entries[i], v8::NewStringType::kNormal).ToLocalChecked();
+                        array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), str);
                     }
                 }
 
@@ -477,8 +478,8 @@ public:
     static void
     query_set_rows(v8::Isolate * isolate, const qdb_query_result_t * result, v8::Local<v8::Object> & final_result)
     {
-        auto rows_prop = v8::String::NewFromUtf8(isolate, "rows");
-        auto rows_count_prop = v8::String::NewFromUtf8(isolate, "row_count");
+        auto rows_prop = v8::String::NewFromUtf8(isolate, "rows", v8::NewStringType::kNormal).ToLocalChecked();
+        auto rows_count_prop = v8::String::NewFromUtf8(isolate, "row_count", v8::NewStringType::kNormal).ToLocalChecked();
 
         const auto column_count = result->column_count;
         const auto row_count = result->row_count;
@@ -492,65 +493,65 @@ public:
                 switch (pt.type)
                 {
                 case qdb_query_result_double:
-                    columns->Set(j, v8::Number::New(isolate, pt.payload.double_.value));
+                    columns->Set(isolate->GetCurrentContext(), j, v8::Number::New(isolate, pt.payload.double_.value));
                     break;
                 case qdb_query_result_blob:
                 {
                     std::string blob{reinterpret_cast<const char *>(pt.payload.blob.content),
                                      pt.payload.blob.content_length};
-                    columns->Set(j, v8::String::NewFromUtf8(isolate, blob.c_str()));
+                    columns->Set(isolate->GetCurrentContext(), j, v8::String::NewFromUtf8(isolate, blob.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
                     break;
                 }
                 case qdb_query_result_int64:
-                    columns->Set(j, v8::Number::New(isolate, pt.payload.int64_.value));
+                    columns->Set(isolate->GetCurrentContext(), j, v8::Number::New(isolate, pt.payload.int64_.value));
                     break;
                 case qdb_query_result_timestamp:
                 {
                     auto timestamp = Timestamp::NewFromTimespec(isolate, pt.payload.timestamp.value);
 
-                    columns->Set(j, timestamp);
+                    columns->Set(isolate->GetCurrentContext(), j, timestamp);
                     break;
                 }
                 case qdb_query_result_count:
                 {
-                    columns->Set(j, v8::Number::New(isolate, pt.payload.count.value));
+                    columns->Set(isolate->GetCurrentContext(), j, v8::Number::New(isolate, pt.payload.count.value));
                     break;
                 }
                 }
             }
-            rows->Set(i, columns);
+            rows->Set(isolate->GetCurrentContext(), i, columns);
         }
-        final_result->Set(rows_prop, rows);
-        final_result->Set(rows_count_prop, v8::Number::New(isolate, row_count));
+        final_result->Set(isolate->GetCurrentContext(), rows_prop, rows);
+        final_result->Set(isolate->GetCurrentContext(), rows_count_prop, v8::Number::New(isolate, row_count));
     }
 
     static void query_set_columns_names(v8::Isolate * isolate,
                                         const qdb_query_result_t * result,
                                         v8::Local<v8::Object> & final_result)
     {
-        auto columns_names_prop = v8::String::NewFromUtf8(isolate, "column_names");
-        auto columns_count_prop = v8::String::NewFromUtf8(isolate, "column_count");
+        auto columns_names_prop = v8::String::NewFromUtf8(isolate, "column_names", v8::NewStringType::kNormal).ToLocalChecked();
+        auto columns_count_prop = v8::String::NewFromUtf8(isolate, "column_count", v8::NewStringType::kNormal).ToLocalChecked();
 
         const auto column_count = result->column_count;
         v8::Local<v8::Array> column_names = v8::Array::New(isolate, static_cast<int>(column_count));
         for (size_t i = 0; i < column_count; ++i)
         {
             std::string name{result->column_names[i].data, result->column_names[i].length};
-            column_names->Set(i, v8::String::NewFromUtf8(isolate, name.c_str()));
+            column_names->Set(isolate->GetCurrentContext(), i, v8::String::NewFromUtf8(isolate, name.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
         }
-        final_result->Set(columns_count_prop, v8::Number::New(isolate, column_count));
-        final_result->Set(columns_names_prop, column_names);
+        final_result->Set(isolate->GetCurrentContext(), columns_count_prop, v8::Number::New(isolate, column_count));
+        final_result->Set(isolate->GetCurrentContext(), columns_names_prop, column_names);
     }
 
     static v8::Local<v8::Object>
     query_make_result(v8::Isolate * isolate, qdb_query_result_t * result, v8::Local<v8::Object> & final_result)
     {
-        auto scanned_point_count_prop = v8::String::NewFromUtf8(isolate, "scanned_point_count");
-        auto error_msg_prop = v8::String::NewFromUtf8(isolate, "error_message");
+        auto scanned_point_count_prop = v8::String::NewFromUtf8(isolate, "scanned_point_count", v8::NewStringType::kNormal).ToLocalChecked();
+        auto error_msg_prop = v8::String::NewFromUtf8(isolate, "error_message", v8::NewStringType::kNormal).ToLocalChecked();
 
-        final_result->Set(scanned_point_count_prop, v8::Number::New(isolate, result->scanned_point_count));
+        final_result->Set(isolate->GetCurrentContext(), scanned_point_count_prop, v8::Number::New(isolate, result->scanned_point_count));
         std::string err_msg{result->error_message.data, result->error_message.length};
-        final_result->Set(error_msg_prop, v8::String::NewFromUtf8(isolate, err_msg.c_str()));
+        final_result->Set(isolate->GetCurrentContext(), error_msg_prop, v8::String::NewFromUtf8(isolate, err_msg.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
 
         query_set_columns_names(isolate, result, final_result);
         query_set_rows(isolate, result, final_result);
@@ -639,16 +640,17 @@ public:
             for (int32_t i = 0; i < 4; ++i)
             {
                 reference->Set(
-                    i, v8::Number::New(isolate,
-                                       static_cast<double>(qdb_req->output.content.entry_metadata.reference.data[i])));
+                    isolate->GetCurrentContext(),
+                    i, 
+                    v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.entry_metadata.reference.data[i])));
             }
 
             auto meta = v8::Object::New(isolate);
 
-            meta->Set(v8::String::NewFromUtf8(isolate, "reference"), reference);
-            meta->Set(v8::String::NewFromUtf8(isolate, "type"),
+            meta->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "reference", v8::NewStringType::kNormal).ToLocalChecked(), reference);
+            meta->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked(),
                       v8::Integer::New(isolate, qdb_req->output.content.entry_metadata.type));
-            meta->Set(v8::String::NewFromUtf8(isolate, "size"),
+            meta->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "size", v8::NewStringType::kNormal).ToLocalChecked(),
                       v8::Number::New(isolate, static_cast<double>(qdb_req->output.content.entry_metadata.size)));
 
             {
@@ -661,7 +663,7 @@ public:
                     return make_value_array(error_code, meta);
                 }
 
-                meta->Set(v8::String::NewFromUtf8(isolate, "modification_time"),
+                meta->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "modification_time", v8::NewStringType::kNormal).ToLocalChecked(),
                           (millis > 0) ? maybe_date.ToLocalChecked() : v8::Local<v8::Value>(v8::Undefined(isolate)));
             }
 
@@ -675,7 +677,7 @@ public:
                     return make_value_array(error_code, meta);
                 }
 
-                meta->Set(v8::String::NewFromUtf8(isolate, "expiry_time"),
+                meta->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "expiry_time", v8::NewStringType::kNormal).ToLocalChecked(),
                           (millis > 0) ? maybe_date.ToLocalChecked() : v8::Local<v8::Value>(v8::Undefined(isolate)));
             }
 
@@ -712,7 +714,7 @@ public:
 
             for (const auto & op : qdb_req->output.batch.operations)
             {
-                obj->Set(v8::String::NewFromUtf8(isolate, op.has_tag.tag),
+                obj->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, op.has_tag.tag, v8::NewStringType::kNormal).ToLocalChecked(),
                          v8::Boolean::New(isolate, qdb_e_ok == op.error));
             }
 
