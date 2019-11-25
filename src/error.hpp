@@ -45,7 +45,7 @@ public:
 
         // Prepare constructor template
         v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, New);
-        tpl->SetClassName(v8::String::NewFromUtf8(isolate, "Error"));
+        tpl->SetClassName(v8::String::NewFromUtf8(isolate, "Error", v8::NewStringType::kNormal).ToLocalChecked());
         tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
         v8::HandleScope handle_scope(isolate);
@@ -53,19 +53,19 @@ public:
 
         auto proto = tpl->PrototypeTemplate();
 
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "informational"),
+        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "informational", v8::NewStringType::kNormal).ToLocalChecked(),
                                    v8::FunctionTemplate::New(isolate, Error::informational, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "origin"),
+        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "origin", v8::NewStringType::kNormal).ToLocalChecked(),
                                    v8::FunctionTemplate::New(isolate, Error::origin, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "severity"),
+        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "severity", v8::NewStringType::kNormal).ToLocalChecked(),
                                    v8::FunctionTemplate::New(isolate, Error::severity, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "message"),
+        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "message", v8::NewStringType::kNormal).ToLocalChecked(),
                                    v8::FunctionTemplate::New(isolate, Error::message, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "code"),
+        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "code", v8::NewStringType::kNormal).ToLocalChecked(),
                                    v8::FunctionTemplate::New(isolate, Error::code, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
@@ -142,7 +142,7 @@ public:
         if (maybe_function.IsEmpty()) return;
 
         constructor.Reset(isolate, maybe_function.ToLocalChecked());
-        exports->Set(v8::String::NewFromUtf8(isolate, "Error"), maybe_function.ToLocalChecked());
+        exports->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "Error", v8::NewStringType::kNormal).ToLocalChecked(), maybe_function.ToLocalChecked());
     }
 
 private:
@@ -257,7 +257,7 @@ public:
         Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {
             // the string returned by qdb_error is static it is therefore safe and efficient to do this
             v8::Isolate * isolate = args.GetIsolate();
-            args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, qdb_error(e->_error)));
+            args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, qdb_error(e->_error), v8::NewStringType::kNormal).ToLocalChecked());
         });
     }
 

@@ -33,7 +33,7 @@ public:
 
         // Prepare constructor template
         v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, New);
-        tpl->SetClassName(v8::String::NewFromUtf8(isolate, "Aggregation"));
+        tpl->SetClassName(v8::String::NewFromUtf8(isolate, "Aggregation", v8::NewStringType::kNormal).ToLocalChecked());
         tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
         v8::HandleScope handle_scope(isolate);
@@ -41,10 +41,10 @@ public:
 
         auto proto = tpl->PrototypeTemplate();
 
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "type"),
+        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked(),
                                    v8::FunctionTemplate::New(isolate, Aggregation::getType, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "range"),
+        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "range", v8::NewStringType::kNormal).ToLocalChecked(),
                                    v8::FunctionTemplate::New(isolate, Aggregation::getRange, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
@@ -79,7 +79,7 @@ public:
         if (maybe_function.IsEmpty()) return;
 
         constructor.Reset(isolate, maybe_function.ToLocalChecked());
-        exports->Set(v8::String::NewFromUtf8(isolate, "Aggregation"), maybe_function.ToLocalChecked());
+        exports->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "Aggregation", v8::NewStringType::kNormal).ToLocalChecked(), maybe_function.ToLocalChecked());
     }
 
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -158,7 +158,7 @@ private:
     static void throwException(const v8::FunctionCallbackInfo<v8::Value> & args, const char * msg)
     {
         auto isolate = args.GetIsolate();
-        isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, msg)));
+        isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, msg, v8::NewStringType::kNormal).ToLocalChecked()));
     }
 
     template <typename F>
@@ -200,7 +200,7 @@ private:
         v8::Isolate * isolate = exports->GetIsolate();
         auto value = v8::Int32::New(isolate, type);
         v8::Maybe<bool> maybe =
-            exports->DefineOwnProperty(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, name), value,
+            exports->DefineOwnProperty(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, name, v8::NewStringType::kNormal).ToLocalChecked(), value,
                                        static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
         (void)maybe;
         assert(maybe.IsJust() && maybe.FromJust());

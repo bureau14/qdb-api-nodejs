@@ -84,8 +84,8 @@ private:
             return;
         }
 
-        info->Set(v8::String::NewFromUtf8(isolate, "name"), args[0]);
-        info->Set(v8::String::NewFromUtf8(isolate, "type"), v8::Integer::New(isolate, type));
+        info->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "name", v8::NewStringType::kNormal).ToLocalChecked(), args[0]);
+        info->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked(), v8::Integer::New(isolate, type));
 
         args.GetReturnValue().Set(info);
     }
