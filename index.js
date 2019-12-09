@@ -74,6 +74,12 @@ qdb.Timeseries
  * @param {error} error - Error containing information about timeseries creation failure
  */
 
+ /**
+ * This callback will return either an error or null if successful
+ * @callback qdb.Timeseries~errorCallback
+ * @param {error} error - Error containing information about the failure
+ */
+
 /**
  * Creates a timeseries
  * 
@@ -83,9 +89,10 @@ qdb.Timeseries
 qdb.Timeseries.prototype.create
 
 /**
- * Removes a timeseries
+ * Drops the timeseries table
  * 
  * @method
+ * @param {qdb.Timeseries~errorCallback} cb - an error callback
  */
 qdb.Timeseries.prototype.remove
 
@@ -107,6 +114,8 @@ qdb.Timeseries.prototype.columns
  * Attach a tag to a table
  * 
  * @method
+ * @param {string} name - The tag name
+ * @param {qdb.Timeseries~errorCallback} cb - an error callback
  */
 qdb.Timeseries.prototype.attachTag
 
@@ -121,10 +130,20 @@ qdb.Timeseries.prototype.attachTag
 qdb.Query
 
 /**
+ * An object representing meta data about a QuasarDB timeseries column
+ * 
+ * @typedef {Object} QueryResult
+ * @property {number} column_count
+ * @property {string[]} column_names
+ * @property {number} row_count
+ * @property {Object[][]} rows
+ */
+
+/**
  * This callback will return either an error or the query results if the query was executed successfully
  * @callback qdb.Query~runCallback
  * @param {error} error - Error containing information about timeseries creation failure
- * @param {Object} results - The query results
+ * @param {QueryResult} result - The query result
  */
 
 /**
