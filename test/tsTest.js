@@ -307,9 +307,9 @@ describe('TimeSeries', function () {
         });
 
 
-        it('should not insert double point into blob column', function (done) {
+        it('should not insert blob point into double column', function (done) {
             var p = qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), Buffer.from("Hello", 'utf8'));
-            columns[1].insert([p], function (err) {
+            columns[0].insert([p], function (err) {
                 test.must(err).be.equal(null);
 
                 done();
@@ -339,7 +339,7 @@ describe('TimeSeries', function () {
             });
         });
 
-        it('should not insert blob point into double column', function (done) {
+        it('should not insert double point into blob column', function (done) {
             var p = qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 7, 4)), 13.37);
             columns[1].insert([p], function (err) {
                 test.must(err).not.be.equal(null);
