@@ -1,7 +1,7 @@
+#include "ts_column.hpp"
 #include "entry.hpp"
 #include "error.hpp"
 #include "time_series.hpp"
-#include "ts_column.hpp"
 #include "ts_point.hpp"
 #include <qdb/ts.h>
 
@@ -22,7 +22,16 @@ void BlobColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
             const auto ts = qdb_req->input.content.str.c_str();
             const auto & points = qdb_req->input.content.blob_points;
 
-            qdb_req->output.error = qdb_ts_blob_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+            // FIXME(Marek): It's a poor man's hack, because ArgsEaterBinder::blobPoints returns an empty collection
+            // when an incorrect input has been given. But C API accepts 0-sized inputs.
+            if (points.empty())
+            {
+                qdb_req->output.error = qdb_e_invalid_argument;
+            }
+            else
+            {
+                qdb_req->output.error = qdb_ts_blob_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+            }
         },
         Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::blobPoints);
 }
@@ -62,16 +71,27 @@ void BlobColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
 
 void DoubleColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    Column<DoubleColumn>::queue_work(
-        args,
-        [](qdb_request * qdb_req) {
-            const auto alias = qdb_req->input.alias.c_str();
-            const auto ts = qdb_req->input.content.str.c_str();
-            const auto & points = qdb_req->input.content.double_points;
+    Column<DoubleColumn>::queue_work(args,
+                                     [](qdb_request * qdb_req) {
+                                         const auto alias = qdb_req->input.alias.c_str();
+                                         const auto ts = qdb_req->input.content.str.c_str();
+                                         const auto & points = qdb_req->input.content.double_points;
 
-            qdb_req->output.error = qdb_ts_double_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
-        },
-        Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::doublePoints);
+                                         // FIXME(Marek): It's a poor man's hack, because ArgsEaterBinder::blobPoints
+                                         // returns an empty collection when an incorrect input has been given. But C
+                                         // API accepts 0-sized inputs.
+                                         if (points.empty())
+                                         {
+                                             qdb_req->output.error = qdb_e_invalid_argument;
+                                         }
+                                         else
+                                         {
+                                             qdb_req->output.error = qdb_ts_double_insert(qdb_req->handle(), ts, alias,
+                                                                                          points.data(), points.size());
+                                         }
+                                     },
+                                     Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias,
+                                     &ArgsEaterBinder::doublePoints);
 }
 
 void DoubleColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -176,7 +196,8 @@ void BlobColumn::processBlobAggregateResult(uv_work_t * req, int status)
 
                     auto obj = v8::Object::New(isolate);
                     obj->Set(isolate->GetCurrentContext(), resprop, result);
-                    obj->Set(isolate->GetCurrentContext(), cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+                    obj->Set(isolate->GetCurrentContext(), cntprop,
+                             v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
                     if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
 
                     // safe to call even on null/invalid buffers
@@ -259,7 +280,8 @@ void DoubleColumn::processDoubleAggregateResult(uv_work_t * req, int status)
 
                     auto obj = v8::Object::New(isolate);
                     obj->Set(isolate->GetCurrentContext(), resprop, result);
-                    obj->Set(isolate->GetCurrentContext(), cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+                    obj->Set(isolate->GetCurrentContext(), cntprop,
+                             v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
 
                     if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
                 }
@@ -284,7 +306,16 @@ void Int64Column::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
             const auto ts = qdb_req->input.content.str.c_str();
             const auto & points = qdb_req->input.content.int64_points;
 
-            qdb_req->output.error = qdb_ts_int64_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+            // FIXME(Marek): It's a poor man's hack, because ArgsEaterBinder::blobPoints returns an empty collection
+            // when an incorrect input has been given. But C API accepts 0-sized inputs.
+            if (points.empty())
+            {
+                qdb_req->output.error = qdb_e_invalid_argument;
+            }
+            else
+            {
+                qdb_req->output.error = qdb_ts_int64_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+            }
         },
         Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::int64Points);
 }
@@ -387,7 +418,8 @@ void Int64Column::processInt64AggregateResult(uv_work_t * req, int status)
 
                     auto obj = v8::Object::New(isolate);
                     obj->Set(isolate->GetCurrentContext(), resprop, result);
-                    obj->Set(isolate->GetCurrentContext(), cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+                    obj->Set(isolate->GetCurrentContext(), cntprop,
+                             v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
 
                     if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
                 }
@@ -403,7 +435,6 @@ void Int64Column::processInt64AggregateResult(uv_work_t * req, int status)
     });
 }
 
-
 void TimestampColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
     Column<TimestampColumn>::queue_work(
@@ -413,7 +444,17 @@ void TimestampColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
             const auto ts = qdb_req->input.content.str.c_str();
             const auto & points = qdb_req->input.content.timestamp_points;
 
-            qdb_req->output.error = qdb_ts_timestamp_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+            // FIXME(Marek): It's a poor man's hack, because ArgsEaterBinder::blobPoints returns an empty collection
+            // when an incorrect input has been given. But C API accepts 0-sized inputs.
+            if (points.empty())
+            {
+                qdb_req->output.error = qdb_e_invalid_argument;
+            }
+            else
+            {
+                qdb_req->output.error =
+                    qdb_ts_timestamp_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+            }
         },
         Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::timestampPoints);
 }
@@ -426,8 +467,8 @@ void TimestampColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
             const auto alias = qdb_req->input.alias.c_str();
             const auto ts = qdb_req->input.content.str.c_str();
             auto & ranges = qdb_req->input.content.ranges;
-            auto bufp =
-                reinterpret_cast<qdb_ts_timestamp_point **>(const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+            auto bufp = reinterpret_cast<qdb_ts_timestamp_point **>(
+                const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
             auto count = &(qdb_req->output.content.buffer.size);
 
             qdb_req->output.error =
@@ -438,17 +479,19 @@ void TimestampColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
 
 void TimestampColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    TimestampColumn::queue_work(
-        args,
-        [](qdb_request * qdb_req) {
-            const auto alias = qdb_req->input.alias.c_str();
-            const auto ts = qdb_req->input.content.str.c_str();
-            qdb_ts_timestamp_aggregation_t * aggrs = qdb_req->input.content.timestamp_aggrs.data();
-            const qdb_size_t count = qdb_req->input.content.timestamp_aggrs.size();
+    TimestampColumn::queue_work(args,
+                                [](qdb_request * qdb_req) {
+                                    const auto alias = qdb_req->input.alias.c_str();
+                                    const auto ts = qdb_req->input.content.str.c_str();
+                                    qdb_ts_timestamp_aggregation_t * aggrs =
+                                        qdb_req->input.content.timestamp_aggrs.data();
+                                    const qdb_size_t count = qdb_req->input.content.timestamp_aggrs.size();
 
-            qdb_req->output.error = qdb_ts_timestamp_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
-        },
-        TimestampColumn::processTimestampAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::timestampAggregations);
+                                    qdb_req->output.error =
+                                        qdb_ts_timestamp_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
+                                },
+                                TimestampColumn::processTimestampAggregateResult, &ArgsEaterBinder::tsAlias,
+                                &ArgsEaterBinder::timestampAggregations);
 }
 
 void TimestampColumn::processTimestampPointArrayResult(uv_work_t * req, int status)
@@ -516,7 +559,8 @@ void TimestampColumn::processTimestampAggregateResult(uv_work_t * req, int statu
 
                     auto obj = v8::Object::New(isolate);
                     obj->Set(isolate->GetCurrentContext(), resprop, result);
-                    obj->Set(isolate->GetCurrentContext(), cntprop, v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+                    obj->Set(isolate->GetCurrentContext(), cntprop,
+                             v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
 
                     if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
                 }

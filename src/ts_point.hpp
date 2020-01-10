@@ -37,9 +37,10 @@ public:
             auto s = v8::Signature::New(isolate, tpl);
             auto proto = tpl->PrototypeTemplate();
 
-            proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "timestamp", v8::NewStringType::kNormal).ToLocalChecked(),
-                                       v8::FunctionTemplate::New(isolate, getTimestamp, v8::Local<v8::Value>(), s),
-                                       v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+            proto->SetAccessorProperty(
+                v8::String::NewFromUtf8(isolate, "timestamp", v8::NewStringType::kNormal).ToLocalChecked(),
+                v8::FunctionTemplate::New(isolate, getTimestamp, v8::Local<v8::Value>(), s),
+                v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
             proto->SetAccessorProperty(
                 v8::String::NewFromUtf8(isolate, "value", v8::NewStringType::kNormal).ToLocalChecked(),
@@ -81,7 +82,9 @@ private:
         if (maybe_function.IsEmpty()) return;
 
         Derivate::constructor.Reset(isolate, maybe_function.ToLocalChecked());
-        exports->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, className, v8::NewStringType::kNormal).ToLocalChecked(), maybe_function.ToLocalChecked());
+        exports->Set(isolate->GetCurrentContext(),
+                     v8::String::NewFromUtf8(isolate, className, v8::NewStringType::kNormal).ToLocalChecked(),
+                     maybe_function.ToLocalChecked());
     }
 
     static void getTimestamp(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -200,7 +203,7 @@ private:
     double value;
 
     static v8::Persistent<v8::Function> constructor;
-}; // class DoublePoint
+};
 
 class BlobPoint : public Point<BlobPoint>
 {

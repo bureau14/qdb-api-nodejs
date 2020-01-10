@@ -88,17 +88,17 @@ private:
         assert(c);
 
         auto ts = c->timeSeries();
-        Column<Derivate>::queue_work(
-            args,
-            [ts](qdb_request * qdb_req) {
-                auto & ranges = qdb_req->input.content.ranges;
-                auto erased = &qdb_req->output.content.uvalue;
-                auto alias = qdb_req->input.alias.c_str();
+        Column<Derivate>::queue_work(args,
+                                     [ts](qdb_request * qdb_req) {
+                                         auto & ranges = qdb_req->input.content.ranges;
+                                         auto erased = &qdb_req->output.content.uvalue;
+                                         auto alias = qdb_req->input.alias.c_str();
 
-                qdb_req->output.error =
-                    qdb_ts_erase_ranges(qdb_req->handle(), ts.c_str(), alias, ranges.data(), ranges.size(), erased);
-            },
-            Column<Derivate>::processUintegerResult, &ArgsEaterBinder::ranges);
+                                         qdb_req->output.error =
+                                             qdb_ts_erase_ranges(qdb_req->handle(), ts.c_str(), alias, ranges.data(),
+                                                                 ranges.size(), erased);
+                                     },
+                                     Column<Derivate>::processUintegerResult, &ArgsEaterBinder::ranges);
     }
 
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -169,7 +169,8 @@ private:
     {
         Column::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, const Column * c) {
             v8::Isolate * isolate = args.GetIsolate();
-            args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, c->ts.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
+            args.GetReturnValue().Set(
+                v8::String::NewFromUtf8(isolate, c->ts.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
         });
     }
 
@@ -193,9 +194,9 @@ class DoubleColumn : public Column<DoubleColumn>
 
     DoubleColumn(cluster_data_ptr cd, const char * name, const char * ts)
         : Column<DoubleColumn>(cd, name, ts, qdb_ts_column_double)
-
     {
     }
+
     virtual ~DoubleColumn(void)
     {
     }
@@ -228,9 +229,9 @@ class BlobColumn : public Column<BlobColumn>
 
     BlobColumn(cluster_data_ptr cd, const char * name, const char * ts)
         : Column<BlobColumn>(cd, name, ts, qdb_ts_column_blob)
-
     {
     }
+
     virtual ~BlobColumn(void)
     {
     }
@@ -256,7 +257,6 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
-
 class Int64Column : public Column<Int64Column>
 {
     friend class Column<Int64Column>;
@@ -264,9 +264,9 @@ class Int64Column : public Column<Int64Column>
 
     Int64Column(cluster_data_ptr cd, const char * name, const char * ts)
         : Column<Int64Column>(cd, name, ts, qdb_ts_column_int64)
-
     {
     }
+
     virtual ~Int64Column(void)
     {
     }
@@ -292,7 +292,6 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
-
 class TimestampColumn : public Column<TimestampColumn>
 {
     friend class Column<TimestampColumn>;
@@ -300,9 +299,9 @@ class TimestampColumn : public Column<TimestampColumn>
 
     TimestampColumn(cluster_data_ptr cd, const char * name, const char * ts)
         : Column<TimestampColumn>(cd, name, ts, qdb_ts_column_timestamp)
-
     {
     }
+
     virtual ~TimestampColumn(void)
     {
     }

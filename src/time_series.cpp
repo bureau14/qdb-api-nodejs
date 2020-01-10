@@ -1,6 +1,6 @@
+#include "time_series.hpp"
 #include "cluster.hpp"
 #include "entry.hpp"
-#include "time_series.hpp"
 #include "ts_column.hpp"
 
 namespace quasardb
@@ -37,14 +37,17 @@ void TimeSeries::processArrayColumnsInfoResult(uv_work_t * req, int status)
                 auto owner = v8::Local<v8::Object>::New(isolate, qdb_req->holder);
                 for (size_t i = 0; i < entries_count; ++i)
                 {
-                    auto obj = CreateColumn(isolate, owner, entries[i].name, entries[i].type);
-                    if (!obj.second)
+                    auto obj_ok = CreateColumn(isolate, owner, entries[i].name, entries[i].type);
+                    if (!obj_ok.second)
                     {
-                        error_code = obj.first;
+                        error_code = obj_ok.first;
                         break;
                     }
 
-                    if (!obj.first.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj.first);
+                    if (!obj_ok.first.IsEmpty())
+                    {
+                        array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj_ok.first);
+                    }
                 }
             }
 
@@ -82,14 +85,18 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
                 auto owner = v8::Local<v8::Object>::New(isolate, qdb_req->holder);
                 for (size_t i = 0; i < columns.size(); ++i)
                 {
-                    auto obj = CreateColumn(isolate, owner, columns[i].name.c_str(), columns[i].type);
-                    if (!obj.second)
+                    auto const & column = columns[i];
+                    auto obj_ok = CreateColumn(isolate, owner, column.name.c_str(), column.type);
+                    if (!obj_ok.second)
                     {
-                        error_code = obj.first;
+                        error_code = obj_ok.first;
                         break;
                     }
 
-                    if (!obj.first.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj.first);
+                    if (!obj_ok.first.IsEmpty())
+                    {
+                        array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj_ok.first);
+                    }
                 }
             }
         }

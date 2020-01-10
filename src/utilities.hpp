@@ -21,18 +21,10 @@ namespace quasardb
 namespace detail
 {
 
-static inline void
-AddConstantProperty(v8::Isolate * isolate, v8::Local<v8::Object> object, const char * key, v8::Local<v8::Value> value)
-{
-    // object->ForceSet(v8::String::NewFromUtf8(isolate, key, v8::NewStringType::kNormal).ToLocalChecked(), value,
-    //                 static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
-
-    v8::Maybe<bool> maybe =
-        object->DefineOwnProperty(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, key, v8::NewStringType::kNormal).ToLocalChecked(), value,
-                                  static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
-    (void)maybe; // unused
-    assert(maybe.IsJust() && maybe.FromJust());
-}
+void AddConstantProperty(v8::Isolate * isolate,
+                         v8::Local<v8::Object> object,
+                         const char * key,
+                         v8::Local<v8::Value> value);
 
 template <typename T>
 struct NewObject
@@ -79,14 +71,6 @@ struct NewObject<Timestamp>
     }
 };
 
-inline void release_node_buffer(char * data, void * hint)
-{
-    if (data && hint)
-    {
-        qdb_release(static_cast<qdb_handle_t>(hint), data);
-    }
-}
-
 } // namespace detail
 
 // POD for storing info about columns from js calls
@@ -119,7 +103,7 @@ struct qdb_request
 
         struct query_content
         {
-            query_content(void) : value(0)
+            query_content() : value(0)
             {
                 buffer.begin = nullptr;
                 buffer.size = 0;
@@ -187,7 +171,7 @@ struct qdb_request
     {
     }
 
-    ~qdb_request(void)
+    ~qdb_request()
     {
         callback.Reset();
         holder.Reset();
@@ -198,43 +182,28 @@ private:
     cluster_data_ptr _cluster_data;
 
 public:
-    qdb_handle_t handle(void)
+    qdb_handle_t handle()
     {
         return _cluster_data ? static_cast<qdb_handle_t>(_cluster_data->handle().get()) : nullptr;
     }
 
     void on_error(v8::Isolate * isolate, const v8::Local<v8::Object> & error_object)
     {
-        if (_cluster_data)
-        {
-            _cluster_data->on_error(isolate, error_object);
-        }
+        if (!_cluster_data) return;
+        _cluster_data->on_error(isolate, error_object);
     }
 
-public:
-    v8::MaybeLocal<v8::Object> make_node_buffer(v8::Isolate * isolate, const void * buf, size_t length)
-    {
-        qdb_handle_t h = handle();
-
-        if (!h || !buf || !length)
-        {
-            return node::Buffer::New(isolate, static_cast<size_t>(0u));
-        }
-
-        return node::Buffer::New(isolate, static_cast<char *>(const_cast<void *>(buf)), length,
-                                 detail::release_node_buffer, h);
-    }
+    v8::MaybeLocal<v8::Object> make_node_buffer(v8::Isolate * isolate, const void * buf, size_t length);
 
     v8::MaybeLocal<v8::Object> make_node_buffer(v8::Isolate * isolate)
     {
         return make_node_buffer(isolate, output.content.buffer.begin, output.content.buffer.size);
     }
 
-public:
     v8::Persistent<v8::Function> callback;
     v8::Persistent<v8::Object> holder;
 
-    v8::Local<v8::Function> callbackAsLocal(void)
+    v8::Local<v8::Function> callbackAsLocal()
     {
         if (callback.IsWeak())
         {
@@ -244,7 +213,7 @@ public:
         return *reinterpret_cast<v8::Local<v8::Function> *>(const_cast<v8::Persistent<v8::Function> *>(&callback));
     }
 
-    void execute(void)
+    void execute()
     {
         if ((output.error == qdb_e_uninitialized) && (_execute))
         {
@@ -272,13 +241,13 @@ struct MethodMan
     }
 
 public:
-    v8::Local<v8::Object> holder(void) const
+    v8::Local<v8::Object> holder() const
     {
         return _args.Holder();
     }
 
     template <typename Object>
-    Object * nativeHolder(void) const
+    Object * nativeHolder() const
     {
         return node::ObjectWrap::Unwrap<Object>(holder());
     }
@@ -289,7 +258,7 @@ public:
         _args.GetReturnValue().Set(typename detail::NewObject<T>()(_isolate, std::forward<P>(p)));
     }
 
-    void setUndefinedReturnValue(void)
+    void setUndefinedReturnValue()
     {
         _args.GetReturnValue().SetUndefined();
     }
@@ -398,17 +367,18 @@ public:
                                              &MethodMan::argDate);
     }
 
-    const v8::FunctionCallbackInfo<v8::Value> & args(void) const
+    const v8::FunctionCallbackInfo<v8::Value> & args() const
     {
         return _args;
     }
 
     void throwException(const char * message) const
     {
-        _isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(_isolate, message, v8::NewStringType::kNormal).ToLocalChecked()));
+        _isolate->ThrowException(v8::Exception::TypeError(
+            v8::String::NewFromUtf8(_isolate, message, v8::NewStringType::kNormal).ToLocalChecked()));
     }
 
-    int argc(void) const
+    int argc() const
     {
         return _args.Length();
     }
@@ -435,13 +405,13 @@ private:
     }
 
 public:
-    std::pair<double, bool> eatNumber(void)
+    std::pair<double, bool> eatNumber()
     {
         return processResult(_method.checkedArgNumber(_pos));
     }
 
     template <typename Integer>
-    std::pair<Integer, bool> eatInteger(void)
+    std::pair<Integer, bool> eatInteger()
     {
         auto res = eatNumber();
         if (!res.second)
@@ -453,69 +423,38 @@ public:
         return std::make_pair(static_cast<Integer>(res.first), true);
     }
 
-    std::pair<v8::Local<v8::String>, bool> eatString(void)
+    std::pair<v8::Local<v8::String>, bool> eatString()
     {
         return processResult(_method.checkedArgString(_pos));
     }
 
-    std::pair<v8::Local<v8::Array>, bool> eatArray(void)
+    std::pair<v8::Local<v8::Array>, bool> eatArray()
     {
         return processResult(_method.checkedArgArray(_pos));
     }
 
-    std::pair<v8::Local<v8::Function>, bool> eatCallback(void)
+    std::pair<v8::Local<v8::Function>, bool> eatCallback()
     {
         return processResult(_method.checkedArgCallback(_pos));
     }
 
-    std::pair<v8::Local<v8::Object>, bool> eatObject(void)
+    std::pair<v8::Local<v8::Object>, bool> eatObject()
     {
         return processResult(_method.checkedArgObject(_pos));
     }
 
-    std::pair<v8::Local<v8::Date>, bool> eatDate(void)
+    std::pair<v8::Local<v8::Date>, bool> eatDate()
     {
         return processResult(_method.checkedArgDate(_pos));
     }
 
 public:
-    qdb_int_t eatAndConvertInteger(void)
+    qdb_int_t eatAndConvertInteger()
     {
         return eatInteger<qdb_int_t>().first;
     }
 
-    qdb_time_t eatAndConvertDate(void)
-    {
-        // we get a Date object a convert that to qdb_time_t
-        const auto date = _method.checkedArgDate(_pos);
-
-        if (date.second)
-        {
-            ++_pos;
-            return static_cast<qdb_time_t>(date.first->ValueOf());
-        }
-
-        // it might be a "special date"
-        const auto number = _method.checkedArgNumber(_pos);
-        if (!number.second)
-        {
-            // nope
-            return static_cast<qdb_time_t>(0);
-        }
-
-        const qdb_time_t res = static_cast<qdb_time_t>(number.first);
-
-        // only special values allowed
-        if ((res != qdb_never_expires) && (res != qdb_preserve_expiration))
-        {
-            return static_cast<qdb_time_t>(0);
-        }
-
-        // this is a special value, increment position index
-        ++_pos;
-
-        return res;
-    }
+    qdb_time_t eatAndConvertDate();
 
     std::string convertString(const v8::Local<v8::String> & s)
     {
@@ -523,259 +462,30 @@ public:
         return std::string(*val, val.length());
     }
 
-    std::string eatAndConvertString(void)
+    std::string eatAndConvertString()
     {
         auto str = eatString();
-        if (str.second) return convertString(str.first);
+        if (!str.second) return {};
 
-        return std::string();
+        return convertString(str.first);
     }
 
-    std::vector<std::string> eatAndConvertStringArray(void)
-    {
-        using string_vector = std::vector<std::string>;
-        string_vector res;
-
-        auto arr = eatArray();
-
-        if (arr.second)
-        {
-            auto len = arr.first->Length();
-            res.reserve(len);
-
-            auto isolate = v8::Isolate::GetCurrent();
-
-            for (auto i = 0u; i < len; ++i)
-            {
-                auto vi = arr.first->Get(isolate->GetCurrentContext(), i).ToLocalChecked();
-                if (!vi->IsString()) return string_vector();
-
-                v8::String::Utf8Value val(v8::Isolate::GetCurrent(), vi->ToString(isolate->GetCurrentContext()).ToLocalChecked());
-                res.push_back(std::string(*val, val.length()));
-            }
-        }
-
-        return res;
-    }
+    std::vector<std::string> eatAndConvertStringArray();
 
     // Expected array of JS objects which has two properties:
     //	name - string, column name
     //	type - integer, column type
-    std::vector<column_info> eatAndConvertColumnsInfoArray(void)
-    {
-        using column_vector = std::vector<column_info>;
-        column_vector res;
+    std::vector<column_info> eatAndConvertColumnsInfoArray();
 
-        auto arr = eatArray();
+    std::vector<qdb_ts_blob_point> eatAndConvertBlobPointsArray();
+    std::vector<qdb_ts_double_point> eatAndConvertDoublePointsArray();
+    std::vector<qdb_ts_int64_point> eatAndConvertInt64PointsArray();
+    std::vector<qdb_ts_timestamp_point> eatAndConvertTimestampPointsArray();
 
-        if (arr.second)
-        {
-            auto len = arr.first->Length();
-            res.reserve(len);
-
-            auto isolate = v8::Isolate::GetCurrent();
-
-            auto nameProp = v8::String::NewFromUtf8(isolate, "name", v8::NewStringType::kNormal).ToLocalChecked();
-            auto typeProp = v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked();
-
-            for (auto i = 0u; i < len; ++i)
-            {
-                auto vi = arr.first->Get(isolate->GetCurrentContext(), i).ToLocalChecked();
-                if (!vi->IsObject()) return column_vector();
-
-                auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
-                if (maybe_obj.IsEmpty())
-                {
-                    return column_vector();
-                }
-                auto obj = maybe_obj.ToLocalChecked();
-                auto name = obj->Get(isolate->GetCurrentContext(), nameProp).ToLocalChecked();
-                auto type = obj->Get(isolate->GetCurrentContext(), typeProp).ToLocalChecked();
-
-                if (!name->IsString() || !type->IsNumber())
-                {
-                    return column_vector();
-                }
-
-                v8::String::Utf8Value sval(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
-
-                auto maybe_type = type->Int32Value(isolate->GetCurrentContext());
-                if (maybe_type.IsNothing())
-                {
-                    return column_vector();
-                }
-
-                res.emplace_back(std::string(*sval, sval.length()), qdb_ts_column_type_t(maybe_type.FromJust()));
-            }
-        }
-
-        return res;
-    }
-
-    template <typename Type, typename Func>
-    std::vector<Type> eatAndConvertPointsArray(Func f)
-    {
-        using point_vector = std::vector<Type>;
-        point_vector res;
-
-        auto arr = eatArray();
-        if (arr.second)
-        {
-            auto len = arr.first->Length();
-            res.reserve(len);
-
-            auto isolate = v8::Isolate::GetCurrent();
-            auto context = isolate->GetCurrentContext();
-
-            auto tsProp = v8::String::NewFromUtf8(isolate, "timestamp", v8::NewStringType::kNormal).ToLocalChecked();
-            auto valueProp = v8::String::NewFromUtf8(isolate, "value", v8::NewStringType::kNormal).ToLocalChecked(); 
-
-            for (auto i = 0u; i < len; ++i)
-            {
-                auto vi = arr.first->Get(context, i).ToLocalChecked();
-                if (!vi->IsObject()) return point_vector();
-
-                auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
-                if (maybe_obj.IsEmpty()) return point_vector();
-
-                auto obj = maybe_obj.ToLocalChecked();
-                auto date = obj->Get(context, tsProp).ToLocalChecked();
-                auto value = obj->Get(context, valueProp).ToLocalChecked();
-
-                if (!Timestamp::InstanceOf(isolate, date)) return point_vector();
-
-                auto maybe_timestamp = date->ToObject(context);
-                if (maybe_timestamp.IsEmpty())
-                {
-                    return point_vector();
-                }
-
-                auto timestamp = node::ObjectWrap::Unwrap<Timestamp>(maybe_timestamp.ToLocalChecked());
-                auto point = f(timestamp->getTimespec(), value);
-
-                if (!point.second) return point_vector();
-                res.push_back(point.first);
-            }
-        }
-
-        return res;
-    }
-
-    std::vector<qdb_ts_double_point> eatAndConvertDoublePointsArray(void)
-    {
-        return eatAndConvertPointsArray<qdb_ts_double_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
-            qdb_ts_double_point p;
-
-            if (!value->IsNumber()) return std::make_pair(p, false);
-
-            auto isolate = v8::Isolate::GetCurrent();
-
-            p.timestamp = ts;
-
-            auto maybe_value = value->NumberValue(isolate->GetCurrentContext());
-            if (maybe_value.IsNothing())
-            {
-                return std::make_pair(p, false);
-            }
-
-            p.value = maybe_value.FromJust();
-            return std::make_pair(p, true);
-        });
-    }
-
-    std::vector<qdb_ts_blob_point> eatAndConvertBlobPointsArray(void)
-    {
-        return eatAndConvertPointsArray<qdb_ts_blob_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
-            qdb_ts_blob_point p;
-
-            if (!value->IsObject()) return std::make_pair(p, false);
-
-            p.timestamp = ts;
-            p.content = node::Buffer::Data(value);
-            p.content_length = node::Buffer::Length(value);
-            return std::make_pair(p, true);
-        });
-    }
-
-    std::vector<qdb_ts_int64_point> eatAndConvertInt64PointsArray(void)
-    {
-        return eatAndConvertPointsArray<qdb_ts_int64_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
-            qdb_ts_int64_point p;
-
-            if (!value->IsNumber()) return std::make_pair(p, false);
-
-            auto isolate = v8::Isolate::GetCurrent();
-
-            p.timestamp = ts;
-
-            auto maybe_value = value->IntegerValue(isolate->GetCurrentContext());
-            if (maybe_value.IsNothing())
-            {
-                return std::make_pair(p, false);
-            }
-
-            p.value = maybe_value.FromJust();
-            return std::make_pair(p, true);
-        });
-    }
-
-    std::vector<qdb_ts_timestamp_point> eatAndConvertTimestampPointsArray(void)
-    {
-        return eatAndConvertPointsArray<qdb_ts_timestamp_point>([](qdb_timespec_t ts, v8::Local<v8::Value> value) {
-            qdb_ts_timestamp_point p;
-            auto isolate = v8::Isolate::GetCurrent();
-            auto context = isolate->GetCurrentContext();
-
-            if (!Timestamp::InstanceOf(isolate, value)) return std::make_pair(p, false);
-
-            auto maybe_timestamp_value = value->ToObject(context);
-            if (maybe_timestamp_value.IsEmpty())
-            {
-                return std::make_pair(p, false);
-            }
-
-            auto timestamp_value = node::ObjectWrap::Unwrap<Timestamp>(maybe_timestamp_value.ToLocalChecked());
-
-            p.timestamp = ts;
-            p.value = timestamp_value->getTimespec();
-
-            return std::make_pair(p, true);
-        });
-    }
-
-    std::vector<qdb_ts_range_t> eatAndConvertRangeArray(void)
-    {
-        using range_vector = std::vector<qdb_ts_range_t>;
-        range_vector res;
-
-        auto arr = eatArray();
-        if (arr.second)
-        {
-            auto len = arr.first->Length();
-            res.reserve(len);
-
-            auto isolate = v8::Isolate::GetCurrent();
-
-            for (auto i = 0u; i < len; ++i)
-            {
-                auto vi = arr.first->Get(isolate->GetCurrentContext(), i).ToLocalChecked();
-                if (!vi->IsObject()) return range_vector();
-
-                auto maybe_obj = vi->ToObject(isolate->GetCurrentContext());
-                if (maybe_obj.IsEmpty()) return range_vector();
-
-                auto obj = node::ObjectWrap::Unwrap<TsRange>(maybe_obj.ToLocalChecked());
-                assert(obj);
-
-                res.push_back(obj->nativeRange());
-            }
-        }
-
-        return res;
-    }
+    std::vector<qdb_ts_range_t> eatAndConvertRangeArray();
 
     template <typename Type>
-    std::vector<Type> eatAndConvertAggrArray(void)
+    std::vector<Type> eatAndConvertAggrArray()
     {
         using aggr_vector = std::vector<Type>;
         aggr_vector res;
@@ -813,42 +523,14 @@ public:
         return res;
     }
 
-    v8::Local<v8::Object> eatHolder(void)
+    v8::Local<v8::Object> eatHolder()
     {
         return _method.holder();
     }
 
-    std::string eatAndConvertTsAlias(void)
-    {
-        auto holder = _method.holder();
-        auto isolate = v8::Isolate::GetCurrent();
-        auto tsProp = v8::String::NewFromUtf8(isolate, "timeseries", v8::NewStringType::kNormal).ToLocalChecked();
+    std::string eatAndConvertTsAlias();
 
-        auto ts = holder->Get(isolate->GetCurrentContext(), tsProp).ToLocalChecked();
-        if (!ts->IsString()) return std::string();
-
-        return convertString(ts->ToString(isolate->GetCurrentContext()).ToLocalChecked());
-    }
-
-    qdb_request::slice eatAndConvertBuffer(void)
-    {
-        auto buf = eatObject();
-
-        qdb_request::slice res;
-
-        if (buf.second)
-        {
-            res.begin = node::Buffer::Data(buf.first);
-            res.size = node::Buffer::Length(buf.first);
-        }
-        else
-        {
-            res.begin = nullptr;
-            res.size = 0;
-        }
-
-        return res;
-    }
+    qdb_request::slice eatAndConvertBuffer();
 
 private:
     const MethodMan & _method;
@@ -862,7 +544,6 @@ public:
     {
     }
 
-public:
     qdb_request & none(qdb_request & req)
     {
         return req;
@@ -970,7 +651,6 @@ public:
         return req;
     }
 
-public:
     bool bindCallback(qdb_request & req)
     {
         auto callback = _eater.eatCallback();
@@ -983,7 +663,6 @@ public:
         return callback.second;
     }
 
-public:
     qdb_request & eatThem(qdb_request & req)
     {
         return req;

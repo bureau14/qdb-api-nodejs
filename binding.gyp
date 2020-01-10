@@ -41,6 +41,7 @@
         "src/ts_aggregation.cpp",
         "src/ts_aggregation.hpp",
         "src/cluster_data.hpp",
+        "src/utilities.cpp",
         "src/utilities.hpp",
         "src/time.cpp",
         "src/time.hpp",

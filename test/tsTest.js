@@ -237,13 +237,18 @@ describe('TimeSeries', function () {
         var columns = null
 
         before('init', function (done) {
-            var columnInfo = [qdb.DoubleColumnInfo('Col1'), qdb.BlobColumnInfo("Col2")]
+            var columnInfo = [qdb.DoubleColumnInfo('ColDouble'), qdb.BlobColumnInfo("ColBlob"), qdb.Int64ColumnInfo("ColInt64"), qdb.TimestampColumnInfo("ColTimestamp")]
             ts = insecureCluster.ts("points")
 
             ts.remove(function (err) {
                 ts.create(columnInfo, function (err, cols) {
                     test.must(err).be.equal(null);
                     test.should(cols.length).eql(columnInfo.length);
+
+                    test.should(cols[0].type).eql(qdb.TS_COLUMN_DOUBLE);
+                    test.should(cols[1].type).eql(qdb.TS_COLUMN_BLOB);
+                    test.should(cols[2].type).eql(qdb.TS_COLUMN_INT64);
+                    test.should(cols[3].type).eql(qdb.TS_COLUMN_TIMESTAMP);
 
                     columns = cols;
                     done();
@@ -283,6 +288,8 @@ describe('TimeSeries', function () {
             test.must(p.value.compare(v)).be.equal(0)
         });
 
+        // ========================================
+
         it('should insert double point', function (done) {
             var p = qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5)), 0.4);
             columns[0].insert([p], function (err) {
@@ -310,11 +317,32 @@ describe('TimeSeries', function () {
         it('should not insert blob point into double column', function (done) {
             var p = qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), Buffer.from("Hello", 'utf8'));
             columns[0].insert([p], function (err) {
-                test.must(err).be.equal(null);
+                test.must(err).not.be.equal(null);
 
                 done();
             });
         });
+
+        // FIXME(Marek): Currently we only check IsNumber, but we need to check if the point is a qdb.Int64Point.
+        it.skip('should not insert int64 point into double column', function (done) {
+            var p = qdb.Int64Point(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), 1337);
+            columns[0].insert([p], function (err) {
+                test.must(err).not.be.equal(null);
+
+                done();
+            });
+        });
+
+        it('should not insert timestamp point into double column', function (done) {
+            var p = qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), qdb.Timestamp.fromDate(new Date(2037, 1, 2, 12)));
+            columns[0].insert([p], function (err) {
+                test.must(err).not.be.equal(null);
+
+                done();
+            });
+        });
+
+        // ========================================
 
         it('should insert blob point', function (done) {
             var p = qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 6, 4)), Buffer.from("Well ", "utf8"));
@@ -342,6 +370,131 @@ describe('TimeSeries', function () {
         it('should not insert double point into blob column', function (done) {
             var p = qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 7, 4)), 13.37);
             columns[1].insert([p], function (err) {
+                test.must(err).not.be.equal(null);
+
+                done();
+            });
+        });
+
+        it('should not insert int64 point into blob column', function (done) {
+            var p = qdb.Int64Point(qdb.Timestamp.fromDate(new Date(2049, 10, 7, 4)), 1337);
+            columns[1].insert([p], function (err) {
+                test.must(err).not.be.equal(null);
+
+                done();
+            });
+        });
+
+        it('should not insert timestamp point into blob column', function (done) {
+            var p = qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), qdb.Timestamp.fromDate(new Date(2037, 1, 2, 12)));
+            columns[1].insert([p], function (err) {
+                test.must(err).not.be.equal(null);
+
+                done();
+            });
+        });
+
+        // ========================================
+
+        it('should insert int64 point', function (done) {
+            var p = qdb.Int64Point(qdb.Timestamp.fromDate(new Date(2049, 10, 5)), 4);
+            columns[2].insert([p], function (err) {
+                test.must(err).be.equal(null);
+
+                done();
+            });
+        });
+
+        it('should insert multiple int64 points', function (done) {
+            var points = [
+                qdb.Int64Point(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)), 4),
+                qdb.Int64Point(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), 5),
+                qdb.Int64Point(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), 6)
+            ];
+
+            columns[2].insert(points, function (err) {
+                test.must(err).be.equal(null);
+
+                done();
+            });
+        });
+
+
+        it('should not insert blob point into int64 column', function (done) {
+            var p = qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), Buffer.from("Hello", 'utf8'));
+            columns[2].insert([p], function (err) {
+                test.must(err).not.be.equal(null);
+
+                done();
+            });
+        });
+
+        // FIXME(Marek): Currently we only check IsNumber, but we need to check if the point is a qdb.DoublePoint.
+        it.skip('should not insert double point into int64 column', function (done) {
+            var p = qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), 13.37);
+            columns[2].insert([p], function (err) {
+                test.must(err).not.be.equal(null);
+
+                done();
+            });
+        });
+
+        it('should not insert timestamp point into int64 column', function (done) {
+            var p = qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), qdb.Timestamp.fromDate(new Date(2037, 1, 2, 12)));
+            columns[2].insert([p], function (err) {
+                test.must(err).not.be.equal(null);
+
+                done();
+            });
+        });
+
+        // ========================================
+
+        it('should insert timestamp point', function (done) {
+            var p = qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5)), qdb.Timestamp.fromDate(new Date(2037, 1, 2, 10)));
+            columns[3].insert([p], function (err) {
+                test.must(err).be.equal(null);
+
+                done();
+            });
+        });
+
+        it('should insert multiple timestamp points', function (done) {
+            var points = [
+                qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)), qdb.Timestamp.fromDate(new Date(2037, 1, 2, 11))),
+                qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), qdb.Timestamp.fromDate(new Date(2037, 1, 2, 12))),
+                qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), qdb.Timestamp.fromDate(new Date(2037, 1, 2, 13)))
+            ];
+
+            columns[3].insert(points, function (err) {
+                test.must(err).be.equal(null);
+
+                done();
+            });
+        });
+
+
+        it('should not insert blob point into timestamp column', function (done) {
+            var p = qdb.BlobPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), Buffer.from("Hello", 'utf8'));
+            columns[3].insert([p], function (err) {
+                test.must(err).not.be.equal(null);
+
+                done();
+            });
+        });
+
+        it('should not insert double point into timestamp column', function (done) {
+            var p = qdb.DoublePoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), 13.37);
+            columns[3].insert([p], function (err) {
+                test.must(err).not.be.equal(null);
+
+                done();
+            });
+        });
+
+        it('should not insert int64 point into timestamp column', function (done) {
+            var p = qdb.Int64Point(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 4)), 1337);
+            columns[3].insert([p], function (err) {
                 test.must(err).not.be.equal(null);
 
                 done();
