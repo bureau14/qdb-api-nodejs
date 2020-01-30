@@ -517,6 +517,13 @@ public:
                     columns->Set(isolate->GetCurrentContext(), j, v8::Number::New(isolate, pt.payload.count.value));
                     break;
                 }
+                case qdb_query_result_string:
+                {
+                    std::string str{reinterpret_cast<const char *>(pt.payload.string.content),
+                                     pt.payload.string.content_length};
+                    columns->Set(isolate->GetCurrentContext(), j, v8::String::NewFromUtf8(isolate, str.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
+                    break;
+                }
                 }
             }
             rows->Set(isolate->GetCurrentContext(), i, columns);
