@@ -40,3 +40,15 @@ tags
 *.swp
 .vscode/
 package-lock.json
+
+# Ignore test files
+cluster_private.key
+cluster_public.key
+insecure/
+qdbd_log_insecure.err.txt
+qdbd_log_insecure.out.txt
+qdbd_log_secure.err.txt
+qdbd_log_secure.out.txt
+secure/
+user_private.key
+users.cfg
