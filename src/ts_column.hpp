@@ -257,6 +257,41 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
+class StringColumn : public Column<StringColumn>
+{
+    friend class Column<StringColumn>;
+    friend class Entry<StringColumn>;
+
+    StringColumn(cluster_data_ptr cd, const char * name, const char * ts)
+        : Column<StringColumn>(cd, name, ts, qdb_ts_column_string)
+    {
+    }
+
+    virtual ~StringColumn(void)
+    {
+    }
+
+public:
+    static void Init(v8::Local<v8::Object> exports)
+    {
+        Column<StringColumn>::Init(exports, "StringColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
+            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", StringColumn::insert);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", StringColumn::ranges);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", StringColumn::aggregate);
+        });
+    }
+
+private:
+    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void ranges(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void aggregate(const v8::FunctionCallbackInfo<v8::Value> & args);
+
+    static void processStringPointArrayResult(uv_work_t * req, int status);
+    static void processStringAggregateResult(uv_work_t * req, int status);
+
+    static v8::Persistent<v8::Function> constructor;
+};
+
 class Int64Column : public Column<Int64Column>
 {
     friend class Column<Int64Column>;

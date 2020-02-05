@@ -55,7 +55,12 @@
         "test/rangeTest.js",
         "test/suffixTest.js",
         "test/tagTest.js",
-        "test/tsTest.js"
+        "test/tsBlobTest.js",
+        "test/tsDoubleTest.js",
+        "test/tsGeneralTest.js",
+        "test/tsInt64Test.js",
+        "test/tsStringTest.js",
+        "test/tsTimestampTest.js",
       ],
       "conditions": [
         [
