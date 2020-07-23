@@ -14,7 +14,7 @@
     "store"
   ],
   "main": "./index.js",
-  "version": "3.8.6",
+  "version": "3.8.7",
   "repository": {
     "type": "git",
     "url": "https://github.com/bureau14/qdb-api-nodejs"
