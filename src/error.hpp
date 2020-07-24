@@ -137,6 +137,14 @@ public:
         AddErrorCode(exports, "E_INVALID_CRYPTO_KEY", qdb_e_invalid_crypto_key);
         AddErrorCode(exports, "E_INVALID_QUERY", qdb_e_invalid_query);
         AddErrorCode(exports, "E_INVALID_REGEX", qdb_e_invalid_regex);
+<<<<<<< HEAD
+=======
+        AddErrorCode(exports, "E_UNKNOWN_USER", qdb_e_unknown_user);
+        AddErrorCode(exports, "E_INTERRUPTED", qdb_e_interrupted);
+        AddErrorCode(exports, "E_NETWORK_INBUF_TOO_SMALL", qdb_e_network_inbuf_too_small);
+        AddErrorCode(exports, "E_NETWORK_ERROR", qdb_e_network_error);
+        AddErrorCode(exports, "E_DATA_CORRUPTION", qdb_e_data_corruption);
+>>>>>>> 31ab971... Fix typo in error code
 
         auto maybe_function = tpl->GetFunction(isolate->GetCurrentContext());
         if (maybe_function.IsEmpty()) return;
