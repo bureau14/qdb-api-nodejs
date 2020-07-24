@@ -144,7 +144,7 @@ public:
         AddErrorCode(exports, "E_INVALID_REGEX", qdb_e_invalid_regex);
         AddErrorCode(exports, "E_UNKNOWN_USER", qdb_e_unknown_user);
         AddErrorCode(exports, "E_INTERRUPTED", qdb_e_interrupted);
-        AddErrorCode(exports, "E_NETWORK_INBUF_TOO_SMAL", qdb_e_network_inbuf_too_smal);
+        AddErrorCode(exports, "E_NETWORK_INBUF_TOO_SMALL", qdb_e_network_inbuf_too_small);
         AddErrorCode(exports, "E_NETWORK_ERROR", qdb_e_network_error);
         AddErrorCode(exports, "E_DATA_CORRUPTION", qdb_e_data_corruption);
 
