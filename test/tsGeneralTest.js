@@ -57,10 +57,20 @@ describe('Timeseries - General', function () {
         info: timestampMakeInfo(timestampName),
         makePoint: () => qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5)), qdb.Timestamp.fromDate(new Date(2049, 10, 5))),
     }
+    var symbolName = 'symbol'
+    var symbolMakeInfo = (n) => qdb.SymbolColumnInfo(n)
+    var symbolType = {
+        name: symbolName,
+        colName: `${symbolName}_col`,
+        index: 3,
+        makeInfo: (n) => symbolMakeInfo(n),
+        info: symbolMakeInfo(symbolName),
+        makePoint: () => qdb.SymbolPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5)), Buffer.from('content', 'utf8')),
+    }
 
-    var colTypes = [blobType,doubleType,int64Type,stringType,timestampType]
+    var colTypes = [blobType,doubleType,int64Type,stringType,timestampType,symbolType]
 
-    var columnInfos = [blobType.info, doubleType.info, int64Type.info, stringType.info, timestampType.info]
+    var columnInfos = [blobType.info, doubleType.info, int64Type.info, stringType.info, timestampType.info, symbolType.info]
 
     before('connect', function (done) {
         insecureCluster.connect(done, done);

@@ -84,13 +84,31 @@ private:
         MethodMan call(args);
         if (args.Length() != 1)
         {
-            call.throwException("Wrong number of arguments");
+            call.throwException("Wrong number of arguments: expected 'name'");
             return;
         }
 
         info->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "name", v8::NewStringType::kNormal).ToLocalChecked(), args[0]);
         info->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked(), v8::Integer::New(isolate, type));
-        info->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "symtable", v8::NewStringType::kNormal).ToLocalChecked(), args[0]);
+
+        args.GetReturnValue().Set(info);
+    }
+    template <>
+    static void columnInfoTpl<qdb_ts_symbol_column>(const v8::FunctionCallbackInfo<v8::Value> & args)
+    {
+        v8::Isolate * isolate = args.GetIsolate();
+        v8::Local<v8::Object> info = v8::Object::New(isolate);
+
+        MethodMan call(args);
+        if (args.Length() != 2)
+        {
+            call.throwException("Wrong number of arguments: expected 'name', 'symtable'");
+            return;
+        }
+
+        info->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "name", v8::NewStringType::kNormal).ToLocalChecked(), args[0]);
+        info->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked(), v8::Integer::New(isolate, type));
+        info->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "symtable", v8::NewStringType::kNormal).ToLocalChecked(), args[1]);
 
         args.GetReturnValue().Set(info);
     }
