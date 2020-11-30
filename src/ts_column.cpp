@@ -13,6 +13,7 @@ v8::Persistent<v8::Function> StringColumn::constructor;
 v8::Persistent<v8::Function> DoubleColumn::constructor;
 v8::Persistent<v8::Function> Int64Column::constructor;
 v8::Persistent<v8::Function> TimestampColumn::constructor;
+v8::Persistent<v8::Function> SymbolColumn::constructor;
 
 void BlobColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
@@ -183,6 +184,62 @@ void DoubleColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
             qdb_req->output.error = qdb_ts_double_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
         },
         DoubleColumn::processDoubleAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::doubleAggregations);
+}
+
+void StringColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    Column<StringColumn>::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            const auto & points = qdb_req->input.content.string_points;
+
+            // FIXME(Marek): It's a poor man's hack, because ArgsEaterBinder::stringPoints returns an empty collection
+            // when an incorrect input has been given. But C API accepts 0-sized inputs.
+            if (points.empty())
+            {
+                qdb_req->output.error = qdb_e_invalid_argument;
+            }
+            else
+            {
+                qdb_req->output.error = qdb_ts_string_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+            }
+        },
+        Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::stringPoints);
+}
+
+void SymbolColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    SymbolColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            auto & ranges = qdb_req->input.content.ranges;
+            auto bufp =
+                reinterpret_cast<qdb_ts_symbol_point **>(const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+            auto count = &(qdb_req->output.content.buffer.size);
+
+            qdb_req->output.error =
+                qdb_ts_symbol_get_ranges(qdb_req->handle(), ts, alias, ranges.data(), ranges.size(), bufp, count);
+        },
+        SymbolColumn::processSymbolPointArrayResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::ranges);
+}
+
+void SymbolColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    SymbolColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            qdb_ts_symbol_aggregation_t * aggrs = qdb_req->input.content.symbol_aggrs.data();
+            const qdb_size_t count = qdb_req->input.content.symbol_aggrs.size();
+
+            qdb_req->output.error = qdb_ts_symbol_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
+        },
+        SymbolColumn::processSymbolAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::symbolAggregations);
 }
 
 void BlobColumn::processBlobPointArrayResult(uv_work_t * req, int status)

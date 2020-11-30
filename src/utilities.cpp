@@ -121,6 +121,7 @@ std::vector<column_info> ArgsEater::eatAndConvertColumnsInfoArray()
 
     auto nameProp = v8::String::NewFromUtf8(isolate, "name", v8::NewStringType::kNormal).ToLocalChecked();
     auto typeProp = v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked();
+    auto symtableProp = v8::String::NewFromUtf8(isolate, "symtable", v8::NewStringType::kNormal).ToLocalChecked();
 
     return eatAndConvertArray<column_info>(*this, [&](v8::Local<v8::Value> vi) {
         if (!vi->IsObject()) return std::make_pair(column_info{}, false);
@@ -131,6 +132,7 @@ std::vector<column_info> ArgsEater::eatAndConvertColumnsInfoArray()
         auto obj = maybe_obj.ToLocalChecked();
         auto name = obj->Get(isolate->GetCurrentContext(), nameProp).ToLocalChecked();
         auto type = obj->Get(isolate->GetCurrentContext(), typeProp).ToLocalChecked();
+        auto symtable = obj->Get(isolate->GetCurrentContext(), symtableProp).ToLocalChecked();
 
         if (!name->IsString() || !type->IsNumber())
         {

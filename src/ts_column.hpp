@@ -362,6 +362,41 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
+class SymbolColumn : public Column<SymbolColumn>
+{
+    friend class Column<SymbolColumn>;
+    friend class Entry<SymbolColumn>;
+
+    SymbolColumn(cluster_data_ptr cd, const char * name, const char * ts)
+        : Column<SymbolColumn>(cd, name, ts, qdb_ts_column_symbol)
+    {
+    }
+
+    virtual ~SymbolColumn(void)
+    {
+    }
+
+public:
+    static void Init(v8::Local<v8::Object> exports)
+    {
+        Column<SymbolColumn>::Init(exports, "SymbolColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
+            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", SymbolColumn::insert);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", SymbolColumn::ranges);
+            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", SymbolColumn::aggregate);
+        });
+    }
+
+private:
+    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void ranges(const v8::FunctionCallbackInfo<v8::Value> & args);
+    static void aggregate(const v8::FunctionCallbackInfo<v8::Value> & args);
+
+    static void processSymbolPointArrayResult(uv_work_t * req, int status);
+    static void processSymbolAggregateResult(uv_work_t * req, int status);
+
+    static v8::Persistent<v8::Function> constructor;
+};
+
 std::pair<v8::Local<v8::Object>, bool>
 CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type);
 

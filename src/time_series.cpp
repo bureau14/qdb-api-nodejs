@@ -21,8 +21,8 @@ void TimeSeries::processArrayColumnsInfoResult(uv_work_t * req, int status)
         auto error_code = processErrorCode(isolate, status, qdb_req);
         if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
         {
-            qdb_ts_column_info_t * entries =
-                reinterpret_cast<qdb_ts_column_info_t *>(const_cast<void *>(qdb_req->output.content.buffer.begin));
+            auto entries =
+                reinterpret_cast<qdb_ts_column_info_ex_t *>(const_cast<void *>(qdb_req->output.content.buffer.begin));
             const size_t entries_count = qdb_req->output.content.buffer.size;
 
             array = v8::Array::New(isolate, static_cast<int>(entries_count));
