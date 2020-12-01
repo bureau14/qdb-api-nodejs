@@ -308,6 +308,21 @@ std::vector<qdb_ts_timestamp_point> ArgsEater::eatAndConvertTimestampPointsArray
     });
 }
 
+std::vector<qdb_ts_symbol_point> ArgsEater::eatAndConvertSymbolPointsArray()
+{
+    return eatAndConvertPointsArray<qdb_ts_symbol_point>(*this, [&](qdb_timespec_t ts, v8::Local<v8::Value> value) {
+        qdb_ts_symbol_point p;
+        auto isolate = v8::Isolate::GetCurrent();
+
+        if (!InstanceOfBuffer(isolate, value)) return std::make_pair(p, false);
+
+        p.timestamp = ts;
+        p.content = node::Buffer::Data(value);
+        p.content_length = node::Buffer::Length(value);
+        return std::make_pair(p, true);
+    });
+}
+
 std::vector<qdb_ts_range_t> ArgsEater::eatAndConvertRangeArray()
 {
     auto isolate = v8::Isolate::GetCurrent();
