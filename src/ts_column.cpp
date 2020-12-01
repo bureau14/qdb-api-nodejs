@@ -186,16 +186,16 @@ void DoubleColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
         DoubleColumn::processDoubleAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::doubleAggregations);
 }
 
-void StringColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
+void SymbolColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
-    Column<StringColumn>::queue_work(
+    Column<SymbolColumn>::queue_work(
         args,
         [](qdb_request * qdb_req) {
             const auto alias = qdb_req->input.alias.c_str();
             const auto ts = qdb_req->input.content.str.c_str();
-            const auto & points = qdb_req->input.content.string_points;
+            const auto & points = qdb_req->input.content.symbol_points;
 
-            // FIXME(Marek): It's a poor man's hack, because ArgsEaterBinder::stringPoints returns an empty collection
+            // FIXME(Marek): It's a poor man's hack, because ArgsEaterBinder::symbolPoints returns an empty collection
             // when an incorrect input has been given. But C API accepts 0-sized inputs.
             if (points.empty())
             {
@@ -203,10 +203,10 @@ void StringColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
             }
             else
             {
-                qdb_req->output.error = qdb_ts_string_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+                qdb_req->output.error = qdb_ts_symbol_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
             }
         },
-        Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::stringPoints);
+        Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::symbolPoints);
 }
 
 void SymbolColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
