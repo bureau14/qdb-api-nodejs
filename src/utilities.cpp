@@ -138,7 +138,7 @@ std::vector<column_info> ArgsEater::eatAndConvertColumnsInfoArray()
             return std::make_pair(column_info{}, false);
         }
 
-        auto name_val = v8::String::Utf8Value(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
+        v8::String::Utf8Value name_val(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
         auto maybe_type = type->Int32Value(isolate->GetCurrentContext());
         if (maybe_type.IsNothing())
         {
@@ -159,7 +159,7 @@ std::vector<column_info> ArgsEater::eatAndConvertColumnsInfoArray()
             return std::make_pair(column_info{}, false);
         }
 
-        auto symtable_val = v8::String::Utf8Value(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
+        v8::String::Utf8Value symtable_val(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
         col.symtable = {*symtable_val, static_cast<size_t>(symtable_val.length())};
         return std::make_pair(std::move(col), true);
     });
