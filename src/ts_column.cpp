@@ -419,6 +419,95 @@ void StringColumn::processStringAggregateResult(uv_work_t * req, int status)
     });
 }
 
+
+void SymbolColumn::processSymbolPointArrayResult(uv_work_t * req, int status)
+{
+    processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+        v8::Local<v8::Array> array;
+
+        auto error_code = processErrorCode(isolate, status, qdb_req);
+        if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+        {
+            qdb_ts_symbol_point * entries =
+                reinterpret_cast<qdb_ts_symbol_point *>(const_cast<void *>(qdb_req->output.content.buffer.begin));
+            const size_t entries_count = qdb_req->output.content.buffer.size;
+
+            array = v8::Array::New(isolate, static_cast<int>(entries_count));
+            if (array.IsEmpty())
+            {
+                error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
+            }
+            else
+            {
+                for (size_t i = 0; i < entries_count; ++i)
+                {
+                    auto obj = SymbolPoint::MakePointWithCopy(isolate, entries[i].timestamp, entries[i].content,
+                                                            entries[i].content_length);
+
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
+                }
+            }
+
+            // safe to call even on null/invalid buffers
+            qdb_release(qdb_req->handle(), entries);
+        }
+        else
+        {
+            // provide an empty array
+            array = v8::Array::New(isolate, 0);
+        }
+
+        return make_value_array(error_code, array);
+    });
+}
+
+void SymbolColumn::processSymbolAggregateResult(uv_work_t * req, int status)
+{
+    processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+        v8::Local<v8::Array> array;
+
+        auto error_code = processErrorCode(isolate, status, qdb_req);
+        if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+        {
+            const auto & aggrs = qdb_req->input.content.symbol_aggrs;
+            array = v8::Array::New(isolate, static_cast<int>(aggrs.size()));
+
+            if (array.IsEmpty())
+            {
+                error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
+            }
+            else
+            {
+                auto resprop = v8::String::NewFromUtf8(isolate, "result", v8::NewStringType::kNormal).ToLocalChecked();
+                auto cntprop = v8::String::NewFromUtf8(isolate, "count", v8::NewStringType::kNormal).ToLocalChecked();
+
+                for (size_t i = 0; i < aggrs.size(); ++i)
+                {
+                    const auto & point = aggrs[i].result;
+                    auto result =
+                        SymbolPoint::MakePointWithCopy(isolate, point.timestamp, point.content, point.content_length);
+
+                    auto obj = v8::Object::New(isolate);
+                    obj->Set(isolate->GetCurrentContext(), resprop, result);
+                    obj->Set(isolate->GetCurrentContext(), cntprop,
+                             v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
+
+                    // safe to call even on null/invalid buffers
+                    qdb_release(qdb_req->handle(), point.content);
+                }
+            }
+        }
+        else
+        {
+            // provide an empty array
+            array = v8::Array::New(isolate, 0);
+        }
+
+        return make_value_array(error_code, array);
+    });
+}
+
 void DoubleColumn::processDoublePointArrayResult(uv_work_t * req, int status)
 {
     processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
