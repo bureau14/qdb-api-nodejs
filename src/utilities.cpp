@@ -159,7 +159,7 @@ std::vector<column_info> ArgsEater::eatAndConvertColumnsInfoArray()
             return std::make_pair(column_info{}, false);
         }
 
-        v8::String::Utf8Value symtable_val(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
+        v8::String::Utf8Value symtable_val(isolate, symtable->ToString(isolate->GetCurrentContext()).ToLocalChecked());
         col.symtable = {*symtable_val, static_cast<size_t>(symtable_val.length())};
         return std::make_pair(std::move(col), true);
     });
