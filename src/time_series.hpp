@@ -94,7 +94,7 @@ private:
         args.GetReturnValue().Set(info);
     }
     template <>
-    static void columnInfoTpl<qdb_ts_symbol_column>(const v8::FunctionCallbackInfo<v8::Value> & args)
+    static void columnInfoTpl<qdb_ts_column_symbol>(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         v8::Isolate * isolate = args.GetIsolate();
         v8::Local<v8::Object> info = v8::Object::New(isolate);
