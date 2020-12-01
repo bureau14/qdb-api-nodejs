@@ -132,23 +132,34 @@ std::vector<column_info> ArgsEater::eatAndConvertColumnsInfoArray()
         auto obj = maybe_obj.ToLocalChecked();
         auto name = obj->Get(isolate->GetCurrentContext(), nameProp).ToLocalChecked();
         auto type = obj->Get(isolate->GetCurrentContext(), typeProp).ToLocalChecked();
-        auto symtable = obj->Get(isolate->GetCurrentContext(), symtableProp).ToLocalChecked();
 
         if (!name->IsString() || !type->IsNumber())
         {
             return std::make_pair(column_info{}, false);
         }
 
-        v8::String::Utf8Value sval(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
-
+        auto sval = v8::String::Utf8Value(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
         auto maybe_type = type->Int32Value(isolate->GetCurrentContext());
         if (maybe_type.IsNothing())
         {
             return std::make_pair(column_info{}, false);
         }
 
-        return std::make_pair(
-            column_info{std::string(*sval, sval.length()), qdb_ts_column_type_t(maybe_type.FromJust())}, true);
+        column_info col;
+        col.name = {*sval, sval.length()};
+        col.type = maybe_type.FromJust();
+
+        auto symtable = obj->Get(isolate->GetCurrentContext(), symtableProp).ToLocalChecked();
+        if (!symtable) return std::make_pair(std::move(col), true);
+
+        if (!symtable->IsString())
+        {
+            return std::make_pair(column_info{}, false);
+        }
+
+        sval = {isolate, symtable->ToString(isolate->GetCurrentContext()).ToLocalChecked()};
+        col.symtable = {*sval, sval.length()};
+        return std::make_pair(std::move(col), true);
     });
 }
 
