@@ -8,6 +8,7 @@
 #include <uv.h>
 #include <memory>
 #include <string>
+#include <iostream>
 
 namespace quasardb
 {
@@ -123,6 +124,7 @@ private:
                     info.name = ci.name.c_str();
                     info.type = ci.type;
                     info.symtable = ci.symtable.c_str();
+                    std::cout << "ADD COL " << ci.name << ", " << ci.symtable << "(" << (int)ci.type << ")" << std::endl;
                     return info;
                 });
 
