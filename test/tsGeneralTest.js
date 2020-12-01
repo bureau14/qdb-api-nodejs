@@ -58,7 +58,7 @@ describe('Timeseries - General', function () {
         makePoint: () => qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5)), qdb.Timestamp.fromDate(new Date(2049, 10, 5))),
     }
     var symbolName = 'symbol'
-    var symbolMakeInfo = (n) => qdb.SymbolColumnInfo(n)
+    var symbolMakeInfo = (n) => qdb.SymbolColumnInfo(n, 'my_symtable')
     var symbolType = {
         name: symbolName,
         colName: `${symbolName}_col`,
