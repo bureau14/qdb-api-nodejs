@@ -74,6 +74,20 @@ public:
         return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
     }
 
+    static v8::Local<v8::Object> MakeColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, const char * symtable)
+    {
+        static const size_t argc = Derivate::ParametersCount;
+
+        v8::Local<v8::Value> argv[argc] = {
+            owner,
+            v8::String::NewFromUtf8(isolate, name, v8::NewStringType::kNormal).ToLocalChecked(),
+            v8::String::NewFromUtf8(isolate, symtable, v8::NewStringType::kNormal).ToLocalChecked(),
+        };
+        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
+        assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
+        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+    }
+
     std::string timeSeries(void) const
     {
         return ts;

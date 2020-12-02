@@ -870,7 +870,7 @@ void TimestampColumn::processTimestampAggregateResult(uv_work_t * req, int statu
 }
 
 std::pair<v8::Local<v8::Object>, bool>
-CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type)
+CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type, const char * symtable)
 {
     switch (type)
     {
@@ -884,6 +884,8 @@ CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * na
         return std::make_pair(TimestampColumn::MakeColumn(isolate, owner, name), true);
     case qdb_ts_column_int64:
         return std::make_pair(Int64Column::MakeColumn(isolate, owner, name), true);
+    case qdb_ts_column_symbol:
+        return std::make_pair(SymbolColumn::MakeColumn(isolate, owner, name, symtable), true);
     case qdb_ts_column_uninitialized:
         return std::make_pair(Error::MakeError(isolate, qdb_e_uninitialized), false);
     }
