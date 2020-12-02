@@ -10,6 +10,7 @@
 #include <uv.h>
 #include <memory>
 #include <string>
+#include <iostream>
 
 namespace quasardb
 {
@@ -71,7 +72,11 @@ public:
         };
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
-        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+
+        std::cout << "DO COL" << std::endl;
+        auto o = (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+        std::cout << "DO COL" << std::endl;
+        return o;
     }
 
     static v8::Local<v8::Object> MakeColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, const char * symtable)
@@ -85,7 +90,11 @@ public:
         };
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
-        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+
+        std::cout << "DO COL SYMTABLE" << std::endl;
+        auto o = (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+        std::cout << "DID COL SYMTABLE" << std::endl;
+        return o;
     }
 
     std::string timeSeries(void) const
