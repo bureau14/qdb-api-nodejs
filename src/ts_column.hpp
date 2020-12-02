@@ -92,6 +92,7 @@ public:
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
 
         std::cout << "DO COL SYMTABLE" << std::endl;
+        std::cout << "DONKEY SHIT ? " << cons.IsEmpty() << std::endl;
         auto o = (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
         std::cout << "DID COL SYMTABLE" << std::endl;
         return o;
@@ -149,8 +150,10 @@ private:
 
     static void New(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
+        std::cout << "NEW BEGIN" << std::endl;
         if (args.IsConstructCall())
         {
+            std::cout << "NEW IF" << std::endl;
             // Invoked as constructor: `new MyObject(...)`
             MethodMan call(args);
             if (args.Length() != ParametersCount)
@@ -158,6 +161,7 @@ private:
                 call.throwException("Wrong number of arguments");
                 return;
             }
+            std::cout << "NEW 1" << std::endl;
 
             ArgsEater argsEater(call);
             auto owner = argsEater.eatObject();
@@ -166,9 +170,11 @@ private:
                 call.throwException("Invalid parameter supplied to object");
                 return;
             }
+            std::cout << "NEW 2" << std::endl;
 
             TimeSeries * ts = node::ObjectWrap::Unwrap<TimeSeries>(owner.first);
             assert(ts);
+            std::cout << "NEW 3" << std::endl;
 
             auto str = argsEater.eatString();
             if (!str.second)
@@ -176,16 +182,22 @@ private:
                 call.throwException("Invalid parameter supplied to object");
                 return;
             }
+            std::cout << "NEW 4" << std::endl;
             v8::String::Utf8Value colname(args.GetIsolate(), str.first);
 
+            std::cout << "NEW 5" << std::endl;
             auto obj = new Derivate(ts->cluster_data(), *colname, ts->native_alias().c_str());
+            std::cout << "NEW 6" << std::endl;
             obj->Wrap(args.This());
+            std::cout << "NEW 7" << std::endl;
             args.GetReturnValue().Set(args.This());
         }
         else
         {
+            std::cout << "NEW ELSE" << std::endl;
             NewInstance(args);
         }
+        std::cout << "NEW END" << std::endl;
     }
 
     template <typename Func>
