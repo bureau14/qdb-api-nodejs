@@ -75,7 +75,7 @@ public:
 
         std::cout << "DO COL" << std::endl;
         auto o = (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
-        std::cout << "DO COL" << std::endl;
+        std::cout << "DID COL" << std::endl;
         return o;
     }
 
@@ -126,14 +126,25 @@ private:
 
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
+        std::cout << "NEW INSTANCE BEGIN" << std::endl;
+
         v8::Isolate * isolate = args.GetIsolate();
+        std::cout << "NEW INSTANCE 1" << std::endl;
 
         static const int argc = ParametersCount;
         v8::Local<v8::Value> argv[argc] = {args[0], args[1]};
+        if (argc == 3) {
+            argv[2] = args[2];
+        std::cout << "NEW INSTANCE SYMTABLE" << std::endl;
+        }
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
+        std::cout << "NEW INSTANCE 2" << std::endl;
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
+        std::cout << "NEW INSTANCE 3" << std::endl;
         v8::MaybeLocal<v8::Object> instance = cons->NewInstance(isolate->GetCurrentContext(), argc, argv);
+        std::cout << "NEW INSTANCE 4" << std::endl;
         args.GetReturnValue().Set(instance.ToLocalChecked());
+        std::cout << "NEW INSTANCE END" << std::endl;
     }
 
     static void New(const v8::FunctionCallbackInfo<v8::Value> & args)
