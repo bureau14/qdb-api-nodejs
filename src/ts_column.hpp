@@ -386,6 +386,8 @@ class SymbolColumn : public Column<SymbolColumn>
     {
     }
 
+    static const size_t ParametersCount = 3;
+
     virtual ~SymbolColumn(void)
     {
     }
