@@ -129,8 +129,25 @@ private:
                 });
 
                 auto alias = qdb_req->input.alias.c_str();
+
+                std::cout << "CREATE TABLE: table=" << alias << ", cols={ ";
+                for (const auto& c : cols) {
+                    std::cout << "(name=" << c.name << ", type=" << c.type;
+                    if (c.symtable) {
+                        std::cout << ", symtable=" << c.symtable;
+                    }
+                    std::cout << ") ";
+                }
+                std::cout << "}" << std::endl;
                 qdb_req->output.error =
                     qdb_ts_create_ex(qdb_req->handle(), alias, qdb_d_default_shard_size, cols.data(), cols.size());
+
+                qdb_error_t err;
+                qdb_string_t msg;
+                qdb_get_last_error(qdb_req->handle(), &err, &msg);
+                if (QDB_FAILURE(err)) {
+                    std::cout << "GOT ERROR: " << msg << std::endl;
+                }
             },
             TimeSeries::processColumnsCreateResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
     }
