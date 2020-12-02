@@ -14,6 +14,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <iostream>
 #include <type_traits>
 
 namespace quasardb
