@@ -146,7 +146,16 @@ private:
                 qdb_string_t msg;
                 qdb_get_last_error(qdb_req->handle(), &err, &msg);
                 if (QDB_FAILURE(err)) {
-                    std::cout << "GOT ERROR: " << msg.data << std::endl;
+                    std::cout << "GOT LAST ERROR: " << msg.data << std::endl;
+                }
+                else {
+                    std::cout << "GOT LAST SUCCESS" << std::endl;
+                }
+                if (QDB_FAILURE(qdb_req->output.error)) {
+                    std::cout << "GOT OUT ERROR: " << qdb_error(qdb_req->output.error) << std::endl;
+                }
+                else {
+                    std::cout << "GOT OUT SUCCESS" << std::endl;
                 }
             },
             TimeSeries::processColumnsCreateResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
