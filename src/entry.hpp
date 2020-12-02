@@ -389,6 +389,7 @@ protected:
     {
         if (status < 0)
         {
+            std::cout << "MAP ERROR INTERNAL" << std::endl;
             return Error::MakeError(isolate, qdb_e_internal_local);
         }
 
@@ -396,10 +397,12 @@ protected:
         // in other cases, even if it is informational we want to create it
         if ((req->output.error == qdb_e_ok) || (req->output.error == qdb_e_ok_created))
         {
+            std::cout << "MAP SUCCESS" << std::endl;
             // nullptr for success
             return v8::Null(isolate);
         }
 
+        std::cout << "MAP ERROR: " << qdb_error(req->output.error) << std::endl;
         return Error::MakeError(isolate, req->output.error); // req->output.error);
     }
 
