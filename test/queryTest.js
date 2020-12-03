@@ -85,10 +85,10 @@ describe('Query', function () {
     it('should retrieve all points', function (done) {
         cluster.query('select * from query_test').run(function (err, output) {
             test.must(err).be.equal(null);
-            test.must(output.scanned_point_count).be.equal(15);
+            test.must(output.scanned_point_count).be.equal(18);
             test.must(output.error_message).be.empty();
 
-            test.must(output.column_count).be.equal(7);
+            test.must(output.column_count).be.equal(8);
             test.must(output.column_names[0]).be.equal('$timestamp');
             test.must(output.column_names[1]).be.equal('$table');
             test.must(output.column_names[2]).be.equal('double_col');

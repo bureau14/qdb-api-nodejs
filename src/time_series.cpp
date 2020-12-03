@@ -87,9 +87,11 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
                 assert(!qdb_req->holder.IsEmpty() && "Verify that appropriate argument eater has been used");
 
                 auto owner = v8::Local<v8::Object>::New(isolate, qdb_req->holder);
+                std::cout << "CREATE COLUMNS BEGIN" << std::endl;
                 for (size_t i = 0; i < columns.size(); ++i)
                 {
                     auto const & column = columns[i];
+                    std::cout << "  in: " << column.name << "(" << column.type << "), s=" << column.symtable << std::endl;
                     auto obj_ok = CreateColumn(isolate, owner, column.name.c_str(), column.type, column.symtable.c_str());
                     if (!obj_ok.second)
                     {
@@ -102,6 +104,7 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
                         array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj_ok.first);
                     }
                 }
+                std::cout << "CREATE COLUMNS END" << std::endl;
             }
         }
         else

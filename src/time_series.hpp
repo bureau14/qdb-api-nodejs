@@ -175,13 +175,16 @@ private:
                 std::vector<qdb_ts_column_info_ex_t> cols;
                 cols.resize(info.size());
 
+                std::cout << "INSERT COLS BEGIN" << std::endl;
                 std::transform(info.cbegin(), info.cend(), cols.begin(), [](const column_info & ci) {
                     qdb_ts_column_info_ex_t info;
                     info.name = ci.name.c_str();
                     info.type = ci.type;
                     info.symtable = ci.symtable.c_str();
+                    std::cout << "  - " << info.name << " (" << info.type << "),s=" << info.symtable << std::endl;
                     return info;
                 });
+                std::cout << "INSERT COLS END" << std::endl;
 
                 auto alias = qdb_req->input.alias.c_str();
                 qdb_req->output.error = qdb_ts_insert_columns_ex(qdb_req->handle(), alias, cols.data(), cols.size());
