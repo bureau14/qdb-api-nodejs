@@ -10,7 +10,6 @@
 #include <uv.h>
 #include <memory>
 #include <string>
-#include <iostream>
 
 namespace quasardb
 {
@@ -73,10 +72,7 @@ public:
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
 
-        std::cout << "DO COL" << std::endl;
-        auto o = (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
-        std::cout << "DID COL" << std::endl;
-        return o;
+        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
     }
 
     static v8::Local<v8::Object> MakeColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, const char * symtable)
@@ -91,11 +87,7 @@ public:
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
 
-        std::cout << "DO COL SYMTABLE" << std::endl;
-        std::cout << "DONKEY SHIT ? " << cons.IsEmpty() << std::endl;
-        auto o = (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
-        std::cout << "DID COL SYMTABLE" << std::endl;
-        return o;
+        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
     }
 
     std::string timeSeries(void) const
@@ -127,43 +119,30 @@ private:
 
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        std::cout << "NEW INSTANCE BEGIN" << std::endl;
-
         v8::Isolate * isolate = args.GetIsolate();
-        std::cout << "NEW INSTANCE 1" << std::endl;
 
         static const int argc = ParametersCount;
         v8::Local<v8::Value> argv[argc] = {args[0], args[1]};
         if (argc == 3) {
             argv[2] = args[2];
-        std::cout << "NEW INSTANCE SYMTABLE" << std::endl;
         }
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
-        std::cout << "NEW INSTANCE 2" << std::endl;
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
-        std::cout << "NEW INSTANCE 3" << std::endl;
         v8::MaybeLocal<v8::Object> instance = cons->NewInstance(isolate->GetCurrentContext(), argc, argv);
-        std::cout << "NEW INSTANCE 4" << std::endl;
         args.GetReturnValue().Set(instance.ToLocalChecked());
-        std::cout << "NEW INSTANCE END" << std::endl;
     }
 
     static void New(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        std::cout << "NEW BEGIN" << std::endl;
         if (args.IsConstructCall())
         {
-            std::cout << "NEW IF" << std::endl;
             // Invoked as constructor: `new MyObject(...)`
             MethodMan call(args);
-            std::cout << "NEW 0" << std::endl;
             if (args.Length() != Derivate::ParametersCount)
             {
-                std::cout << "NEW EXCEPTION" << std::endl;
                 call.throwException("Wrong number of arguments");
                 return;
             }
-            std::cout << "NEW 1" << std::endl;
 
             ArgsEater argsEater(call);
             auto owner = argsEater.eatObject();
@@ -172,11 +151,9 @@ private:
                 call.throwException("Invalid parameter supplied to object");
                 return;
             }
-            std::cout << "NEW 2" << std::endl;
 
             TimeSeries * ts = node::ObjectWrap::Unwrap<TimeSeries>(owner.first);
             assert(ts);
-            std::cout << "NEW 3" << std::endl;
 
             auto str = argsEater.eatString();
             if (!str.second)
@@ -184,22 +161,16 @@ private:
                 call.throwException("Invalid parameter supplied to object");
                 return;
             }
-            std::cout << "NEW 4" << std::endl;
             v8::String::Utf8Value colname(args.GetIsolate(), str.first);
 
-            std::cout << "NEW 5" << std::endl;
             auto obj = new Derivate(ts->cluster_data(), *colname, ts->native_alias().c_str());
-            std::cout << "NEW 6" << std::endl;
             obj->Wrap(args.This());
-            std::cout << "NEW 7" << std::endl;
             args.GetReturnValue().Set(args.This());
         }
         else
         {
-            std::cout << "NEW ELSE" << std::endl;
             NewInstance(args);
         }
-        std::cout << "NEW END" << std::endl;
     }
 
     template <typename Func>

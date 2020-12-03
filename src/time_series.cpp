@@ -69,13 +69,9 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
     processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
         v8::Local<v8::Array> array;
 
-        std::cout << "IN PROCESS..." << std::endl;
-
         auto error_code = processErrorCode(isolate, status, qdb_req);
         if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
         {
-            std::cout << "CREATE SUCCESS" << std::endl;
-
             const auto & columns = qdb_req->input.content.columns;
             array = v8::Array::New(isolate, static_cast<int>(columns.size()));
             if (array.IsEmpty())
@@ -87,11 +83,9 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
                 assert(!qdb_req->holder.IsEmpty() && "Verify that appropriate argument eater has been used");
 
                 auto owner = v8::Local<v8::Object>::New(isolate, qdb_req->holder);
-                std::cout << "CREATE COLUMNS BEGIN" << std::endl;
                 for (size_t i = 0; i < columns.size(); ++i)
                 {
                     auto const & column = columns[i];
-                    std::cout << "  in: " << column.name << "(" << column.type << "), s=" << column.symtable << std::endl;
                     auto obj_ok = CreateColumn(isolate, owner, column.name.c_str(), column.type, column.symtable.c_str());
                     if (!obj_ok.second)
                     {
@@ -104,13 +98,10 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
                         array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj_ok.first);
                     }
                 }
-                std::cout << "CREATE COLUMNS END" << std::endl;
             }
         }
         else
         {
-            std::cout << "CREATE ERROR" << std::endl;
-
             // provide an empty array
             array = v8::Array::New(isolate, 0);
         }

@@ -8,7 +8,6 @@
 #include <uv.h>
 #include <memory>
 #include <string>
-#include <iostream>
 
 namespace quasardb
 {
@@ -124,39 +123,13 @@ private:
                     info.name = ci.name.c_str();
                     info.type = ci.type;
                     info.symtable = ci.symtable.c_str();
-                    std::cout << "ADD COL " << ci.name << ", " << ci.symtable << "(" << (int)ci.type << ")" << std::endl;
                     return info;
                 });
 
                 auto alias = qdb_req->input.alias.c_str();
 
-                std::cout << "CREATE TABLE: table=" << alias << ", cols={ ";
-                for (const auto& c : cols) {
-                    std::cout << "(name=" << c.name << ", type=" << c.type;
-                    if (c.symtable) {
-                        std::cout << ", symtable=" << c.symtable;
-                    }
-                    std::cout << ") ";
-                }
-                std::cout << "}" << std::endl;
                 qdb_req->output.error =
                     qdb_ts_create_ex(qdb_req->handle(), alias, qdb_d_default_shard_size, cols.data(), cols.size());
-
-                qdb_error_t err;
-                qdb_string_t msg;
-                qdb_get_last_error(qdb_req->handle(), &err, &msg);
-                if (QDB_FAILURE(err)) {
-                    std::cout << "GOT LAST ERROR: " << msg.data << std::endl;
-                }
-                else {
-                    std::cout << "GOT LAST SUCCESS" << std::endl;
-                }
-                if (QDB_FAILURE(qdb_req->output.error)) {
-                    std::cout << "GOT OUT ERROR: " << qdb_error(qdb_req->output.error) << std::endl;
-                }
-                else {
-                    std::cout << "GOT OUT SUCCESS" << std::endl;
-                }
             },
             TimeSeries::processColumnsCreateResult, &ArgsEaterBinder::holder, &ArgsEaterBinder::columnsInfo);
     }
