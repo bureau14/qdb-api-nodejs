@@ -62,7 +62,7 @@ describe('Timeseries - General', function () {
     var symbolType = {
         name: symbolName,
         colName: `${symbolName}_col`,
-        index: 3,
+        index: 5,
         makeInfo: (n) => symbolMakeInfo(n),
         info: symbolMakeInfo(symbolName),
         makePoint: () => qdb.SymbolPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5)), Buffer.from('content', 'utf8')),
