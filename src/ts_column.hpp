@@ -122,9 +122,9 @@ private:
         v8::Isolate * isolate = args.GetIsolate();
 
         static const int argc = ParametersCount;
-        v8::Local<v8::Value> argv[argc] = {args[0], args[1]};
-        if (argc == 3) {
-            argv[2] = args[2];
+        v8::Local<v8::Value> argv[argc];
+        for (size_t i = 0; i != argc; ++i) {
+            argv[i] = args[i];
         }
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
