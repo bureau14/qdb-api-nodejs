@@ -297,18 +297,9 @@ describe('Timeseries - General', function () {
                 {
                     return;
                 }
-                // FIXME(vianney): Currently we can't check that blobs are not strings
-                if ((current.name == 'blob' && next.name == 'string') || (current.name == 'string' && next.name == 'blob'))
-                {
-                    return;
-                }
-                // FIXME(Sidney): Same for symbols
-                if ((current.name == 'symbol' && next.name == 'string') || (current.name == 'string' && next.name == 'symbol'))
-                {
-                    return;
-                }
-                // FIXME(Sidney): Same for symbols
-                if ((current.name == 'symbol' && next.name == 'blob') || (current.name == 'blob' && next.name == 'symbol'))
+                // FIXME(vianney & sidney): Currently we can't check that blobs are not strings nor symbols.
+                const isStringLike = (name) => (name == 'blob' || name == 'string' || name == 'symbol');
+                if (isStringLike(current.name) && isStringLike(next.name) && current.name != next.name)
                 {
                     return;
                 }

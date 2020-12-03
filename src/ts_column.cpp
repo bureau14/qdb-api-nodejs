@@ -195,7 +195,7 @@ void SymbolColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
             const auto ts = qdb_req->input.content.str.c_str();
             const auto & points = qdb_req->input.content.symbol_points;
 
-            // FIXME(Marek): It's a poor man's hack, because ArgsEaterBinder::symbolPoints returns an empty collection
+            // FIXME(Sidney): It's a poor man's hack, because ArgsEaterBinder::symbolPoints returns an empty collection
             // when an incorrect input has been given. But C API accepts 0-sized inputs.
             if (points.empty())
             {
