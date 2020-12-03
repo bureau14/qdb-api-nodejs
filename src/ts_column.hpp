@@ -157,7 +157,7 @@ private:
             // Invoked as constructor: `new MyObject(...)`
             MethodMan call(args);
             std::cout << "NEW 0" << std::endl;
-            if (args.Length() != ParametersCount)
+            if (args.Length() != Derivate::ParametersCount)
             {
                 std::cout << "NEW EXCEPTION" << std::endl;
                 call.throwException("Wrong number of arguments");
