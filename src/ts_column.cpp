@@ -13,6 +13,7 @@ v8::Persistent<v8::Function> StringColumn::constructor;
 v8::Persistent<v8::Function> DoubleColumn::constructor;
 v8::Persistent<v8::Function> Int64Column::constructor;
 v8::Persistent<v8::Function> TimestampColumn::constructor;
+v8::Persistent<v8::Function> SymbolColumn::constructor;
 
 void BlobColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
@@ -185,6 +186,62 @@ void DoubleColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
         DoubleColumn::processDoubleAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::doubleAggregations);
 }
 
+void SymbolColumn::insert(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    Column<SymbolColumn>::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            const auto & points = qdb_req->input.content.symbol_points;
+
+            // FIXME(Sidney): It's a poor man's hack, because ArgsEaterBinder::symbolPoints returns an empty collection
+            // when an incorrect input has been given. But C API accepts 0-sized inputs.
+            if (points.empty())
+            {
+                qdb_req->output.error = qdb_e_invalid_argument;
+            }
+            else
+            {
+                qdb_req->output.error = qdb_ts_symbol_insert(qdb_req->handle(), ts, alias, points.data(), points.size());
+            }
+        },
+        Entry<Column>::processVoidResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::symbolPoints);
+}
+
+void SymbolColumn::ranges(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    SymbolColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            auto & ranges = qdb_req->input.content.ranges;
+            auto bufp =
+                reinterpret_cast<qdb_ts_symbol_point **>(const_cast<void **>(&(qdb_req->output.content.buffer.begin)));
+            auto count = &(qdb_req->output.content.buffer.size);
+
+            qdb_req->output.error =
+                qdb_ts_symbol_get_ranges(qdb_req->handle(), ts, alias, ranges.data(), ranges.size(), bufp, count);
+        },
+        SymbolColumn::processSymbolPointArrayResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::ranges);
+}
+
+void SymbolColumn::aggregate(const v8::FunctionCallbackInfo<v8::Value> & args)
+{
+    SymbolColumn::queue_work(
+        args,
+        [](qdb_request * qdb_req) {
+            const auto alias = qdb_req->input.alias.c_str();
+            const auto ts = qdb_req->input.content.str.c_str();
+            qdb_ts_symbol_aggregation_t * aggrs = qdb_req->input.content.symbol_aggrs.data();
+            const qdb_size_t count = qdb_req->input.content.symbol_aggrs.size();
+
+            qdb_req->output.error = qdb_ts_symbol_aggregate(qdb_req->handle(), ts, alias, aggrs, count);
+        },
+        SymbolColumn::processSymbolAggregateResult, &ArgsEaterBinder::tsAlias, &ArgsEaterBinder::symbolAggregations);
+}
+
 void BlobColumn::processBlobPointArrayResult(uv_work_t * req, int status)
 {
     processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
@@ -340,6 +397,95 @@ void StringColumn::processStringAggregateResult(uv_work_t * req, int status)
                     const auto & point = aggrs[i].result;
                     auto result =
                         StringPoint::MakePointWithCopy(isolate, point.timestamp, point.content, point.content_length);
+
+                    auto obj = v8::Object::New(isolate);
+                    obj->Set(isolate->GetCurrentContext(), resprop, result);
+                    obj->Set(isolate->GetCurrentContext(), cntprop,
+                             v8::Number::New(isolate, static_cast<double>(aggrs[i].count)));
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
+
+                    // safe to call even on null/invalid buffers
+                    qdb_release(qdb_req->handle(), point.content);
+                }
+            }
+        }
+        else
+        {
+            // provide an empty array
+            array = v8::Array::New(isolate, 0);
+        }
+
+        return make_value_array(error_code, array);
+    });
+}
+
+
+void SymbolColumn::processSymbolPointArrayResult(uv_work_t * req, int status)
+{
+    processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+        v8::Local<v8::Array> array;
+
+        auto error_code = processErrorCode(isolate, status, qdb_req);
+        if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+        {
+            qdb_ts_symbol_point * entries =
+                reinterpret_cast<qdb_ts_symbol_point *>(const_cast<void *>(qdb_req->output.content.buffer.begin));
+            const size_t entries_count = qdb_req->output.content.buffer.size;
+
+            array = v8::Array::New(isolate, static_cast<int>(entries_count));
+            if (array.IsEmpty())
+            {
+                error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
+            }
+            else
+            {
+                for (size_t i = 0; i < entries_count; ++i)
+                {
+                    auto obj = SymbolPoint::MakePointWithCopy(isolate, entries[i].timestamp, entries[i].content,
+                                                            entries[i].content_length);
+
+                    if (!obj.IsEmpty()) array->Set(isolate->GetCurrentContext(), static_cast<uint32_t>(i), obj);
+                }
+            }
+
+            // safe to call even on null/invalid buffers
+            qdb_release(qdb_req->handle(), entries);
+        }
+        else
+        {
+            // provide an empty array
+            array = v8::Array::New(isolate, 0);
+        }
+
+        return make_value_array(error_code, array);
+    });
+}
+
+void SymbolColumn::processSymbolAggregateResult(uv_work_t * req, int status)
+{
+    processResult<2>(req, status, [&](v8::Isolate * isolate, qdb_request * qdb_req) {
+        v8::Local<v8::Array> array;
+
+        auto error_code = processErrorCode(isolate, status, qdb_req);
+        if ((qdb_req->output.error == qdb_e_ok) && (status >= 0))
+        {
+            const auto & aggrs = qdb_req->input.content.symbol_aggrs;
+            array = v8::Array::New(isolate, static_cast<int>(aggrs.size()));
+
+            if (array.IsEmpty())
+            {
+                error_code = Error::MakeError(isolate, qdb_e_no_memory_local);
+            }
+            else
+            {
+                auto resprop = v8::String::NewFromUtf8(isolate, "result", v8::NewStringType::kNormal).ToLocalChecked();
+                auto cntprop = v8::String::NewFromUtf8(isolate, "count", v8::NewStringType::kNormal).ToLocalChecked();
+
+                for (size_t i = 0; i < aggrs.size(); ++i)
+                {
+                    const auto & point = aggrs[i].result;
+                    auto result =
+                        SymbolPoint::MakePointWithCopy(isolate, point.timestamp, point.content, point.content_length);
 
                     auto obj = v8::Object::New(isolate);
                     obj->Set(isolate->GetCurrentContext(), resprop, result);
@@ -724,7 +870,7 @@ void TimestampColumn::processTimestampAggregateResult(uv_work_t * req, int statu
 }
 
 std::pair<v8::Local<v8::Object>, bool>
-CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type)
+CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type, const char * symtable)
 {
     switch (type)
     {
@@ -738,6 +884,8 @@ CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * na
         return std::make_pair(TimestampColumn::MakeColumn(isolate, owner, name), true);
     case qdb_ts_column_int64:
         return std::make_pair(Int64Column::MakeColumn(isolate, owner, name), true);
+    case qdb_ts_column_symbol:
+        return std::make_pair(SymbolColumn::MakeColumn(isolate, owner, name, symtable), true);
     case qdb_ts_column_uninitialized:
         return std::make_pair(Error::MakeError(isolate, qdb_e_uninitialized), false);
     }

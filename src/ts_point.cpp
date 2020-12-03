@@ -8,5 +8,6 @@ v8::Persistent<v8::Function> BlobPoint::constructor;
 v8::Persistent<v8::Function> StringPoint::constructor;
 v8::Persistent<v8::Function> Int64Point::constructor;
 v8::Persistent<v8::Function> TimestampPoint::constructor;
+v8::Persistent<v8::Function> SymbolPoint::constructor;
 
 } // namespace quasardb

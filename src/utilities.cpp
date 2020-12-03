@@ -121,6 +121,7 @@ std::vector<column_info> ArgsEater::eatAndConvertColumnsInfoArray()
 
     auto nameProp = v8::String::NewFromUtf8(isolate, "name", v8::NewStringType::kNormal).ToLocalChecked();
     auto typeProp = v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked();
+    auto symtableProp = v8::String::NewFromUtf8(isolate, "symtable", v8::NewStringType::kNormal).ToLocalChecked();
 
     return eatAndConvertArray<column_info>(*this, [&](v8::Local<v8::Value> vi) {
         if (!vi->IsObject()) return std::make_pair(column_info{}, false);
@@ -137,16 +138,30 @@ std::vector<column_info> ArgsEater::eatAndConvertColumnsInfoArray()
             return std::make_pair(column_info{}, false);
         }
 
-        v8::String::Utf8Value sval(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
-
+        v8::String::Utf8Value name_val(isolate, name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
         auto maybe_type = type->Int32Value(isolate->GetCurrentContext());
         if (maybe_type.IsNothing())
         {
             return std::make_pair(column_info{}, false);
         }
 
-        return std::make_pair(
-            column_info{std::string(*sval, sval.length()), qdb_ts_column_type_t(maybe_type.FromJust())}, true);
+        column_info col;
+        col.name = {*name_val, static_cast<size_t>(name_val.length())};
+        col.type = static_cast<qdb_ts_column_type_t>(maybe_type.FromJust());
+
+        auto symtable = obj->Get(isolate->GetCurrentContext(), symtableProp).ToLocalChecked();
+        if (symtable->IsNull() || symtable->IsUndefined())
+        {
+            return std::make_pair(std::move(col), true);
+        }
+        if (!symtable->IsString())
+        {
+            return std::make_pair(column_info{}, false);
+        }
+
+        v8::String::Utf8Value symtable_val(isolate, symtable->ToString(isolate->GetCurrentContext()).ToLocalChecked());
+        col.symtable = {*symtable_val, static_cast<size_t>(symtable_val.length())};
+        return std::make_pair(std::move(col), true);
     });
 }
 
@@ -302,6 +317,21 @@ std::vector<qdb_ts_timestamp_point> ArgsEater::eatAndConvertTimestampPointsArray
         p.timestamp = ts;
         p.value = timestamp_value->getTimespec();
 
+        return std::make_pair(p, true);
+    });
+}
+
+std::vector<qdb_ts_symbol_point> ArgsEater::eatAndConvertSymbolPointsArray()
+{
+    return eatAndConvertPointsArray<qdb_ts_symbol_point>(*this, [&](qdb_timespec_t ts, v8::Local<v8::Value> value) {
+        qdb_ts_symbol_point p;
+        auto isolate = v8::Isolate::GetCurrent();
+
+        if (!InstanceOfBuffer(isolate, value)) return std::make_pair(p, false);
+
+        p.timestamp = ts;
+        p.content = node::Buffer::Data(value);
+        p.content_length = node::Buffer::Length(value);
         return std::make_pair(p, true);
     });
 }

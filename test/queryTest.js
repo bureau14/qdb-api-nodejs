@@ -14,7 +14,7 @@ describe('Query', function () {
 
 
     before('init', function (done) {
-        columnInfo = [qdb.DoubleColumnInfo('double_col'), qdb.BlobColumnInfo('blob_col'), qdb.StringColumnInfo('string_col'), qdb.Int64ColumnInfo('int64_col'), qdb.TimestampColumnInfo('timestamp_col')]
+        columnInfo = [qdb.DoubleColumnInfo('double_col'), qdb.BlobColumnInfo('blob_col'), qdb.StringColumnInfo('string_col'), qdb.Int64ColumnInfo('int64_col'), qdb.TimestampColumnInfo('timestamp_col'), qdb.SymbolColumnInfo('symbol_col', 'my_symtable')]
         ts = cluster.ts("query_test")
 
         ts.remove(function (err) {
@@ -45,6 +45,11 @@ describe('Query', function () {
                     qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2))),
                     qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)))
                 ];
+                var symbolPoints = [
+                    qdb.SymbolPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)), Buffer.from("a", "utf8")),
+                    qdb.SymbolPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), Buffer.from("b", "utf8")),
+                    qdb.SymbolPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), Buffer.from("c", "utf8"))
+                ];
                 // encapsulate to make sure everything is inserted properly
                 columns[0].insert(doublePoints, function (err) {
                     test.must(err).be.equal(null);
@@ -56,7 +61,10 @@ describe('Query', function () {
                                 test.must(err).be.equal(null);
                                 columns[4].insert(timestampPoints, function (err) {
                                     test.must(err).be.equal(null);
-                                    done();
+                                    columns[5].insert(symbolPoints, function (err) {
+                                        test.must(err).be.equal(null);
+                                        done();
+                                    });
                                 });
                             });
                         });
@@ -77,10 +85,10 @@ describe('Query', function () {
     it('should retrieve all points', function (done) {
         cluster.query('select * from query_test').run(function (err, output) {
             test.must(err).be.equal(null);
-            test.must(output.scanned_point_count).be.equal(15);
+            test.must(output.scanned_point_count).be.equal(18);
             test.must(output.error_message).be.empty();
 
-            test.must(output.column_count).be.equal(7);
+            test.must(output.column_count).be.equal(8);
             test.must(output.column_names[0]).be.equal('$timestamp');
             test.must(output.column_names[1]).be.equal('$table');
             test.must(output.column_names[2]).be.equal('double_col');
@@ -88,6 +96,7 @@ describe('Query', function () {
             test.must(output.column_names[4]).be.equal('string_col');
             test.must(output.column_names[5]).be.equal('int64_col');
             test.must(output.column_names[6]).be.equal('timestamp_col');
+            test.must(output.column_names[7]).be.equal('symbol_col');
 
             test.must(output.row_count).be.equal(3);
 
@@ -99,6 +108,7 @@ describe('Query', function () {
             test.must(output.rows[0][4]).be.equal('a');
             test.must(output.rows[0][5]).be.equal(1);
             test.must(output.rows[0][6].toDate().getTime()).be.equal((new Date(2049, 10, 5, 1)).getTime());
+            test.must(output.rows[0][7]).be.equal('a');
 
             // second row
             test.must(output.rows[1][0].toDate().getTime()).be.equal((new Date(2049, 10, 5, 2)).getTime());
@@ -108,6 +118,7 @@ describe('Query', function () {
             test.must(output.rows[1][4]).be.equal('b');
             test.must(output.rows[1][5]).be.equal(2);
             test.must(output.rows[1][6].toDate().getTime()).be.equal((new Date(2049, 10, 5, 2)).getTime());
+            test.must(output.rows[1][7]).be.equal('b');
 
             // third row
             test.must(output.rows[2][0].toDate().getTime()).be.equal((new Date(2049, 10, 5, 3)).getTime());
@@ -117,6 +128,7 @@ describe('Query', function () {
             test.must(output.rows[2][4]).be.equal('c');
             test.must(output.rows[2][5]).be.equal(3);
             test.must(output.rows[2][6].toDate().getTime()).be.equal((new Date(2049, 10, 5, 3)).getTime());
+            test.must(output.rows[2][7]).be.equal('c');
 
             done();
         });

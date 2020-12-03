@@ -76,13 +76,9 @@ struct NewObject<Timestamp>
 // POD for storing info about columns from js calls
 struct column_info
 {
-    column_info(std::string name = std::string(), qdb_ts_column_type_t type = qdb_ts_column_uninitialized)
-        : name(name), type(type)
-    {
-    }
-
     std::string name;
     qdb_ts_column_type_t type;
+    std::string symtable;
 };
 
 struct qdb_request
@@ -123,6 +119,7 @@ struct qdb_request
             std::vector<qdb_ts_double_point> double_points;
             std::vector<qdb_ts_int64_point> int64_points;
             std::vector<qdb_ts_timestamp_point> timestamp_points;
+            std::vector<qdb_ts_symbol_point> symbol_points;
 
             std::vector<qdb_ts_range_t> ranges;
 
@@ -131,6 +128,7 @@ struct qdb_request
             std::vector<qdb_ts_double_aggregation_t> double_aggrs;
             std::vector<qdb_ts_int64_aggregation_t> int64_aggrs;
             std::vector<qdb_ts_timestamp_aggregation_t> timestamp_aggrs;
+            std::vector<qdb_ts_symbol_aggregation_t> symbol_aggrs;
         };
 
         query_content content;
@@ -484,6 +482,7 @@ public:
     std::vector<qdb_ts_double_point> eatAndConvertDoublePointsArray();
     std::vector<qdb_ts_int64_point> eatAndConvertInt64PointsArray();
     std::vector<qdb_ts_timestamp_point> eatAndConvertTimestampPointsArray();
+    std::vector<qdb_ts_symbol_point> eatAndConvertSymbolPointsArray();
 
     std::vector<qdb_ts_range_t> eatAndConvertRangeArray();
 
@@ -624,6 +623,12 @@ public:
         return req;
     }
 
+    qdb_request & symbolPoints(qdb_request & req)
+    {
+        req.input.content.symbol_points = _eater.eatAndConvertSymbolPointsArray();
+        return req;
+    }
+
     qdb_request & ranges(qdb_request & req)
     {
         req.input.content.ranges = _eater.eatAndConvertRangeArray();
@@ -657,6 +662,12 @@ public:
     qdb_request & timestampAggregations(qdb_request & req)
     {
         req.input.content.timestamp_aggrs = _eater.eatAndConvertAggrArray<qdb_ts_timestamp_aggregation_t>();
+        return req;
+    }
+
+    qdb_request & symbolAggregations(qdb_request & req)
+    {
+        req.input.content.symbol_aggrs = _eater.eatAndConvertAggrArray<qdb_ts_symbol_aggregation_t>();
         return req;
     }
 
