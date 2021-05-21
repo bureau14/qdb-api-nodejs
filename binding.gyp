@@ -77,7 +77,7 @@
                         ],
                         "xcode_settings": {
                             "OTHER_CFLAGS": [
-                                "-std=c++11",
+                                "-std=c++14",
                                 "-stdlib=libc++",
                                 "-Wno-strict-aliasing",
                                 "-mmacosx-version-min=10.7"
@@ -99,7 +99,7 @@
                             "-Wl,-rpath=\'$$ORIGIN\'"
                         ],
                         "cflags": [
-                            "-std=c++11",
+                            "-std=c++14",
                             "-stdlib=libc++",
                             "-Wno-strict-aliasing",
                             "-Wno-deprecated-declarations",
@@ -123,7 +123,7 @@
                             "-static-libstdc++"
                         ],
                         "cflags": [
-                            "-std=c++11",
+                            "-std=c++14",
                             "-Wno-strict-aliasing"
                         ]
                     }
