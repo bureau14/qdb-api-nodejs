@@ -7,4 +7,4 @@ source "$SCRIPT_DIR/commands.sh"
 echo "Installing version: $NODE_VERSION -- arch: $NODE_ARCH";
 
 nvm_load
-nvm install $NODE_VERSION $NODE_ARCH
+nvm install $NODE_VERSION $NODE_ARCH --experimental-gypjs
