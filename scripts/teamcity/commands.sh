@@ -26,7 +26,7 @@ function nvm_use {
     esac
 }
 
-function npm_config {    
+function npm_config {
     nvm_load
     case "$(uname)" in
         MINGW*)
