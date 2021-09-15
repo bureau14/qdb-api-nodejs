@@ -30,7 +30,7 @@ function npm_config {
     nvm_load
     case "$(uname)" in
         MINGW*)
-            $NPM config set msvs_version 2017
+            $NPM config set msvs_version 2019
         ;;
         *)
             $NPM config set python python3
