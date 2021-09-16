@@ -29,7 +29,7 @@
     "unit.js": "^2.1.0"
   },
   "bundledDependencies": [
-    "node-pre-gyp"
+    "@mapbox/node-pre-gyp"
   ],
   "scripts": {
     "install": "node-pre-gyp install",
