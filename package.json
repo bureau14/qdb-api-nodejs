@@ -20,7 +20,8 @@
     "url": "https://github.com/bureau14/qdb-api-nodejs"
   },
   "dependencies": {
-    "node-pre-gyp": "^0.13.0"
+    "@mapbox/node-pre-gyp": "^1.0.5",
+    "mocha-teamcity-reporter": "^4.1.0"
   },
   "devDependencies": {
     "bluebird": "^3.4.3",
