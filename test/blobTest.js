@@ -40,7 +40,7 @@ describe('Blob', function () {
                 tags.must.be.empty();
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -49,7 +49,7 @@ describe('Blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should return correct entry type', function (done) {
@@ -59,7 +59,7 @@ describe('Blob', function () {
                 test.must(meta.type).be.equal(qdb.ENTRY_BLOB);
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should return correct entry metadata', function (done) {
@@ -95,7 +95,7 @@ describe('Blob', function () {
                 });
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should get the previous value', function (done) {
@@ -105,7 +105,7 @@ describe('Blob', function () {
                 test.must(data.toString()).be.equal('bam_content');
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should remove without error', function (done) {
@@ -113,7 +113,7 @@ describe('Blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should put again without an error', function (done) {
@@ -121,7 +121,7 @@ describe('Blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should get the new value', function (done) {
@@ -131,7 +131,7 @@ describe('Blob', function () {
                 test.must(data.toString()).be.equal('boom_content');
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should get an empty tag list', function (done) {
@@ -141,7 +141,7 @@ describe('Blob', function () {
                 tags.must.have.length(0);
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -155,7 +155,7 @@ describe('Blob', function () {
                 err.informational.must.be.true();
 
                 done();
-            });
+            }).catch(done);;
 
         });
 
@@ -164,7 +164,7 @@ describe('Blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -178,7 +178,7 @@ describe('Blob', function () {
                 err.informational.must.be.true();
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -187,7 +187,7 @@ describe('Blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -199,7 +199,7 @@ describe('Blob', function () {
                 tags[0].must.be.equal(tagName);
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -209,7 +209,7 @@ describe('Blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -223,7 +223,7 @@ describe('Blob', function () {
                 err.informational.must.be.true();
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -237,7 +237,7 @@ describe('Blob', function () {
                 err.informational.must.be.true();
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -248,7 +248,7 @@ describe('Blob', function () {
                 tags.must.have.length(0);
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -257,7 +257,7 @@ describe('Blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
         });
 
     }); // update/get/delete
@@ -286,7 +286,7 @@ describe('blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should return undefined expiry', function (done) {
@@ -295,7 +295,7 @@ describe('blob', function () {
                 test.must(entry_expiry).be.equal(undefined);
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should update with an expiry in 2s without error', function (done) {
@@ -306,7 +306,7 @@ describe('blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should wait three seconds', function (done) {
@@ -324,7 +324,7 @@ describe('blob', function () {
                 err.informational.must.be.false();
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should put with an expiry in 2030', function (done) {
@@ -334,7 +334,7 @@ describe('blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -347,14 +347,14 @@ describe('blob', function () {
                 test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should leave the expiry untouched', function (done) {
             b.update(Buffer.from('bim_content', 'utf8'), qdb.PRESERVE_EXPIRATION, function (err) {
                 test.must(err).be.equal(null);
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -367,7 +367,7 @@ describe('blob', function () {
                 test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should update without expiry', function (done) {
@@ -375,7 +375,7 @@ describe('blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should return undefined expiry', function (done) {
@@ -384,7 +384,7 @@ describe('blob', function () {
                 test.must(entry_expiry).be.equal(undefined);
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should set the expiry to 2040', function (done) {
@@ -394,7 +394,7 @@ describe('blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
 
         });
 
@@ -407,7 +407,7 @@ describe('blob', function () {
                 test.must(Math.trunc(entry_expiry.valueOf() / 1000)).be.equal(Math.trunc(test_exp.valueOf() / 1000));
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should expire in 2 seconds from now', function (done) {
@@ -415,7 +415,7 @@ describe('blob', function () {
                 test.must(err).be.equal(null);
 
                 done();
-            });
+            }).catch(done);
         });
 
         it('should wait three seconds', function (done) {
@@ -433,7 +433,7 @@ describe('blob', function () {
                 err.informational.must.be.false();
 
                 done();
-            });
+            }).catch(done);
         });
 
     }); // expiry
