@@ -14,7 +14,7 @@
     "store"
   ],
   "main": "./index.js",
-  "version": "3.10.0-nightly.0",
+  "version": "3.10.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/bureau14/qdb-api-nodejs"
@@ -39,6 +39,6 @@
     "module_name": "quasardb",
     "module_path": "./lib/binding/",
     "host": "https://download.quasardb.net",
-    "remote_path": "./{name}/nightly/api/nodejs"
+    "remote_path": "./{name}/3.10/{version}/api/nodejs"
   }
 }
