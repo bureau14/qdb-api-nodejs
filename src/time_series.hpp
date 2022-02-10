@@ -89,7 +89,7 @@ private:
             call.throwException("Wrong number of arguments: expected 'name'");
             return;
         }
-        else if (is_symbol && args.Length() != 2)
+        if (is_symbol && args.Length() != 2)
         {
             call.throwException("Wrong number of arguments: expected 'name', 'symtable'");
             return;

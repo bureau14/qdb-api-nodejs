@@ -75,21 +75,6 @@ public:
         return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
     }
 
-    static v8::Local<v8::Object> MakeColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, const char * symtable)
-    {
-        static const size_t argc = Derivate::ParametersCount;
-
-        v8::Local<v8::Value> argv[argc] = {
-            owner,
-            v8::String::NewFromUtf8(isolate, name, v8::NewStringType::kNormal).ToLocalChecked(),
-            v8::String::NewFromUtf8(isolate, symtable, v8::NewStringType::kNormal).ToLocalChecked(),
-        };
-        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
-        assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");
-
-        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
-    }
-
     std::string timeSeries(void) const
     {
         return ts;
@@ -381,44 +366,7 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
-class SymbolColumn : public Column<SymbolColumn>
-{
-    friend class Column<SymbolColumn>;
-    friend class Entry<SymbolColumn>;
-
-    SymbolColumn(cluster_data_ptr cd, const char * name, const char * ts)
-        : Column<SymbolColumn>(cd, name, ts, qdb_ts_column_symbol)
-    {
-    }
-
-    static const size_t ParametersCount = 3;
-
-    virtual ~SymbolColumn(void)
-    {
-    }
-
-public:
-    static void Init(v8::Local<v8::Object> exports)
-    {
-        Column<SymbolColumn>::Init(exports, "SymbolColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", SymbolColumn::insert);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", SymbolColumn::ranges);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", SymbolColumn::aggregate);
-        });
-    }
-
-private:
-    static void insert(const v8::FunctionCallbackInfo<v8::Value> & args);
-    static void ranges(const v8::FunctionCallbackInfo<v8::Value> & args);
-    static void aggregate(const v8::FunctionCallbackInfo<v8::Value> & args);
-
-    static void processSymbolPointArrayResult(uv_work_t * req, int status);
-    static void processSymbolAggregateResult(uv_work_t * req, int status);
-
-    static v8::Persistent<v8::Function> constructor;
-};
-
 std::pair<v8::Local<v8::Object>, bool>
-CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type, const char * symtable);
+CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type);
 
 } // namespace quasardb

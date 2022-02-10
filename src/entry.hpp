@@ -524,13 +524,6 @@ public:
                     columns->Set(isolate->GetCurrentContext(), j, v8::String::NewFromUtf8(isolate, str.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
                     break;
                 }
-                case qdb_query_result_symbol:
-                {
-                    std::string str{reinterpret_cast<const char *>(pt.payload.symbol.content),
-                                     pt.payload.symbol.content_length};
-                    columns->Set(isolate->GetCurrentContext(), j, v8::String::NewFromUtf8(isolate, str.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
-                    break;
-                }
                 }
             }
             rows->Set(isolate->GetCurrentContext(), i, columns);

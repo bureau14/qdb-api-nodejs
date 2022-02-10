@@ -37,7 +37,7 @@ void TimeSeries::processArrayColumnsInfoResult(uv_work_t * req, int status)
                 auto owner = v8::Local<v8::Object>::New(isolate, qdb_req->holder);
                 for (size_t i = 0; i < entries_count; ++i)
                 {
-                    auto obj_ok = CreateColumn(isolate, owner, entries[i].name, entries[i].type, entries[i].symtable);
+                    auto obj_ok = CreateColumn(isolate, owner, entries[i].name, entries[i].type);
                     if (!obj_ok.second)
                     {
                         error_code = obj_ok.first;
@@ -86,7 +86,7 @@ void TimeSeries::processColumnsCreateResult(uv_work_t * req, int status)
                 for (size_t i = 0; i < columns.size(); ++i)
                 {
                     auto const & column = columns[i];
-                    auto obj_ok = CreateColumn(isolate, owner, column.name.c_str(), column.type, column.symtable.c_str());
+                    auto obj_ok = CreateColumn(isolate, owner, column.name.c_str(), column.type);
                     if (!obj_ok.second)
                     {
                         error_code = obj_ok.first;

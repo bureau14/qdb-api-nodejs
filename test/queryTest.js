@@ -46,9 +46,9 @@ describe('Query', function () {
                     qdb.TimestampPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)))
                 ];
                 var symbolPoints = [
-                    qdb.SymbolPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)), Buffer.from("a", "utf8")),
-                    qdb.SymbolPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), Buffer.from("b", "utf8")),
-                    qdb.SymbolPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), Buffer.from("c", "utf8"))
+                    qdb.StringPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 1)), Buffer.from("a", "utf8")),
+                    qdb.StringPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 2)), Buffer.from("b", "utf8")),
+                    qdb.StringPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5, 3)), Buffer.from("c", "utf8"))
                 ];
                 // encapsulate to make sure everything is inserted properly
                 columns[0].insert(doublePoints, function (err) {

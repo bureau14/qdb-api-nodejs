@@ -65,7 +65,7 @@ describe('Timeseries - General', function () {
         index: 5,
         makeInfo: (n) => symbolMakeInfo(n),
         info: symbolMakeInfo(symbolName),
-        makePoint: () => qdb.SymbolPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5)), Buffer.from('content', 'utf8')),
+        makePoint: () => qdb.StringPoint(qdb.Timestamp.fromDate(new Date(2049, 10, 5)), Buffer.from('content', 'utf8')),
     }
 
     var colTypes = [blobType,doubleType,int64Type,stringType,timestampType,symbolType]
@@ -126,7 +126,7 @@ describe('Timeseries - General', function () {
                     test.must(columns.length).be.equal(colTypes.length)
                     colTypes.forEach(function(col) {
                         test.must(columns[col.index].alias()).be.equal(col.name);
-                        test.must(columns[col.index].type).be.equal(col.info.type);
+                        test.must(columns[col.index].type).be.equal(col.info.type != 5 ? col.info.type : 4);
                         test.must(columns[col.index].timeseries).be.equal(ts.alias());
                     });
                     done();
@@ -157,7 +157,7 @@ describe('Timeseries - General', function () {
 
                 colTypes.forEach(function(col) {
                     test.must(columns[col.index].alias()).be.equal(`col_${col.name}_${col.index}`);
-                    test.must(columns[col.index].type).be.equal(col.info.type);
+                    test.must(columns[col.index].type).be.equal(col.info.type != 5 ? col.info.type : 4);
                     test.must(columns[col.index].timeseries).be.equal(ts.alias());
                 });
 
@@ -236,7 +236,7 @@ describe('Timeseries - General', function () {
                 // Database guarantees to return columns in the same order as we created/appended them.
                 for (var i = 0; i < columns.length; i++) {
                     test.must(columns[i].alias()).be.equal(columnInfos[i].name);
-                    test.must(columns[i].type).be.equal(columnInfos[i].type);
+                    test.must(columns[i].type).be.equal(columnInfos[i].type != 5 ? columnInfos[i].type : 4);
                     test.must(columns[i].timeseries).be.equal(ts.alias());
                 }
 
@@ -278,7 +278,7 @@ describe('Timeseries - General', function () {
                     test.must(err).be.equal(null);
                     test.should(columns.length).eql(colTypes.length);
                     colTypes.forEach(function(col) {
-                        test.should(columns[col.index].type).eql(col.info.type);
+                        test.must(columns[col.index].type).be.equal(col.info.type != 5 ? col.info.type : 4);
                     });
 
                     createdColumns = columns
