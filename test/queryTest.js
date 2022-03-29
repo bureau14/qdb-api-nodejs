@@ -82,6 +82,25 @@ describe('Query', function () {
         });
     });
 
+    it('should insert new point', function (done) {
+        cluster.query('CREATE TABLE insert_test (double_col DOUBLE)').run(function (err, output) {
+            test.must(err).be.equal(null);
+            test.must(output).be.empty();
+
+            cluster.query('INSERT INTO insert_test ($timestamp, double_col) VALUES (2020-01-01, 123.456)').run(function (err, output) {
+                test.must(err).be.equal(null);
+                test.must(output).be.empty();
+
+                cluster.query('DROP TABLE insert_test').run(function (err, output) {
+                    test.must(err).be.equal(null);
+                    test.must(output).be.empty();
+
+                    done();
+                });
+            });
+        });
+    });
+
     it('should retrieve all points', function (done) {
         cluster.query('select * from query_test').run(function (err, output) {
             test.must(err).be.equal(null);

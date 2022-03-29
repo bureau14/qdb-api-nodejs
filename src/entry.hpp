@@ -553,6 +553,11 @@ public:
     static v8::Local<v8::Object>
     query_make_result(v8::Isolate * isolate, qdb_query_result_t * result, v8::Local<v8::Object> & final_result)
     {
+        if (!result)
+        {
+            // Some queries don't return any result.
+            return {};
+        }
         auto scanned_point_count_prop = v8::String::NewFromUtf8(isolate, "scanned_point_count", v8::NewStringType::kNormal).ToLocalChecked();
         auto error_msg_prop = v8::String::NewFromUtf8(isolate, "error_message", v8::NewStringType::kNormal).ToLocalChecked();
 
