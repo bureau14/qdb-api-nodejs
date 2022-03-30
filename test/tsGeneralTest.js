@@ -85,7 +85,7 @@ describe('Timeseries - General', function () {
         test.object(ts).hasProperty('alias');
         test.must(ts.alias()).be.a.string();
     });
-    
+
     after('Timeseries', function (done) {
         ts.remove(function (err) {
             test.must(err).be.equal(null);
@@ -93,7 +93,7 @@ describe('Timeseries - General', function () {
             done();
         });
     });
-    
+
     // Column Infos are tested in each type test file
 
     describe('creation', function () {
@@ -117,7 +117,7 @@ describe('Timeseries - General', function () {
                 });
             });
         });
-        
+
         it('should create multiple columns', function (done) {
             ts.remove(function (err) {
                 ts.create(columnInfos, function (err, columns) {
@@ -319,6 +319,20 @@ describe('Timeseries - General', function () {
             var begin = new Date(2049, 10, 5, 1);
             var end = new Date(2049, 10, 5, 3);
             var range = qdb.TsRange(qdb.Timestamp.fromDate(begin), qdb.Timestamp.fromDate(end));
+
+            test.object(range).hasProperty('begin');
+            test.object(range).hasProperty('end');
+
+            test.must(range.begin.toDate().getTime()).be.equal(begin.getTime());
+            test.must(range.end.toDate().getTime()).be.equal(end.getTime());
+        });
+    });
+
+    describe('ranges from dates', function () {
+        it('should create valid range', function () {
+            var begin = new Date(2049, 10, 5, 1);
+            var end = new Date(2049, 10, 5, 3);
+            var range = qdb.TsRange(begin, end);
 
             test.object(range).hasProperty('begin');
             test.object(range).hasProperty('end');
