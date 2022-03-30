@@ -36,9 +36,10 @@ public:
 
         auto proto = tpl->PrototypeTemplate();
 
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "begin", v8::NewStringType::kNormal).ToLocalChecked(),
-                                   v8::FunctionTemplate::New(isolate, TsRange::begin, v8::Local<v8::Value>(), s),
-                                   v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+        proto->SetAccessorProperty(
+            v8::String::NewFromUtf8(isolate, "begin", v8::NewStringType::kNormal).ToLocalChecked(),
+            v8::FunctionTemplate::New(isolate, TsRange::begin, v8::Local<v8::Value>(), s),
+            v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
         proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "end", v8::NewStringType::kNormal).ToLocalChecked(),
                                    v8::FunctionTemplate::New(isolate, TsRange::end, v8::Local<v8::Value>(), s),
                                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
@@ -47,7 +48,9 @@ public:
         if (maybe_function.IsEmpty()) return;
 
         constructor.Reset(isolate, maybe_function.ToLocalChecked());
-        exports->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "TsRange", v8::NewStringType::kNormal).ToLocalChecked(), maybe_function.ToLocalChecked());
+        exports->Set(isolate->GetCurrentContext(),
+                     v8::String::NewFromUtf8(isolate, "TsRange", v8::NewStringType::kNormal).ToLocalChecked(),
+                     maybe_function.ToLocalChecked());
     }
 
     // Two arguments for regular range
@@ -86,14 +89,26 @@ private:
                 return;
             }
 
-            if (!Timestamp::InstanceOf(isolate, args[0]) || !Timestamp::InstanceOf(isolate, args[1]))
+            v8::Local<v8::Value> begin = args[0];
+            if (args[0]->IsDate())
+            {
+                begin = Timestamp::NewFromDate(isolate, v8::Local<v8::Date>::Cast(args[0]));
+            }
+
+            v8::Local<v8::Value> end = args[1];
+            if (args[1]->IsDate())
+            {
+                end = Timestamp::NewFromDate(isolate, v8::Local<v8::Date>::Cast(args[1]));
+            }
+
+            if (!Timestamp::InstanceOf(isolate, begin) || !Timestamp::InstanceOf(isolate, end))
             {
                 throwException(args, "Wrong type of arguments");
                 return;
             }
 
-            auto maybe_begin_timestamp = args[0]->ToObject(context);
-            auto maybe_end_timestamp = args[1]->ToObject(context);
+            auto maybe_begin_timestamp = begin->ToObject(context);
+            auto maybe_end_timestamp = end->ToObject(context);
             if (maybe_begin_timestamp.IsEmpty() || maybe_end_timestamp.IsEmpty())
             {
                 throwException(args, "Invalid timestamp object arguments");
@@ -122,7 +137,8 @@ private:
     static void throwException(const v8::FunctionCallbackInfo<v8::Value> & args, const char * msg)
     {
         auto isolate = args.GetIsolate();
-        isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, msg, v8::NewStringType::kNormal).ToLocalChecked()));
+        isolate->ThrowException(v8::Exception::TypeError(
+            v8::String::NewFromUtf8(isolate, msg, v8::NewStringType::kNormal).ToLocalChecked()));
     }
 
     template <typename F>
@@ -142,20 +158,24 @@ private:
 
     static void begin(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        TsRange::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr) {
-            auto isolate = args.GetIsolate();
-            auto timestamp = Timestamp::NewFromTimespec(isolate, fr->range.begin);
-            args.GetReturnValue().Set(timestamp);
-        });
+        TsRange::getter(args,
+                        [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr)
+                        {
+                            auto isolate = args.GetIsolate();
+                            auto timestamp = Timestamp::NewFromTimespec(isolate, fr->range.begin);
+                            args.GetReturnValue().Set(timestamp);
+                        });
     }
 
     static void end(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        TsRange::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr) {
-            auto isolate = args.GetIsolate();
-            auto timestamp = Timestamp::NewFromTimespec(isolate, fr->range.end);
-            args.GetReturnValue().Set(timestamp);
-        });
+        TsRange::getter(args,
+                        [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr)
+                        {
+                            auto isolate = args.GetIsolate();
+                            auto timestamp = Timestamp::NewFromTimespec(isolate, fr->range.end);
+                            args.GetReturnValue().Set(timestamp);
+                        });
     }
 
 private:
