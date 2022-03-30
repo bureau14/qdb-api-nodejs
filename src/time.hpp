@@ -40,10 +40,13 @@ public:
         auto tmpl = v8::FunctionTemplate::New(isolate, New);
         tmpl->SetClassName(v8::String::NewFromUtf8(isolate, "Timestamp", v8::NewStringType::kNormal).ToLocalChecked());
         tmpl->InstanceTemplate()->SetInternalFieldCount(1);
-        tmpl->InstanceTemplate()->SetAccessor(v8::String::NewFromUtf8(isolate, "seconds", v8::NewStringType::kNormal).ToLocalChecked(), GetProperty);
-        tmpl->InstanceTemplate()->SetAccessor(v8::String::NewFromUtf8(isolate, "nanoseconds", v8::NewStringType::kNormal).ToLocalChecked(), GetProperty);
+        tmpl->InstanceTemplate()->SetAccessor(
+            v8::String::NewFromUtf8(isolate, "seconds", v8::NewStringType::kNormal).ToLocalChecked(), GetProperty);
+        tmpl->InstanceTemplate()->SetAccessor(
+            v8::String::NewFromUtf8(isolate, "nanoseconds", v8::NewStringType::kNormal).ToLocalChecked(), GetProperty);
 
-        tmpl->Set(v8::String::NewFromUtf8(isolate, "fromDate", v8::NewStringType::kNormal).ToLocalChecked(), v8::FunctionTemplate::New(isolate, FromDate));
+        tmpl->Set(v8::String::NewFromUtf8(isolate, "fromDate", v8::NewStringType::kNormal).ToLocalChecked(),
+                  v8::FunctionTemplate::New(isolate, FromDate));
         NODE_SET_PROTOTYPE_METHOD(tmpl, "toDate", ToDate);
 
         Timestamp::tmpl.Reset(isolate, tmpl);
@@ -51,22 +54,38 @@ public:
         auto cons = tmpl->GetFunction(context).ToLocalChecked();
 
         Timestamp::constructor.Reset(isolate, cons);
-        exports->Set(context, v8::String::NewFromUtf8(isolate, "Timestamp", v8::NewStringType::kNormal).ToLocalChecked(), cons);
+        exports->Set(context,
+                     v8::String::NewFromUtf8(isolate, "Timestamp", v8::NewStringType::kNormal).ToLocalChecked(), cons);
     }
 
     static v8::Local<v8::Object> NewFromTimespec(v8::Isolate * isolate, qdb_timespec_t ts)
     {
-        const int argc = 2;
         auto seconds = static_cast<double>(ts.tv_sec);
         auto nanoseconds = static_cast<double>(ts.tv_nsec);
 
+        const int argc = 2;
         v8::Local<v8::Value> argv[argc] = {
             v8::Number::New(isolate, seconds),
             v8::Number::New(isolate, nanoseconds),
         };
 
-        v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
+        auto cons = v8::Local<v8::Function>::New(isolate, constructor);
+        return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
+    }
 
+    static v8::Local<v8::Object> NewFromDate(v8::Isolate * isolate, v8::Local<v8::Date> d)
+    {
+        milliseconds epoch_ms{d->ToNumber(isolate->GetCurrentContext()).ToLocalChecked()->Value()};
+        seconds s = epoch_ms;
+        nanoseconds ns = epoch_ms - s;
+
+        const int argc = 2;
+        v8::Local<v8::Value> argv[argc] = {
+            v8::Number::New(isolate, static_cast<double>(s.count())),
+            v8::Number::New(isolate, static_cast<double>(ns.count())),
+        };
+
+        auto cons = v8::Local<v8::Function>::New(isolate, constructor);
         return (cons->NewInstance(isolate->GetCurrentContext(), argc, argv)).ToLocalChecked();
     }
 
@@ -162,7 +181,8 @@ private:
 
         if (args.Length() != 1 || !args[0]->IsDate())
         {
-            isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "Expected a Date", v8::NewStringType::kNormal).ToLocalChecked()));
+            isolate->ThrowException(v8::Exception::TypeError(
+                v8::String::NewFromUtf8(isolate, "Expected a Date", v8::NewStringType::kNormal).ToLocalChecked()));
         }
 
         milliseconds epoch_ms{args[0]->ToNumber(isolate->GetCurrentContext()).ToLocalChecked()->Value()};
@@ -175,6 +195,7 @@ private:
         args.GetReturnValue().Set(cons->NewInstance(isolate->GetCurrentContext(), argc, argv).ToLocalChecked());
     }
 
+private:
     static void ToDate(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         auto isolate = args.GetIsolate();
