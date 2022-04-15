@@ -182,7 +182,8 @@ private:
             {
                 v8::Isolate * isolate = args.GetIsolate();
                 args.GetReturnValue().Set(
-                    v8::String::NewFromUtf8(isolate, c->ts.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
+                    v8::String::NewFromUtf8(isolate, c->ts.c_str(), v8::NewStringType::kNormal, c->ts.size())
+                        .ToLocalChecked());
             });
     }
 
