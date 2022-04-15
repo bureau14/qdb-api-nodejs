@@ -80,7 +80,7 @@
                                 "-std=c++14",
                                 "-stdlib=libc++",
                                 "-Wno-strict-aliasing",
-                                "-mmacosx-version-min=10.7"
+                                "-mmacosx-version-min=10.15"
                             ]
                         }
                     }
