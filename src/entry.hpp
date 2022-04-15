@@ -522,10 +522,10 @@ public:
                     break;
                 case qdb_query_result_blob:
                 {
-                    std::string blob{
-                        reinterpret_cast<const char *>(pt.payload.blob.content), pt.payload.blob.content_length};
                     columns->Set(isolate->GetCurrentContext(), j,
-                        v8::String::NewFromUtf8(isolate, blob.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
+                        v8::String::NewFromUtf8(isolate, static_cast<const char *>(pt.payload.blob.content),
+                            v8::NewStringType::kNormal, pt.payload.blob.content_length)
+                            .ToLocalChecked());
                     break;
                 }
                 case qdb_query_result_int64:
@@ -545,10 +545,10 @@ public:
                 }
                 case qdb_query_result_string:
                 {
-                    std::string str{
-                        reinterpret_cast<const char *>(pt.payload.string.content), pt.payload.string.content_length};
                     columns->Set(isolate->GetCurrentContext(), j,
-                        v8::String::NewFromUtf8(isolate, str.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
+                        v8::String::NewFromUtf8(isolate, pt.payload.string.content, v8::NewStringType::kNormal,
+                            pt.payload.string.content_length)
+                            .ToLocalChecked());
                     break;
                 }
                 }
@@ -571,9 +571,9 @@ public:
         v8::Local<v8::Array> column_names = v8::Array::New(isolate, static_cast<int>(column_count));
         for (size_t i = 0; i < column_count; ++i)
         {
-            std::string name{result->column_names[i].data, result->column_names[i].length};
+            const auto & name = result->column_names[i];
             column_names->Set(isolate->GetCurrentContext(), i,
-                v8::String::NewFromUtf8(isolate, name.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
+                v8::String::NewFromUtf8(isolate, name.data, v8::NewStringType::kNormal, name.length).ToLocalChecked());
         }
         final_result->Set(isolate->GetCurrentContext(), columns_count_prop, v8::Number::New(isolate, column_count));
         final_result->Set(isolate->GetCurrentContext(), columns_names_prop, column_names);
@@ -594,9 +594,10 @@ public:
 
         final_result->Set(isolate->GetCurrentContext(), scanned_point_count_prop,
             v8::Number::New(isolate, result->scanned_point_count));
-        std::string err_msg{result->error_message.data, result->error_message.length};
         final_result->Set(isolate->GetCurrentContext(), error_msg_prop,
-            v8::String::NewFromUtf8(isolate, err_msg.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
+            v8::String::NewFromUtf8(
+                isolate, result->error_message.data, v8::NewStringType::kNormal, result->error_message.length)
+                .ToLocalChecked());
 
         query_set_columns_names(isolate, result, final_result);
         query_set_rows(isolate, result, final_result);
