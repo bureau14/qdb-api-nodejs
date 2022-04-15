@@ -27,7 +27,8 @@ public:
     static const size_t ParameterCount = 1;
 
 private:
-    Query(cluster_data_ptr cd, const char * alias) : Entry<Query>(cd, alias)
+    Query(cluster_data_ptr cd, const char * alias)
+        : Entry<Query>(cd, alias)
     {
     }
     virtual ~Query(void)
@@ -37,19 +38,21 @@ private:
 public:
     static void Init(v8::Local<v8::Object> exports)
     {
-        Entry<Query>::Init(exports, "Query",
-                           [](v8::Local<v8::FunctionTemplate> tpl) { NODE_SET_PROTOTYPE_METHOD(tpl, "run", run); });
+        Entry<Query>::Init(
+            exports, "Query", [](v8::Local<v8::FunctionTemplate> tpl) { NODE_SET_PROTOTYPE_METHOD(tpl, "run", run); });
     }
 
 public:
     static void run(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Entry<Query>::queue_work(args,
-                                 [](qdb_request * qdb_req) {
-                                     qdb_req->output.error =
-                                         qdb_query(qdb_req->handle(), qdb_req->input.alias.c_str(), &(qdb_req->output.query_result));
-                                 },
-                                 Entry<Query>::processQueryResult);
+        Entry<Query>::queue_work(
+            args,
+            [](qdb_request * qdb_req)
+            {
+                qdb_req->output.error =
+                    qdb_query(qdb_req->handle(), qdb_req->input.alias.c_str(), &(qdb_req->output.query_result));
+            },
+            Entry<Query>::processQueryResult);
     }
 
 private:

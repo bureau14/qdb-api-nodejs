@@ -27,7 +27,8 @@ public:
     static const size_t ParameterCount = 1;
 
 private:
-    QueryFind(cluster_data_ptr cd, const char * alias) : Entry<QueryFind>(cd, alias)
+    QueryFind(cluster_data_ptr cd, const char * alias)
+        : Entry<QueryFind>(cd, alias)
     {
     }
     virtual ~QueryFind(void)
@@ -38,21 +39,21 @@ public:
     static void Init(v8::Local<v8::Object> exports)
     {
         Entry<QueryFind>::Init(exports, "QueryFind",
-                           [](v8::Local<v8::FunctionTemplate> tpl) { NODE_SET_PROTOTYPE_METHOD(tpl, "run", run); });
+            [](v8::Local<v8::FunctionTemplate> tpl) { NODE_SET_PROTOTYPE_METHOD(tpl, "run", run); });
     }
 
 public:
     static void run(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Entry<QueryFind>::queue_work(args,
-                                 [](qdb_request * qdb_req) {
-                                     qdb_req->output.error =
-                                         qdb_query_find(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                   reinterpret_cast<const char ***>(
-                                                       const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
-                                                   &(qdb_req->output.content.buffer.size));
-                                 },
-                                 Entry<QueryFind>::processArrayStringResult);
+        Entry<QueryFind>::queue_work(
+            args,
+            [](qdb_request * qdb_req)
+            {
+                qdb_req->output.error = qdb_query_find(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                    reinterpret_cast<const char ***>(const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
+                    &(qdb_req->output.content.buffer.size));
+            },
+            Entry<QueryFind>::processArrayStringResult);
     }
 
 private:

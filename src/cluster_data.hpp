@@ -16,7 +16,6 @@ using qdb_handle_ptr = std::shared_ptr<void>;
 
 struct cluster_data
 {
-
 private:
     void bindCallbacks(v8::Local<v8::Function> os, v8::Local<v8::Function> oe)
     {
@@ -26,7 +25,12 @@ private:
     }
 
 public:
-    cluster_data(std::string uri, std::string user_private_key_file, std::string cluster_public_key_file, int timeout, v8::Local<v8::Function> os, v8::Local<v8::Function> oe)
+    cluster_data(std::string uri,
+        std::string user_private_key_file,
+        std::string cluster_public_key_file,
+        int timeout,
+        v8::Local<v8::Function> os,
+        v8::Local<v8::Function> oe)
         : _uri{std::move(uri)}
         , _user_private_key_file{std::move(user_private_key_file)}
         , _cluster_public_key_file{std::move(cluster_public_key_file)}
@@ -91,7 +95,8 @@ public:
 
         if (!_cluster_public_key_file.empty() && !_user_private_key_file.empty())
         {
-            qdb_error_t res = qdb_option_load_security_files(static_cast<qdb_handle_t>(_handle.get()), _cluster_public_key_file.c_str(), _user_private_key_file.c_str());
+            qdb_error_t res = qdb_option_load_security_files(static_cast<qdb_handle_t>(_handle.get()),
+                _cluster_public_key_file.c_str(), _user_private_key_file.c_str());
             if (res) return res;
         }
 
@@ -123,7 +128,7 @@ public:
 
         return !_handle ? qdb_e_ok
                         : qdb_prefix_get(static_cast<qdb_handle_t>(_handle.get()), prefix.c_str(), max_count, &results,
-                                         &result_count);
+                              &result_count);
     }
 
 private:

@@ -21,7 +21,8 @@ class Point : public node::ObjectWrap
     static const size_t FieldsCount = 1;
 
 public:
-    Point(qdb_timespec_t ts) : timestamp(ts)
+    Point(qdb_timespec_t ts)
+        : timestamp(ts)
     {
     }
 
@@ -32,23 +33,25 @@ public:
     template <typename F>
     static void Init(v8::Local<v8::Object> exports, const char * className, F init)
     {
-        InitConstructorOnly(exports, className, [init](v8::Local<v8::FunctionTemplate> tpl) {
-            auto isolate = v8::Isolate::GetCurrent();
-            auto s = v8::Signature::New(isolate, tpl);
-            auto proto = tpl->PrototypeTemplate();
+        InitConstructorOnly(exports, className,
+            [init](v8::Local<v8::FunctionTemplate> tpl)
+            {
+                auto isolate = v8::Isolate::GetCurrent();
+                auto s = v8::Signature::New(isolate, tpl);
+                auto proto = tpl->PrototypeTemplate();
 
-            proto->SetAccessorProperty(
-                v8::String::NewFromUtf8(isolate, "timestamp", v8::NewStringType::kNormal).ToLocalChecked(),
-                v8::FunctionTemplate::New(isolate, getTimestamp, v8::Local<v8::Value>(), s),
-                v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+                proto->SetAccessorProperty(
+                    v8::String::NewFromUtf8(isolate, "timestamp", v8::NewStringType::kNormal).ToLocalChecked(),
+                    v8::FunctionTemplate::New(isolate, getTimestamp, v8::Local<v8::Value>(), s),
+                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
-            proto->SetAccessorProperty(
-                v8::String::NewFromUtf8(isolate, "value", v8::NewStringType::kNormal).ToLocalChecked(),
-                v8::FunctionTemplate::New(isolate, Derivate::getValue, v8::Local<v8::Value>(), s),
-                v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+                proto->SetAccessorProperty(
+                    v8::String::NewFromUtf8(isolate, "value", v8::NewStringType::kNormal).ToLocalChecked(),
+                    v8::FunctionTemplate::New(isolate, Derivate::getValue, v8::Local<v8::Value>(), s),
+                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
-            init(tpl);
-        });
+                init(tpl);
+            });
     }
 
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -83,8 +86,8 @@ private:
 
         Derivate::constructor.Reset(isolate, maybe_function.ToLocalChecked());
         exports->Set(isolate->GetCurrentContext(),
-                     v8::String::NewFromUtf8(isolate, className, v8::NewStringType::kNormal).ToLocalChecked(),
-                     maybe_function.ToLocalChecked());
+            v8::String::NewFromUtf8(isolate, className, v8::NewStringType::kNormal).ToLocalChecked(),
+            maybe_function.ToLocalChecked());
     }
 
     static void getTimestamp(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -112,7 +115,9 @@ class DoublePoint : public Point<DoublePoint>
 
     static const size_t ParametersCount = 2;
 
-    DoublePoint(qdb_timespec_t ts, double v) : Point<DoublePoint>(ts), value(v)
+    DoublePoint(qdb_timespec_t ts, double v)
+        : Point<DoublePoint>(ts)
+        , value(v)
     {
     }
 
@@ -212,7 +217,8 @@ class BlobPoint : public Point<BlobPoint>
     static const size_t ParametersCount = 2;
 
     BlobPoint(qdb_timespec_t ts, v8::Isolate * isolate, v8::Local<v8::Object> obj)
-        : Point<BlobPoint>(ts), buffer(isolate, obj)
+        : Point<BlobPoint>(ts)
+        , buffer(isolate, obj)
     {
     }
 
@@ -227,8 +233,8 @@ public:
         Point<BlobPoint>::Init(exports, "BlobPoint", [](v8::Local<v8::FunctionTemplate> tpl) {});
     }
 
-    static v8::Local<v8::Object>
-    MakePointWithCopy(v8::Isolate * isolate, qdb_timespec_t ts, const void * content, size_t size)
+    static v8::Local<v8::Object> MakePointWithCopy(
+        v8::Isolate * isolate, qdb_timespec_t ts, const void * content, size_t size)
     {
         static const size_t argc = ParametersCount;
 
@@ -314,7 +320,8 @@ class StringPoint : public Point<StringPoint>
     static const size_t ParametersCount = 2;
 
     StringPoint(qdb_timespec_t ts, v8::Isolate * isolate, v8::Local<v8::Object> obj)
-        : Point<StringPoint>(ts), buffer(isolate, obj)
+        : Point<StringPoint>(ts)
+        , buffer(isolate, obj)
     {
     }
 
@@ -329,8 +336,8 @@ public:
         Point<StringPoint>::Init(exports, "StringPoint", [](v8::Local<v8::FunctionTemplate> tpl) {});
     }
 
-    static v8::Local<v8::Object>
-    MakePointWithCopy(v8::Isolate * isolate, qdb_timespec_t ts, const void * content, size_t size)
+    static v8::Local<v8::Object> MakePointWithCopy(
+        v8::Isolate * isolate, qdb_timespec_t ts, const void * content, size_t size)
     {
         static const size_t argc = ParametersCount;
 
@@ -415,7 +422,9 @@ class Int64Point : public Point<Int64Point>
 
     static const size_t ParametersCount = 2;
 
-    Int64Point(qdb_timespec_t ts, qdb_int_t v) : Point<Int64Point>(ts), value(v)
+    Int64Point(qdb_timespec_t ts, qdb_int_t v)
+        : Point<Int64Point>(ts)
+        , value(v)
     {
     }
 
@@ -514,7 +523,9 @@ class TimestampPoint : public Point<TimestampPoint>
 
     static const size_t ParametersCount = 2;
 
-    TimestampPoint(qdb_timespec_t ts, qdb_timespec_t v) : Point<TimestampPoint>(ts), value(v)
+    TimestampPoint(qdb_timespec_t ts, qdb_timespec_t v)
+        : Point<TimestampPoint>(ts)
+        , value(v)
     {
     }
 
@@ -532,8 +543,8 @@ public:
     {
         static const size_t argc = ParametersCount;
 
-        v8::Local<v8::Value> argv[argc] = {Timestamp::NewFromTimespec(isolate, ts),
-                                           Timestamp::NewFromTimespec(isolate, value)};
+        v8::Local<v8::Value> argv[argc] = {
+            Timestamp::NewFromTimespec(isolate, ts), Timestamp::NewFromTimespec(isolate, value)};
 
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
         assert(!cons.IsEmpty() && "Verify that Object::Init has been called in qdb_api.cpp:InitAll()");

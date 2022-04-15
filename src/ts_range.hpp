@@ -41,16 +41,16 @@ public:
             v8::FunctionTemplate::New(isolate, TsRange::begin, v8::Local<v8::Value>(), s),
             v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
         proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "end", v8::NewStringType::kNormal).ToLocalChecked(),
-                                   v8::FunctionTemplate::New(isolate, TsRange::end, v8::Local<v8::Value>(), s),
-                                   v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+            v8::FunctionTemplate::New(isolate, TsRange::end, v8::Local<v8::Value>(), s),
+            v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
         auto maybe_function = tpl->GetFunction(isolate->GetCurrentContext());
         if (maybe_function.IsEmpty()) return;
 
         constructor.Reset(isolate, maybe_function.ToLocalChecked());
         exports->Set(isolate->GetCurrentContext(),
-                     v8::String::NewFromUtf8(isolate, "TsRange", v8::NewStringType::kNormal).ToLocalChecked(),
-                     maybe_function.ToLocalChecked());
+            v8::String::NewFromUtf8(isolate, "TsRange", v8::NewStringType::kNormal).ToLocalChecked(),
+            maybe_function.ToLocalChecked());
     }
 
     // Two arguments for regular range
@@ -159,23 +159,23 @@ private:
     static void begin(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         TsRange::getter(args,
-                        [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr)
-                        {
-                            auto isolate = args.GetIsolate();
-                            auto timestamp = Timestamp::NewFromTimespec(isolate, fr->range.begin);
-                            args.GetReturnValue().Set(timestamp);
-                        });
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr)
+            {
+                auto isolate = args.GetIsolate();
+                auto timestamp = Timestamp::NewFromTimespec(isolate, fr->range.begin);
+                args.GetReturnValue().Set(timestamp);
+            });
     }
 
     static void end(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         TsRange::getter(args,
-                        [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr)
-                        {
-                            auto isolate = args.GetIsolate();
-                            auto timestamp = Timestamp::NewFromTimespec(isolate, fr->range.end);
-                            args.GetReturnValue().Set(timestamp);
-                        });
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, TsRange * fr)
+            {
+                auto isolate = args.GetIsolate();
+                auto timestamp = Timestamp::NewFromTimespec(isolate, fr->range.end);
+                args.GetReturnValue().Set(timestamp);
+            });
     }
 
 private:

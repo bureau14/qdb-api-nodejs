@@ -26,7 +26,9 @@ class Column : public Entry<Derivate>
 
 public:
     Column(cluster_data_ptr cd, const char * name, const char * ts, qdb_ts_column_type_t type)
-        : Entry<Derivate>(cd, name), ts(ts), type(type)
+        : Entry<Derivate>(cd, name)
+        , ts(ts)
+        , type(type)
 
     {
     }
@@ -38,27 +40,29 @@ public:
     template <typename F>
     static void Init(v8::Local<v8::Object> exports, const char * className, F init)
     {
-        Entry<Derivate>::Init(exports, className, [exports, init](v8::Local<v8::FunctionTemplate> tpl) {
-            // call init function of derivate
-            init(tpl);
+        Entry<Derivate>::Init(exports, className,
+            [exports, init](v8::Local<v8::FunctionTemplate> tpl)
+            {
+                // call init function of derivate
+                init(tpl);
 
-            NODE_SET_PROTOTYPE_METHOD(tpl, "erase", Column<Derivate>::erase);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "erase", Column<Derivate>::erase);
 
-            v8::Isolate * isolate = exports->GetIsolate();
+                v8::Isolate * isolate = exports->GetIsolate();
 
-            auto s = v8::Signature::New(isolate, tpl);
-            auto proto = tpl->PrototypeTemplate();
+                auto s = v8::Signature::New(isolate, tpl);
+                auto proto = tpl->PrototypeTemplate();
 
-            proto->SetAccessorProperty(
-                v8::String::NewFromUtf8(isolate, "timeseries", v8::NewStringType::kNormal).ToLocalChecked(),
-                v8::FunctionTemplate::New(isolate, Column<Derivate>::getTsAlias, v8::Local<v8::Value>(), s),
-                v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+                proto->SetAccessorProperty(
+                    v8::String::NewFromUtf8(isolate, "timeseries", v8::NewStringType::kNormal).ToLocalChecked(),
+                    v8::FunctionTemplate::New(isolate, Column<Derivate>::getTsAlias, v8::Local<v8::Value>(), s),
+                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
-            proto->SetAccessorProperty(
-                v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked(),
-                v8::FunctionTemplate::New(isolate, Column<Derivate>::getType, v8::Local<v8::Value>(), s),
-                v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
-        });
+                proto->SetAccessorProperty(
+                    v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked(),
+                    v8::FunctionTemplate::New(isolate, Column<Derivate>::getType, v8::Local<v8::Value>(), s),
+                    v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+            });
     }
 
     static v8::Local<v8::Object> MakeColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name)
@@ -89,17 +93,18 @@ private:
         assert(c);
 
         auto ts = c->timeSeries();
-        Column<Derivate>::queue_work(args,
-                                     [ts](qdb_request * qdb_req) {
-                                         auto & ranges = qdb_req->input.content.ranges;
-                                         auto erased = &qdb_req->output.content.uvalue;
-                                         auto alias = qdb_req->input.alias.c_str();
+        Column<Derivate>::queue_work(
+            args,
+            [ts](qdb_request * qdb_req)
+            {
+                auto & ranges = qdb_req->input.content.ranges;
+                auto erased = &qdb_req->output.content.uvalue;
+                auto alias = qdb_req->input.alias.c_str();
 
-                                         qdb_req->output.error =
-                                             qdb_ts_erase_ranges(qdb_req->handle(), ts.c_str(), alias, ranges.data(),
-                                                                 ranges.size(), erased);
-                                     },
-                                     Column<Derivate>::processUintegerResult, &ArgsEaterBinder::ranges);
+                qdb_req->output.error =
+                    qdb_ts_erase_ranges(qdb_req->handle(), ts.c_str(), alias, ranges.data(), ranges.size(), erased);
+            },
+            Column<Derivate>::processUintegerResult, &ArgsEaterBinder::ranges);
     }
 
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -108,7 +113,8 @@ private:
 
         static const int argc = ParametersCount;
         v8::Local<v8::Value> argv[argc];
-        for (size_t i = 0; i != argc; ++i) {
+        for (size_t i = 0; i != argc; ++i)
+        {
             argv[i] = args[i];
         }
         v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, Derivate::constructor);
@@ -171,19 +177,23 @@ private:
 
     static void getTsAlias(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Column::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, const Column * c) {
-            v8::Isolate * isolate = args.GetIsolate();
-            args.GetReturnValue().Set(
-                v8::String::NewFromUtf8(isolate, c->ts.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
-        });
+        Column::getter(args,
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, const Column * c)
+            {
+                v8::Isolate * isolate = args.GetIsolate();
+                args.GetReturnValue().Set(
+                    v8::String::NewFromUtf8(isolate, c->ts.c_str(), v8::NewStringType::kNormal).ToLocalChecked());
+            });
     }
 
     static void getType(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Column::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, const Column * c) {
-            v8::Isolate * isolate = args.GetIsolate();
-            args.GetReturnValue().Set(v8::Number::New(isolate, c->type));
-        });
+        Column::getter(args,
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, const Column * c)
+            {
+                v8::Isolate * isolate = args.GetIsolate();
+                args.GetReturnValue().Set(v8::Number::New(isolate, c->type));
+            });
     }
 
 private:
@@ -208,11 +218,13 @@ class DoubleColumn : public Column<DoubleColumn>
 public:
     static void Init(v8::Local<v8::Object> exports)
     {
-        Column<DoubleColumn>::Init(exports, "DoubleColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", DoubleColumn::insert);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", DoubleColumn::ranges);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", DoubleColumn::aggregate);
-        });
+        Column<DoubleColumn>::Init(exports, "DoubleColumn",
+            [](v8::Local<v8::FunctionTemplate> tpl)
+            {
+                NODE_SET_PROTOTYPE_METHOD(tpl, "insert", DoubleColumn::insert);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", DoubleColumn::ranges);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", DoubleColumn::aggregate);
+            });
     }
 
 private:
@@ -243,11 +255,13 @@ class BlobColumn : public Column<BlobColumn>
 public:
     static void Init(v8::Local<v8::Object> exports)
     {
-        Column<BlobColumn>::Init(exports, "BlobColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", BlobColumn::insert);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", BlobColumn::ranges);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", BlobColumn::aggregate);
-        });
+        Column<BlobColumn>::Init(exports, "BlobColumn",
+            [](v8::Local<v8::FunctionTemplate> tpl)
+            {
+                NODE_SET_PROTOTYPE_METHOD(tpl, "insert", BlobColumn::insert);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", BlobColumn::ranges);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", BlobColumn::aggregate);
+            });
     }
 
 private:
@@ -278,11 +292,13 @@ class StringColumn : public Column<StringColumn>
 public:
     static void Init(v8::Local<v8::Object> exports)
     {
-        Column<StringColumn>::Init(exports, "StringColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", StringColumn::insert);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", StringColumn::ranges);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", StringColumn::aggregate);
-        });
+        Column<StringColumn>::Init(exports, "StringColumn",
+            [](v8::Local<v8::FunctionTemplate> tpl)
+            {
+                NODE_SET_PROTOTYPE_METHOD(tpl, "insert", StringColumn::insert);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", StringColumn::ranges);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", StringColumn::aggregate);
+            });
     }
 
 private:
@@ -313,11 +329,13 @@ class Int64Column : public Column<Int64Column>
 public:
     static void Init(v8::Local<v8::Object> exports)
     {
-        Column<Int64Column>::Init(exports, "Int64Column", [](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", Int64Column::insert);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", Int64Column::ranges);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", Int64Column::aggregate);
-        });
+        Column<Int64Column>::Init(exports, "Int64Column",
+            [](v8::Local<v8::FunctionTemplate> tpl)
+            {
+                NODE_SET_PROTOTYPE_METHOD(tpl, "insert", Int64Column::insert);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", Int64Column::ranges);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", Int64Column::aggregate);
+            });
     }
 
 private:
@@ -348,11 +366,13 @@ class TimestampColumn : public Column<TimestampColumn>
 public:
     static void Init(v8::Local<v8::Object> exports)
     {
-        Column<TimestampColumn>::Init(exports, "TimestampColumn", [](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "insert", TimestampColumn::insert);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", TimestampColumn::ranges);
-            NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", TimestampColumn::aggregate);
-        });
+        Column<TimestampColumn>::Init(exports, "TimestampColumn",
+            [](v8::Local<v8::FunctionTemplate> tpl)
+            {
+                NODE_SET_PROTOTYPE_METHOD(tpl, "insert", TimestampColumn::insert);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "ranges", TimestampColumn::ranges);
+                NODE_SET_PROTOTYPE_METHOD(tpl, "aggregate", TimestampColumn::aggregate);
+            });
     }
 
 private:
@@ -366,7 +386,7 @@ private:
     static v8::Persistent<v8::Function> constructor;
 };
 
-std::pair<v8::Local<v8::Object>, bool>
-CreateColumn(v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type);
+std::pair<v8::Local<v8::Object>, bool> CreateColumn(
+    v8::Isolate * isolate, v8::Local<v8::Object> owner, const char * name, qdb_ts_column_type_t type);
 
 } // namespace quasardb

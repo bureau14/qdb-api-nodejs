@@ -27,7 +27,8 @@ public:
     static const size_t ParameterCount = 1;
 
 private:
-    Tag(cluster_data_ptr cd, const char * alias) : Entry<Tag>(cd, alias)
+    Tag(cluster_data_ptr cd, const char * alias)
+        : Entry<Tag>(cd, alias)
     {
     }
     virtual ~Tag(void)
@@ -37,25 +38,25 @@ private:
 public:
     static void Init(v8::Local<v8::Object> exports)
     {
-        Entry<Tag>::Init(exports, "Tag", [](v8::Local<v8::FunctionTemplate> tpl) {
-            NODE_SET_PROTOTYPE_METHOD(tpl, "getEntries", getEntries);
-        });
+        Entry<Tag>::Init(exports, "Tag",
+            [](v8::Local<v8::FunctionTemplate> tpl) { NODE_SET_PROTOTYPE_METHOD(tpl, "getEntries", getEntries); });
     }
 
 public:
     // :desc: Gets an array of entities associated with the Tag.
-    // :args: callback(err, entities) (function) - A callback or anonymous function with error and array of entities parameters.
+    // :args: callback(err, entities) (function) - A callback or anonymous function with error and array of entities
+    // parameters.
     static void getEntries(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Entry<Tag>::queue_work(args,
-                               [](qdb_request * qdb_req) {
-                                   qdb_req->output.error =
-                                       qdb_get_tagged(qdb_req->handle(), qdb_req->input.alias.c_str(),
-                                                      reinterpret_cast<const char ***>(
-                                                          const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
-                                                      &(qdb_req->output.content.buffer.size));
-                               },
-                               Entry<Tag>::processArrayStringResult);
+        Entry<Tag>::queue_work(
+            args,
+            [](qdb_request * qdb_req)
+            {
+                qdb_req->output.error = qdb_get_tagged(qdb_req->handle(), qdb_req->input.alias.c_str(),
+                    reinterpret_cast<const char ***>(const_cast<void **>(&(qdb_req->output.content.buffer.begin))),
+                    &(qdb_req->output.content.buffer.size));
+            },
+            Entry<Tag>::processArrayStringResult);
     }
 
 private:
