@@ -1,5 +1,5 @@
-#include "cluster.hpp"
 #include "suffix.hpp"
+#include "cluster.hpp"
 
 namespace quasardb
 {

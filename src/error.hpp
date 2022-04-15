@@ -9,7 +9,8 @@ namespace quasardb
 class Error : public node::ObjectWrap
 {
 public:
-    explicit Error(qdb_error_t e) : _error(e)
+    explicit Error(qdb_error_t e)
+        : _error(e)
     {
     }
 
@@ -153,8 +154,8 @@ public:
 
         constructor.Reset(isolate, maybe_function.ToLocalChecked());
         exports->Set(isolate->GetCurrentContext(),
-                     v8::String::NewFromUtf8(isolate, "Error", v8::NewStringType::kNormal).ToLocalChecked(),
-                     maybe_function.ToLocalChecked());
+            v8::String::NewFromUtf8(isolate, "Error", v8::NewStringType::kNormal).ToLocalChecked(),
+            maybe_function.ToLocalChecked());
     }
 
 private:
@@ -232,59 +233,70 @@ private:
     }
 
 public:
-    //:desc: Determines if the error is an informational error.
-    //:returns: True if the error is informational, false otherwise.
+    // :desc: Determines if the error is an informational error.
+    // :returns: True if the error is informational, false otherwise.
     static void informational(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {
-            v8::Isolate * isolate = args.GetIsolate();
-            args.GetReturnValue().Set(v8::Boolean::New(isolate, QDB_SUCCESS(e->_error)));
-        });
+        Error::accessor(args,
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e)
+            {
+                v8::Isolate * isolate = args.GetIsolate();
+                args.GetReturnValue().Set(v8::Boolean::New(isolate, QDB_SUCCESS(e->_error)));
+            });
     }
 
-    //:desc: Gets the origin of the error
-    //:returns: A string containing the origin of the error.
+    // :desc: Gets the origin of the error
+    // :returns: A string containing the origin of the error.
     static void origin(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {
-            v8::Isolate * isolate = args.GetIsolate();
-            args.GetReturnValue().Set(v8::Integer::New(isolate, QDB_ERROR_ORIGIN(e->_error)));
-        });
+        Error::accessor(args,
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e)
+            {
+                v8::Isolate * isolate = args.GetIsolate();
+                args.GetReturnValue().Set(v8::Integer::New(isolate, QDB_ERROR_ORIGIN(e->_error)));
+            });
     }
 
-    //:desc: Gets the severity of the errror
-    //:returns: A string containing the severity of the error.
+    // :desc: Gets the severity of the errror
+    // :returns: A string containing the severity of the error.
     static void severity(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {
-            v8::Isolate * isolate = args.GetIsolate();
-            args.GetReturnValue().Set(v8::Integer::New(isolate, QDB_ERROR_SEVERITY(e->_error)));
-        });
+        Error::accessor(args,
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e)
+            {
+                v8::Isolate * isolate = args.GetIsolate();
+                args.GetReturnValue().Set(v8::Integer::New(isolate, QDB_ERROR_SEVERITY(e->_error)));
+            });
     }
 
-    //:desc: Gets a description of the error.
-    //:returns: A string containing the error message.
+    // :desc: Gets a description of the error.
+    // :returns: A string containing the error message.
     static void message(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {
-            // the string returned by qdb_error is static it is therefore safe and efficient to do this
-            v8::Isolate * isolate = args.GetIsolate();
-            args.GetReturnValue().Set(
-                v8::String::NewFromUtf8(isolate, qdb_error(e->_error), v8::NewStringType::kNormal).ToLocalChecked());
-        });
+        Error::accessor(args,
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e)
+            {
+                // the string returned by qdb_error is static it is therefore safe and efficient to do this
+                v8::Isolate * isolate = args.GetIsolate();
+                args.GetReturnValue().Set(
+                    v8::String::NewFromUtf8(isolate, qdb_error(e->_error), v8::NewStringType::kNormal)
+                        .ToLocalChecked());
+            });
     }
 
-    //:desc: Gets the error code.
-    //:returns: An integer with the error code.
+    // :desc: Gets the error code.
+    // :returns: An integer with the error code.
     static void code(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Error::accessor(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e) {
-            // the string returned by qdb_error is static it is therefore safe and efficient to do this
-            v8::Isolate * isolate = args.GetIsolate();
+        Error::accessor(args,
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, Error * e)
+            {
+                // the string returned by qdb_error is static it is therefore safe and efficient to do this
+                v8::Isolate * isolate = args.GetIsolate();
 
-            // read low 16-bit for the code
-            args.GetReturnValue().Set(v8::Integer::NewFromUnsigned(isolate, e->_error & 0xffff));
-        });
+                // read low 16-bit for the code
+                args.GetReturnValue().Set(v8::Integer::NewFromUnsigned(isolate, e->_error & 0xffff));
+            });
     }
 
 private:

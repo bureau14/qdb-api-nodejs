@@ -16,7 +16,8 @@ class Aggregation : public node::ObjectWrap
 
 public:
     Aggregation(qdb_ts_aggregation_type_t type, v8::Isolate * isolate, v8::Local<v8::Object> range)
-        : type(type), range_obj(isolate, range)
+        : type(type)
+        , range_obj(isolate, range)
     {
         auto fr = node::ObjectWrap::Unwrap<TsRange>(range);
         this->range = fr->nativeRange();
@@ -41,12 +42,14 @@ public:
 
         auto proto = tpl->PrototypeTemplate();
 
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked(),
-                                   v8::FunctionTemplate::New(isolate, Aggregation::getType, v8::Local<v8::Value>(), s),
-                                   v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
-        proto->SetAccessorProperty(v8::String::NewFromUtf8(isolate, "range", v8::NewStringType::kNormal).ToLocalChecked(),
-                                   v8::FunctionTemplate::New(isolate, Aggregation::getRange, v8::Local<v8::Value>(), s),
-                                   v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+        proto->SetAccessorProperty(
+            v8::String::NewFromUtf8(isolate, "type", v8::NewStringType::kNormal).ToLocalChecked(),
+            v8::FunctionTemplate::New(isolate, Aggregation::getType, v8::Local<v8::Value>(), s),
+            v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
+        proto->SetAccessorProperty(
+            v8::String::NewFromUtf8(isolate, "range", v8::NewStringType::kNormal).ToLocalChecked(),
+            v8::FunctionTemplate::New(isolate, Aggregation::getRange, v8::Local<v8::Value>(), s),
+            v8::Local<v8::FunctionTemplate>(), v8::ReadOnly);
 
         // Export aggregation types
         AddAggrType(exports, "AggFirst", qdb_agg_first);
@@ -79,7 +82,9 @@ public:
         if (maybe_function.IsEmpty()) return;
 
         constructor.Reset(isolate, maybe_function.ToLocalChecked());
-        exports->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "Aggregation", v8::NewStringType::kNormal).ToLocalChecked(), maybe_function.ToLocalChecked());
+        exports->Set(isolate->GetCurrentContext(),
+            v8::String::NewFromUtf8(isolate, "Aggregation", v8::NewStringType::kNormal).ToLocalChecked(),
+            maybe_function.ToLocalChecked());
     }
 
     static void NewInstance(const v8::FunctionCallbackInfo<v8::Value> & args)
@@ -158,7 +163,8 @@ private:
     static void throwException(const v8::FunctionCallbackInfo<v8::Value> & args, const char * msg)
     {
         auto isolate = args.GetIsolate();
-        isolate->ThrowException(v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, msg, v8::NewStringType::kNormal).ToLocalChecked()));
+        isolate->ThrowException(v8::Exception::TypeError(
+            v8::String::NewFromUtf8(isolate, msg, v8::NewStringType::kNormal).ToLocalChecked()));
     }
 
     template <typename F>
@@ -178,30 +184,34 @@ private:
 
     static void getType(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Aggregation::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Aggregation * aggr) {
-            v8::Isolate * isolate = args.GetIsolate();
+        Aggregation::getter(args,
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, Aggregation * aggr)
+            {
+                v8::Isolate * isolate = args.GetIsolate();
 
-            args.GetReturnValue().Set(v8::Int32::New(isolate, aggr->type));
-        });
+                args.GetReturnValue().Set(v8::Int32::New(isolate, aggr->type));
+            });
     }
 
     static void getRange(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
-        Aggregation::getter(args, [](const v8::FunctionCallbackInfo<v8::Value> & args, Aggregation * aggr) {
-            v8::Isolate * isolate = args.GetIsolate();
+        Aggregation::getter(args,
+            [](const v8::FunctionCallbackInfo<v8::Value> & args, Aggregation * aggr)
+            {
+                v8::Isolate * isolate = args.GetIsolate();
 
-            auto value = v8::Local<v8::Object>::New(isolate, aggr->range_obj);
-            args.GetReturnValue().Set(value);
-        });
+                auto value = v8::Local<v8::Object>::New(isolate, aggr->range_obj);
+                args.GetReturnValue().Set(value);
+            });
     }
 
     static void AddAggrType(v8::Local<v8::Object> exports, const char * name, qdb_ts_aggregation_type_t type)
     {
         v8::Isolate * isolate = exports->GetIsolate();
         auto value = v8::Int32::New(isolate, type);
-        v8::Maybe<bool> maybe =
-            exports->DefineOwnProperty(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, name, v8::NewStringType::kNormal).ToLocalChecked(), value,
-                                       static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
+        v8::Maybe<bool> maybe = exports->DefineOwnProperty(isolate->GetCurrentContext(),
+            v8::String::NewFromUtf8(isolate, name, v8::NewStringType::kNormal).ToLocalChecked(), value,
+            static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete));
         (void)maybe;
         assert(maybe.IsJust() && maybe.FromJust());
     }

@@ -5,8 +5,8 @@
 #include "error.hpp"
 #include "integer.hpp"
 #include "prefix.hpp"
-#include "query_find.hpp"
 #include "query.hpp"
+#include "query_find.hpp"
 #include "range.hpp"
 #include "suffix.hpp"
 #include "tag.hpp"
@@ -20,13 +20,12 @@ namespace quasardb
 // cAmelCaSe :(
 class Cluster : public node::ObjectWrap
 {
-
 public:
     // we have a structure we can ref count that holds important data
     // this makes sure we can keep things alive in asynchronous operations
 
-public:
-    explicit Cluster(const char * uri, const char * cluster_public_key_file = "", const char * user_private_key_file = "")
+    explicit Cluster(
+        const char * uri, const char * cluster_public_key_file = "", const char * user_private_key_file = "")
         : _uri{uri}
         , _user_private_key_file{user_private_key_file}
         , _cluster_public_key_file{cluster_public_key_file}
@@ -86,7 +85,9 @@ public:
         if (maybe_function.IsEmpty()) return;
 
         constructor.Reset(isolate, maybe_function.ToLocalChecked());
-        exports->Set(isolate->GetCurrentContext(), v8::String::NewFromUtf8(isolate, "Cluster", v8::NewStringType::kNormal).ToLocalChecked(), maybe_function.ToLocalChecked());
+        exports->Set(isolate->GetCurrentContext(),
+            v8::String::NewFromUtf8(isolate, "Cluster", v8::NewStringType::kNormal).ToLocalChecked(),
+            maybe_function.ToLocalChecked());
     }
 
 private:
@@ -112,7 +113,7 @@ private:
             }
 
             v8::String::Utf8Value uri_utf8(args.GetIsolate(), uri.first);
-            
+
             if (args.Length() == 3)
             {
                 auto cluster_public_key_file = argsEater.eatString();
@@ -129,7 +130,7 @@ private:
 
                 v8::String::Utf8Value cluster_public_key_file_utf8{args.GetIsolate(), cluster_public_key_file.first};
                 v8::String::Utf8Value user_credentials_file_utf8{args.GetIsolate(), user_credentials_file.first};
-                
+
                 Cluster * cl = new Cluster(*uri_utf8, *cluster_public_key_file_utf8, *user_credentials_file_utf8);
 
                 cl->Wrap(args.This());
@@ -147,8 +148,6 @@ private:
                 cl->Wrap(args.This());
                 args.GetReturnValue().Set(args.This());
             }
-
-
         }
         else
         {
@@ -315,7 +314,8 @@ private:
 private:
     struct connection_request
     {
-        explicit connection_request(cluster_data_ptr cd) : data(cd)
+        explicit connection_request(cluster_data_ptr cd)
+            : data(cd)
         {
             assert(data);
         }
@@ -422,69 +422,69 @@ public:
         objectFactory<Blob>(args);
     }
 
-    //:desc: Creates an Integer associated with the specified alias. No query is performed at this point.
-    //:args: alias (String) - the alias of the integer in the database.
-    //:returns: the Integer
+    // :desc: Creates an Integer associated with the specified alias. No query is performed at this point.
+    // :args: alias (String) - the alias of the integer in the database.
+    // :returns: the Integer
 
     static void integer(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Integer>(args);
     }
 
-    //:desc: Retrieves aliases with the input prefix argument
-    //:args: prefix (String) - The prefix to search for.
-    //:returns: the Prefix
+    // :desc: Retrieves aliases with the input prefix argument
+    // :args: prefix (String) - The prefix to search for.
+    // :returns: the Prefix
 
     static void prefix(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Prefix>(args);
     }
 
-    //:desc: Retrieves list of aliases that matches the query condition
-    //:args: Query (String) - the query string
-    //:returns: List of matched aliases.
+    // :desc: Retrieves list of aliases that matches the query condition
+    // :args: Query (String) - the query string
+    // :returns: List of matched aliases.
     static void queryFind(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<QueryFind>(args);
     }
 
-    //:desc: Perform an sql-like query
-    //:args: Query (String) - the query string
-    //:returns: query result structure.
+    // :desc: Perform an sql-like query
+    // :args: Query (String) - the query string
+    // :returns: query result structure.
     static void query(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Query>(args);
     }
 
-    //:desc: Returns a range object which supports BlobScan, BlobScanRegex
-    //:returns: The Range object
+    // :desc: Returns a range object which supports BlobScan, BlobScanRegex
+    // :returns: The Range object
 
     static void range(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Range>(args);
     }
 
-    //:desc: Retrieves aliases with the input suffix argument
-    //:args: suffix (String) - The prefix to search for.
-    //:returns: the Suffix
+    // :desc: Retrieves aliases with the input suffix argument
+    // :args: suffix (String) - The prefix to search for.
+    // :returns: the Suffix
 
     static void suffix(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Suffix>(args);
     }
 
-    //:desc: Creates a Tag with the specified name.
-    //:args: tagName (String) - the name of the tag in the database.
-    //:returns: the Tag
+    // :desc: Creates a Tag with the specified name.
+    // :args: tagName (String) - the name of the tag in the database.
+    // :returns: the Tag
 
     static void tag(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
         objectFactory<Tag>(args);
     }
 
-    //:desc: Creates a timeseries object with the given alias
-    //:args: alias (String) - the name of the timeseries
-    //:returns: the ts object
+    // :desc: Creates a timeseries object with the given alias
+    // :args: alias (String) - the name of the timeseries
+    // :returns: the ts object
 
     static void ts(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
@@ -492,8 +492,8 @@ public:
     }
 
 public:
-    //:desc: Returns the current set timeout in milliseconds
-    //:returns: Current set timeout in milliseconds
+    // :desc: Returns the current set timeout in milliseconds
+    // :returns: Current set timeout in milliseconds
 
     static void getTimeout(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
@@ -511,8 +511,8 @@ public:
         call.template setReturnValue<v8::Integer>(c->_timeout);
     }
 
-    //:desc: Set the current timeout in milliseconds
-    //:args: timeout (Integer) - this timeout is in milliseconds
+    // :desc: Set the current timeout in milliseconds
+    // :args: timeout (Integer) - this timeout is in milliseconds
 
     static void setTimeout(const v8::FunctionCallbackInfo<v8::Value> & args)
     {
@@ -581,7 +581,8 @@ private:
 
         {
             std::unique_lock<std::mutex> lock(_data_mutex);
-            res = _data = std::make_shared<cluster_data>(_uri, _user_private_key_file, _cluster_public_key_file, _timeout, on_success, on_error);
+            res = _data = std::make_shared<cluster_data>(
+                _uri, _user_private_key_file, _cluster_public_key_file, _timeout, on_success, on_error);
         }
 
         return res;

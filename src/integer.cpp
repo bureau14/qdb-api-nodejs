@@ -11,4 +11,5 @@ void Integer::New(const v8::FunctionCallbackInfo<v8::Value> & args)
 {
     Cluster::newObject<Integer>(args);
 }
-}
+
+} // namespace quasardb

@@ -46,7 +46,7 @@ public:
             v8::String::NewFromUtf8(isolate, "nanoseconds", v8::NewStringType::kNormal).ToLocalChecked(), GetProperty);
 
         tmpl->Set(v8::String::NewFromUtf8(isolate, "fromDate", v8::NewStringType::kNormal).ToLocalChecked(),
-                  v8::FunctionTemplate::New(isolate, FromDate));
+            v8::FunctionTemplate::New(isolate, FromDate));
         NODE_SET_PROTOTYPE_METHOD(tmpl, "toDate", ToDate);
 
         Timestamp::tmpl.Reset(isolate, tmpl);
@@ -54,8 +54,8 @@ public:
         auto cons = tmpl->GetFunction(context).ToLocalChecked();
 
         Timestamp::constructor.Reset(isolate, cons);
-        exports->Set(context,
-                     v8::String::NewFromUtf8(isolate, "Timestamp", v8::NewStringType::kNormal).ToLocalChecked(), cons);
+        exports->Set(
+            context, v8::String::NewFromUtf8(isolate, "Timestamp", v8::NewStringType::kNormal).ToLocalChecked(), cons);
     }
 
     static v8::Local<v8::Object> NewFromTimespec(v8::Isolate * isolate, qdb_timespec_t ts)
@@ -112,7 +112,9 @@ public:
     }
 
 private:
-    explicit Timestamp(double seconds, double nanoseconds) : seconds_(seconds), nanoseconds_(nanoseconds)
+    explicit Timestamp(double seconds, double nanoseconds)
+        : seconds_(seconds)
+        , nanoseconds_(nanoseconds)
     {
     }
 

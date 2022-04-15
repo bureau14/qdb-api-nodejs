@@ -21,10 +21,8 @@ namespace quasardb
 namespace detail
 {
 
-void AddConstantProperty(v8::Isolate * isolate,
-                         v8::Local<v8::Object> object,
-                         const char * key,
-                         v8::Local<v8::Value> value);
+void AddConstantProperty(
+    v8::Isolate * isolate, v8::Local<v8::Object> object, const char * key, v8::Local<v8::Value> value);
 
 template <typename T>
 struct NewObject
@@ -39,7 +37,6 @@ struct NewObject
 template <>
 struct NewObject<v8::String>
 {
-
     template <typename P>
     v8::Local<v8::String> operator()(v8::Isolate * i, P && p)
     {
@@ -51,7 +48,6 @@ struct NewObject<v8::String>
 template <>
 struct NewObject<v8::Date>
 {
-
     template <typename P>
     v8::Local<v8::Value> operator()(v8::Isolate * i, P && p)
     {
@@ -63,7 +59,6 @@ struct NewObject<v8::Date>
 template <>
 struct NewObject<Timestamp>
 {
-
     template <typename P>
     v8::Local<v8::Value> operator()(v8::Isolate * i, P && p)
     {
@@ -91,7 +86,9 @@ struct qdb_request
 
     struct query
     {
-        query(std::string a = "") : alias(a), expiry(0)
+        query(std::string a = "")
+            : alias(a)
+            , expiry(0)
         {
         }
 
@@ -99,7 +96,8 @@ struct qdb_request
 
         struct query_content
         {
-            query_content() : value(0)
+            query_content()
+                : value(0)
             {
                 buffer.begin = nullptr;
                 buffer.size = 0;
@@ -136,11 +134,13 @@ struct qdb_request
 
     struct result
     {
-        result(qdb_error_t err = qdb_e_uninitialized) : error(err)
+        result(qdb_error_t err = qdb_e_uninitialized)
+            : error(err)
         {
         }
 
-        union {
+        union
+        {
             slice buffer;
             qdb_uint_t uvalue;
             qdb_int_t value;
@@ -160,12 +160,16 @@ struct qdb_request
         qdb_error_t error;
     };
 
-    explicit qdb_request(qdb_error_t err) : _cluster_data(nullptr), output(err)
+    explicit qdb_request(qdb_error_t err)
+        : _cluster_data(nullptr)
+        , output(err)
     {
     }
 
     qdb_request(cluster_data_ptr cd, std::function<void(qdb_request *)> exec, std::string a)
-        : _cluster_data(cd), input(a), _execute(exec)
+        : _cluster_data(cd)
+        , input(a)
+        , _execute(exec)
     {
     }
 
@@ -234,7 +238,9 @@ private:
 struct MethodMan
 {
     explicit MethodMan(const v8::FunctionCallbackInfo<v8::Value> & args)
-        : _isolate(args.GetIsolate()), _scope(_isolate), _args(args)
+        : _isolate(args.GetIsolate())
+        , _scope(_isolate)
+        , _args(args)
     {
     }
 
@@ -311,8 +317,8 @@ public:
 
     std::pair<v8::Local<v8::Function>, bool> checkedArgCallback(int i) const
     {
-        return checkArg<v8::Local<v8::Function>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsFunction(); },
-                                                 &MethodMan::argCallback);
+        return checkArg<v8::Local<v8::Function>>(
+            i, [](v8::Local<v8::Value> v) -> bool { return v->IsFunction(); }, &MethodMan::argCallback);
     }
 
     v8::Local<v8::String> argString(int i) const
@@ -322,8 +328,8 @@ public:
 
     std::pair<v8::Local<v8::String>, bool> checkedArgString(int i) const
     {
-        return checkArg<v8::Local<v8::String>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsString(); },
-                                               &MethodMan::argString);
+        return checkArg<v8::Local<v8::String>>(
+            i, [](v8::Local<v8::Value> v) -> bool { return v->IsString(); }, &MethodMan::argString);
     }
 
     v8::Local<v8::Array> argArray(int i) const
@@ -333,8 +339,8 @@ public:
 
     std::pair<v8::Local<v8::Array>, bool> checkedArgArray(int i) const
     {
-        return checkArg<v8::Local<v8::Array>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsArray(); },
-                                              &MethodMan::argArray);
+        return checkArg<v8::Local<v8::Array>>(
+            i, [](v8::Local<v8::Value> v) -> bool { return v->IsArray(); }, &MethodMan::argArray);
     }
 
     double argNumber(int i) const
@@ -351,7 +357,8 @@ public:
 
     std::pair<double, bool> checkedArgNumber(int i) const
     {
-        return checkArg<double>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsNumber(); }, &MethodMan::argNumber);
+        return checkArg<double>(
+            i, [](v8::Local<v8::Value> v) -> bool { return v->IsNumber(); }, &MethodMan::argNumber);
     }
 
     v8::Local<v8::Date> argDate(int i) const
@@ -361,8 +368,8 @@ public:
 
     std::pair<v8::Local<v8::Date>, bool> checkedArgDate(int i) const
     {
-        return checkArg<v8::Local<v8::Date>>(i, [](v8::Local<v8::Value> v) -> bool { return v->IsDate(); },
-                                             &MethodMan::argDate);
+        return checkArg<v8::Local<v8::Date>>(
+            i, [](v8::Local<v8::Value> v) -> bool { return v->IsDate(); }, &MethodMan::argDate);
     }
 
     const v8::FunctionCallbackInfo<v8::Value> & args() const
@@ -390,7 +397,9 @@ private:
 
 struct ArgsEater
 {
-    explicit ArgsEater(const MethodMan & meth) : _method(meth), _pos(0)
+    explicit ArgsEater(const MethodMan & meth)
+        : _method(meth)
+        , _pos(0)
     {
     }
 
@@ -539,7 +548,8 @@ private:
 class ArgsEaterBinder
 {
 public:
-    explicit ArgsEaterBinder(const MethodMan & meth) : _eater(meth)
+    explicit ArgsEaterBinder(const MethodMan & meth)
+        : _eater(meth)
     {
     }
 
