@@ -517,17 +517,18 @@ public:
                 auto pt = result->rows[i][j];
                 switch (pt.type)
                 {
+                case qdb_query_result_none:
+                    // TODO(Marek): Should we do something?
+                    break;
                 case qdb_query_result_double:
                     columns->Set(isolate->GetCurrentContext(), j, v8::Number::New(isolate, pt.payload.double_.value));
                     break;
                 case qdb_query_result_blob:
-                {
                     columns->Set(isolate->GetCurrentContext(), j,
                         v8::String::NewFromUtf8(isolate, static_cast<const char *>(pt.payload.blob.content),
                             v8::NewStringType::kNormal, pt.payload.blob.content_length)
                             .ToLocalChecked());
                     break;
-                }
                 case qdb_query_result_int64:
                     columns->Set(isolate->GetCurrentContext(), j, v8::Number::New(isolate, pt.payload.int64_.value));
                     break;
@@ -539,18 +540,23 @@ public:
                     break;
                 }
                 case qdb_query_result_count:
-                {
                     columns->Set(isolate->GetCurrentContext(), j, v8::Number::New(isolate, pt.payload.count.value));
                     break;
-                }
+
                 case qdb_query_result_string:
-                {
                     columns->Set(isolate->GetCurrentContext(), j,
                         v8::String::NewFromUtf8(isolate, pt.payload.string.content, v8::NewStringType::kNormal,
                             pt.payload.string.content_length)
                             .ToLocalChecked());
                     break;
-                }
+
+                case qdb_query_result_array_double:
+                case qdb_query_result_array_blob:
+                case qdb_query_result_array_int64:
+                case qdb_query_result_array_timestamp:
+                case qdb_query_result_array_string:
+                    // TODO(Marek): Handle arrays.
+                    break;
                 }
             }
             rows->Set(isolate->GetCurrentContext(), i, columns);
