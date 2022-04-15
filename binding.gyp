@@ -79,7 +79,9 @@
                             "OTHER_CFLAGS": [
                                 "-std=c++14",
                                 "-stdlib=libc++",
+                                "-Werror",
                                 "-Wno-strict-aliasing",
+                                "-Wno-unused-result",
                                 "-mmacosx-version-min=10.15"
                             ]
                         }
@@ -124,7 +126,10 @@
                         ],
                         "cflags": [
                             "-std=c++14",
-                            "-Wno-strict-aliasing"
+                            "-Werror",
+                            "-Wno-error=cast-function-type",
+                            "-Wno-strict-aliasing",
+                            "-Wno-unused-result"
                         ]
                     }
                 ],
@@ -134,11 +139,14 @@
                         "include_dirs": [
                             "<(c_api_path)/include"
                         ],
+                        # Cf. https://github.com/nodejs/node-gyp/blob/master/gyp/pylib/gyp/MSVSSettings.py.
                         "msvs_settings": {
                             "VCCLCompilerTool": {
                                 "ExceptionHandling": "2",
+                                # "VerboseOutput": "true",
+                                "WarnAsError": "true",
                                 "DisableSpecificWarnings": [
-                                    "4530"
+                                    "4309" # 'static_cast': truncation of constant value
                                 ]
                             }
                         },
