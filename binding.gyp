@@ -75,14 +75,17 @@
                             "-Wl,-rpath,@loader_path"
                         ],
                         "xcode_settings": {
+                            # We need to use these variables, because otherwise node-gyp will set them anyway and the order of options will be important.
+                            # These results in problems, because OTHER_CFLAGS are appended to compile flags, but OTHER_LDFLAGS are prepended to linker flags.
+                            # Cf. https://github.com/nodejs/node-gyp/blob/d7687d55666fa77928cce270b8991b8e819c5094/gyp/pylib/gyp/xcode_emulation.py#L557
+                            "CLANG_CXX_LIBRARY": "libc++",
+                            "CLANG_CXX_LANGUAGE_STANDARD": "c++14",
+                            "MACOSX_DEPLOYMENT_TARGET": "10.14",
                             "OTHER_CFLAGS": [
-                                "-std=c++14",
-                                "-stdlib=libc++",
                                 "-Werror",
                                 "-Wno-strict-aliasing",
                                 "-Wno-unused-result",
-                                "-mmacosx-version-min=10.15"
-                            ]
+                            ],
                         }
                     }
                 ],
