@@ -67,7 +67,6 @@
                     "OS=='mac'",
                     {
                         "include_dirs": [
-                            "/usr/local/include",
                             "<(c_api_path)/include"
                         ],
                         "libraries": [
@@ -180,14 +179,6 @@
                                         "copy_c_api=='yes'",
                                         {
                                             "files": [
-                                                "<(c_api_path)/lib/libc++.1.0.dylib",
-                                                "<(c_api_path)/lib/libc++.1.dylib",
-                                                "<(c_api_path)/lib/libc++.LICENSE.TXT",
-                                                "<(c_api_path)/lib/libc++.dylib",
-                                                "<(c_api_path)/lib/libc++abi.1.0.dylib",
-                                                "<(c_api_path)/lib/libc++abi.1.dylib",
-                                                "<(c_api_path)/lib/libc++abi.LICENSE.TXT",
-                                                "<(c_api_path)/lib/libc++abi.dylib",
                                                 "<(c_api_path)/lib/libqdb_api.dylib"
                                             ]
                                         }
